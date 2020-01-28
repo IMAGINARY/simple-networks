@@ -81,7 +81,10 @@ export class Level {
     this.updatetable();
 
     d3.select("#totalerror")
-      .text("value of loss function (to be minimized): " + this.network.loss(this.trainXs, this.trainYs));
+      .text(this.network.loss(this.trainXs, this.trainYs).toFixed(2));
+    d3.select("#totalerrorterm")
+      .text(this.rows.map(r => `(${r[r.length-1]} - ${r[r.length-2]})²`).join(" + "));
+
 
 
     d3.select("#outputs").select(".values").selectAll("text")
@@ -89,13 +92,14 @@ export class Level {
       .join("text")
       .text(n => n.format(n.getActivation()))
       .attr("x", n => n.x)
-      .attr("y", n => n.y - unit * n.getActivation())
+      .attr("y", n => n.y - unit * n.getActivation());
+
     d3.select("#input").select(".values").selectAll("text")
       .data(this.network.inputnodes)
       .join("text")
       .text(n => n.format(n.getActivation()))
       .attr("x", n => n.x - 25)
-      .attr("y", n => n.y - unit * n.getActivation())
+      .attr("y", n => n.y - unit * n.getActivation());
 
 
     if (document.querySelector("#showgradient").checked) {
@@ -109,6 +113,7 @@ export class Level {
     const tbody = this.tbody;
 
     let rows = [];
+    this.rows = rows;
     for (let k in this.trainXs) {
       const row = this.trainXs[k].map((v, k) => this.network.inputnodes[k].format(v))
         .concat(this.trainYs[k].map((v, k) => this.network.outputnodes[k].format(v)))

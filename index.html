@@ -65,13 +65,15 @@
           </p>
         </div>
         <div class="data">
-          <h3>Training Data (click on row to select as input)</h3>
-          <table style="border-collapse: collapse;" id="trainingtable"></table>
+          <h3>Training Data</h3>
+          <table id="trainingtable"></table>
           <div>
             <h3>Total error on training data</h3>
-            <p>
-              <div id="totalerror"></div>
-            </p>
+            <p>Value of the loss function (to be minimized):</p>
+            <div class="center-formula">
+              <p id="totalerror"></p>
+              <p class="formula"><span> = </span><span id="totalerrorterm"></span></p>
+            </div>
           </div>
         </div>
       </div>

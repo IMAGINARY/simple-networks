@@ -15,10 +15,14 @@
     p
       button#gradientdescent100 Adjust parameters with 100 gradient descent steps
   div.data
-    h3 Training Data (click on row to select as input)
-    table(style="border-collapse: collapse;")#trainingtable
+    h3 Training Data
+    table#trainingtable
     div
       h3 Total error on training data
-      p
-        #totalerror
+      p Value of the loss function (to be minimized):
+      .center-formula
+        p#totalerror
+        p.formula
+          span  = 
+          span#totalerrorterm
   

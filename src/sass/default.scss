@@ -16,6 +16,7 @@ svg {
 
 table {
   border-spacing: 0;
+  border-collapse: collapse;
 }
 
 tr:hover {
@@ -49,4 +50,17 @@ tr:hover {
 
 .training {
   width: 30vw;
+}
+
+#totalerror {
+  font-size: 50px;
+}
+
+.formula {
+  color: gray;
+}
+
+.center-formula > p {
+  margin: 0;
+  text-align: center;
 }

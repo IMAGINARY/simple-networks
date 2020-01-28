@@ -78,7 +78,8 @@ svg {
   height: 100%; }
 
 table {
-  border-spacing: 0; }
+  border-spacing: 0;
+  border-collapse: collapse; }
 
 tr:hover {
   opacity: 0.8; }
@@ -106,5 +107,15 @@ tr:hover {
 
 .training {
   width: 30vw; }
+
+#totalerror {
+  font-size: 50px; }
+
+.formula {
+  color: gray; }
+
+.center-formula > p {
+  margin: 0;
+  text-align: center; }
 
 /*# sourceMappingURL=default.css.map */
