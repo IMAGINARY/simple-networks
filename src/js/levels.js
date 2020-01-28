@@ -403,7 +403,7 @@ export class MaxLevel extends Level {
 
     nodes[0].addChild(nodes[2], 1);
     //nodes[0].addChild(nodes[3], 1);
-    nodes[1].addChild(nodes[2], -.2);
+    nodes[1].addChild(nodes[2], -0.2);
 
 
     nodes[2].addChild(nodes[3], 1);

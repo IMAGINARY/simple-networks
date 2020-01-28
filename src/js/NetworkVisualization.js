@@ -181,7 +181,7 @@ export class NetworkVisualization {
       .attr("fill-opacity", 0.6)
       .attr("stroke", "black")
       .attr("stroke-width", 2)
-      .attr("stroke-opacity", 0.6)
+      .attr("stroke-opacity", 0.6);
 
     const outputwidth = inputwidth;
 
