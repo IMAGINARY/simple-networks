@@ -1,49 +1,52 @@
-
-<!--out: index.html, pretty: true--><!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html>
+<html>
   <head>
-    <title>Predict the temperature given the cloudiness and being inside!</title>
-    <link rel="stylesheet" href="assets/css/default.css">
-    <script type="text/javascript" src="src/js/d3.js">//TODO</script>
-    <script src="src/js/LevelController.js" type="module"></script>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <meta property="og:url" content="">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Simple Networks">
+    <meta property="og:image" content="">
+    <meta name="description" content="Adjust your neural network.">
+    <meta property="og:description" content="Adjust your neural network.">
+    <link rel="icon" type="image/png" href="assets/img/favicon.png">
+    <!--link(href="https://fonts.googleapis.com/css?family=Ubuntu:300,400,700", rel="stylesheet")-->
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,600,700" rel="stylesheet">
+    <!--link(rel="stylesheet", href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css", integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T", crossorigin="anonymous")-->
+    <link rel="stylesheet" href="assets/css/default.css" media="all" type="text/css">
+    <title>Simple Networks
+    </title>
   </head>
   <body>
-    <div style="display:flex;">
-      <div>
-        <button id="backbutton">Previous Level</button>
-      </div>
-      <div>
-        <button id="nextbutton">Next Level</button>
-      </div>
-    </div>
-    <h1 id="leveltitle">Adjust the Neural Network</h1>
-    <p id="description"></p>
-    <svg>
-      <g id="input">
-        <g class="parameters"></g>
-        <g class="activations"></g>
-        <g class="values"></g>
-      </g>
-      <g id="outputs">
-        <g class="flow"></g>
-        <g class="target"></g>
-        <g class="values"></g>
-      </g>
-      <g id="edges">
-        <g class="edges"></g>
-        <g class="activations"></g>
-        <g class="gradient"></g>
-        <g class="parameters"></g>
-        <g class="normalized-parameters"></g>
-      </g>
-      <g id="nodes">
-        <g class="nodes"></g>
-        <g class="gradient"></g>
-        <g class="parameters"></g>
-      </g>
-      <g id="tooltip"></g>
-    </svg>
-    <div style="display:flex;">
+    <div class="main">
+      <h1 id="leveltitle">Adjust the Neural Network</h1>
+      <p id="description"></p>
+      <svg>
+        <g id="input">
+          <g class="parameters"></g>
+          <g class="activations"></g>
+          <g class="values"></g>
+        </g>
+        <g id="outputs">
+          <g class="flow"></g>
+          <g class="target"></g>
+          <g class="values"></g>
+        </g>
+        <g id="edges">
+          <g class="edges"></g>
+          <g class="activations"></g>
+          <g class="gradient"></g>
+          <g class="parameters"></g>
+          <g class="normalized-parameters"></g>
+        </g>
+        <g id="nodes">
+          <g class="nodes"></g>
+          <g class="gradient"></g>
+          <g class="parameters"></g>
+        </g>
+        <g id="tooltip"></g>
+      </svg>
+      <div style="display:flex;"></div>
       <div>
         <h3>Training Data (click on row to select as input)</h3>
         <table style="border-collapse: collapse;" id="trainingtable"></table>
@@ -65,5 +68,17 @@
         </p>
       </div>
     </div>
+    <div class="footer">
+      <div class="navigation">
+        <div>
+          <button id="backbutton">Previous Level</button>
+        </div>
+        <div>
+          <button id="nextbutton">Next Level</button>
+        </div>
+      </div>
+    </div>
+    <script type="text/javascript" src="src/js/d3.js"></script>
+    <script type="module" src="src/js/LevelController.js">//TODO: browserfy</script>
   </body>
 </html>
