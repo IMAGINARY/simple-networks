@@ -1,0 +1,23 @@
+.button {
+  font-family: Roboto;
+  font-style: normal;
+  font-size: 32px;
+  line-height: 37px;
+  font-weight: normal;
+  padding: 14px 28px;
+  background: white;
+  border: 2px solid #000000;
+  box-sizing: border-box;
+  border-radius: 10px;
+  margin: 25px;
+  pointer-events: all;
+}
+
+.button:hover {
+  background: #EEEEEE;
+}
+
+.button.selected {
+  font-weight: bold;
+  background: #E1E1E1;
+}

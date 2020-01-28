@@ -12,7 +12,7 @@ import {
 
 
 
-class LevelController {
+export class LevelController {
   constructor() {
     this.createEvents();
     this.levels = [ //generators for levels
@@ -30,7 +30,6 @@ class LevelController {
 
     this.updateFooter(0);
   }
-
   updateFooter(lid) {
     d3.select('#navcircles').selectAll("a").data(this.levels)
       .join("a")
@@ -104,5 +103,3 @@ class LevelController {
     this.clevel.show();
   }
 }
-
-new LevelController();

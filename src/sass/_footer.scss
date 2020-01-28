@@ -6,29 +6,6 @@
   z-index: 10;
 }
 
-.footer .navbutton {
-  font-family: Roboto;
-  font-style: normal;
-  font-size: 32px;
-  line-height: 37px;
-  font-weight: normal;
-  padding: 14px 28px;
-  background: white;
-  border: 2px solid #000000;
-  box-sizing: border-box;
-  border-radius: 10px;
-  margin: 25px;
-  pointer-events: all;
-}
-
-.footer .navbutton:hover {
-  background: #EEEEEE;
-}
-
-.footer .navbutton.selected {
-  font-weight: bold;
-  background: #E1E1E1;
-}
 
 .footer .international {
   background-image: url("assets/img/international.svg");

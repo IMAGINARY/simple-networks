@@ -50,23 +50,26 @@
           </g>
           <g id="tooltip"></g>
         </svg>
-      </div>
-      <div class="training">
-        <div class="helper">
-          <p>
-            <input type="checkbox" id="showgradient">
-            <label for="showgradient">show negative gradient of loss function</label>
-          </p>
-          <p>
-            <button id="gradientdescent">Adjust parameters with gradient descent</button>
-          </p>
-          <p>
-            <button id="gradientdescent100">Adjust parameters with 100 gradient descent steps</button>
-          </p>
+        <div class="helpme">
+          <div class="button" id="helpme">Help me</div>
         </div>
-        <div class="data">
+      </div>
+      <div class="train">
+        <div class="helper">
+          <div style="flex:1;">Show gradient of loss function
+            <label class="switch">
+              <input type="checkbox" id="showgradient"><span class="slider round"></span>
+            </label>
+          </div>
+          <div class="h-seperator"></div>
+          <div style="flex:1;">Train with gradient descent
+            <div class="controls"><a class="reset" href="#2" title="reset training"></a><a class="pause-resume pause" href="#2" title="pause/resume training (Adjust parameters with 100 gradient descent steps)" id="gradientdescentanimate"></a><a class="single-step" href="#2" title="train a single step (Adjust parameters with gradient descent)" id="gradientdescent"></a></div>
+          </div>
+        </div>
+        <div class="box">
           <h3>Training Data</h3>
           <table id="trainingtable"></table>
+          <div class="v-seperator"></div>
           <div>
             <h3>Total error on training data</h3>
             <p>Value of the loss function (to be minimized):</p>
@@ -82,13 +85,13 @@
       <!--.navigation-->
       <!--  a#backbutton.navbutton Previous Level-->
       <!--  a#nextbutton.navbutton Next Level-->
-      <div class="footerbox"><a class="navbutton" id="backbutton">Previous Level</a></div>
+      <div class="footerbox"><a class="button" id="backbutton">Previous Level</a></div>
       <div class="footerbox">
         <div class="circles" id="navcircles"><a class="circ selected" href="index.html#1"></a><a class="circ" href="index.html#2"></a><a class="circ" href="index.html#3"></a><a class="circ" href="index.html#4"></a></div>
       </div>
-      <div class="footerbox"><a class="navbutton" id="nextbutton">Next Level</a></div>
+      <div class="footerbox"><a class="button" id="nextbutton">Next Level</a></div>
     </div>
     <script type="text/javascript" src="src/js/d3.js"></script>
-    <script type="module" src="src/js/LevelController.js">//TODO: browserfy</script>
+    <script type="module" src="src/js/main.js">//TODO: browserfy</script>
   </body>
 </html>

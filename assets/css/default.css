@@ -5,27 +5,6 @@
   display: flex;
   z-index: 10; }
 
-.footer .navbutton {
-  font-family: Roboto;
-  font-style: normal;
-  font-size: 32px;
-  line-height: 37px;
-  font-weight: normal;
-  padding: 14px 28px;
-  background: white;
-  border: 2px solid #000000;
-  box-sizing: border-box;
-  border-radius: 10px;
-  margin: 25px;
-  pointer-events: all; }
-
-.footer .navbutton:hover {
-  background: #EEEEEE; }
-
-.footer .navbutton.selected {
-  font-weight: bold;
-  background: #E1E1E1; }
-
 .footer .international {
   background-image: url("assets/img/international.svg"); }
 
@@ -65,6 +44,256 @@
 .footer .footerbox:last-child > a {
   margin-left: auto; }
 
+.train {
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  font-size: 20px;
+  padding: 30px; }
+
+.train .helper {
+  visibility: hidden;
+  opacity: 0;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 5px; }
+
+.train .box {
+  background: #FFFFFF;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  padding: 28px; }
+
+.train .controls {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  height: 100px;
+  justify-content: center; }
+
+.train .controls > a {
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  width: 30%;
+  height: 60%; }
+
+.train .controls .reset {
+  visibility: hidden;
+  background-image: url("../../assets/img/reset.svg"); }
+
+.train .controls .pause-resume.resume {
+  background-image: url("../../assets/img/resume.svg"); }
+
+.train .controls .pause-resume.pause {
+  background-image: url("../../assets/img/pause.svg"); }
+
+.train .controls .single-step {
+  background-image: url("../../assets/img/step.svg"); }
+
+.train .box .info {
+  display: flex;
+  justify-content: space-around; }
+
+.train .h-seperator {
+  height: 100%;
+  border: 1px solid #C4C4C4;
+  margin: auto; }
+
+.train .v-seperator {
+  width: 100%;
+  border: 1px solid #C4C4C4;
+  margin: auto; }
+
+.train .number {
+  font-weight: 500;
+  font-size: 42px;
+  line-height: 49px;
+  text-align: center; }
+
+.train .button {
+  font-family: Roboto;
+  font-style: normal;
+  font-size: 32px;
+  line-height: 37px;
+  font-weight: normal;
+  padding: 14px 2px;
+  width: 100%;
+  background: white;
+  border: 2px solid #000000;
+  box-sizing: border-box;
+  border-radius: 10px;
+  /* overwrite if .menu is drawmode */
+  pointer-events: all;
+  z-index: 2; }
+
+.train .menu.drawmode .box .button {
+  background: #E1E1E1; }
+
+.train .button:hover {
+  background: #EEEEEE; }
+
+/* The switch - the box around the slider */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 34px; }
+
+.train .simplenetwork canvas {
+  width: 100%;
+  height: 100%; }
+
+.train .advanced {
+  pointer-events: all;
+  display: flex;
+  flex-direction: row;
+  padding: 30px; }
+
+.train .advanced .columns {
+  align-items: normal; }
+
+.train .advanced canvas {
+  height: 100%;
+  width: 30%; }
+
+.train .advanced .options {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  /* align-items: flex-start; */
+  padding: 30px; }
+
+.train select {
+  font-family: Roboto;
+  font-style: normal;
+  font-size: 32px;
+  line-height: 37px;
+  font-weight: normal;
+  padding: 14px 2px;
+  width: 100%;
+  background: white;
+  border: 2px solid #000000;
+  box-sizing: border-box;
+  border-radius: 10px;
+  /* overwrite if .menu is drawmode */
+  pointer-events: all;
+  z-index: 2; }
+
+.train input[type=range] {
+  width: 100%; }
+
+.button {
+  font-family: Roboto;
+  font-style: normal;
+  font-size: 32px;
+  line-height: 37px;
+  font-weight: normal;
+  padding: 14px 28px;
+  background: white;
+  border: 2px solid #000000;
+  box-sizing: border-box;
+  border-radius: 10px;
+  margin: 25px;
+  pointer-events: all; }
+
+.button:hover {
+  background: #EEEEEE; }
+
+.button.selected {
+  font-weight: bold;
+  background: #E1E1E1; }
+
+/* The slider */
+/* Hide default HTML checkbox */
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0; }
+
+.slider {
+  pointer-events: all;
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: 0.4s;
+  transition: 0.4s; }
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  -webkit-transition: 0.4s;
+  transition: 0.4s; }
+
+input:checked + .slider {
+  background-color: #888; }
+
+input:focus + .slider {
+  box-shadow: 0 0 1px #888; }
+
+input:checked + .slider:before {
+  -webkit-transform: translateX(26px);
+  -ms-transform: translateX(26px);
+  transform: translateX(26px); }
+
+/* Rounded sliders */
+.slider.round {
+  border-radius: 34px; }
+
+.slider.round:before {
+  border-radius: 50%; }
+
+input[type=range] {
+  -webkit-appearance: none;
+  background: none; }
+
+input[type=range]::-webkit-slider-runnable-track {
+  height: 34px;
+  background: #ccc;
+  border: none;
+  border-radius: 17px; }
+
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  border: none;
+  height: 26px;
+  width: 26px;
+  border-radius: 50%;
+  background: #fff;
+  margin-top: 4px;
+  position: relative; }
+
+input[type=range]:focus {
+  outline: none; }
+  input[type=range]:focus::-webkit-slider-thumb:after {
+    position: absolute;
+    top: -35px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #888;
+    border-radius: 5px;
+    padding: 5px 10px; }
+
+input[type=range]:focus::-webkit-slider-runnable-track {
+  background: #888; }
+
+.visible {
+  visibility: visible !important;
+  opacity: 1 !important; }
+
 body {
   font-family: "Roboto";
   user-select: none;
@@ -92,7 +321,7 @@ tr:hover {
   height: 0; }
 
 .network {
-  width: 70vw;
+  width: 75vw;
   position: relative; }
 
 .network .text {
@@ -105,8 +334,8 @@ tr:hover {
   column-fill: auto;
   column-count: 5; }
 
-.training {
-  width: 30vw; }
+.train {
+  width: 25vw; }
 
 #totalerror {
   font-size: 50px; }
@@ -117,5 +346,11 @@ tr:hover {
 .center-formula > p {
   margin: 0;
   text-align: center; }
+
+.helpme {
+  position: absolute;
+  top: 80px;
+  right: -80px;
+  transform: rotate(-90deg); }
 
 /*# sourceMappingURL=default.css.map */

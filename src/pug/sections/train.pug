@@ -1,0 +1,23 @@
+.helper
+  div(style="flex:1;") Show gradient of loss function
+    label.switch
+      input(type="checkbox")#showgradient
+      span.slider.round
+  .h-seperator
+  div(style="flex:1;") Train with gradient descent
+    .controls
+      a(href="#2", title="reset training").reset
+      a(href="#2", title="pause/resume training (Adjust parameters with 100 gradient descent steps)").pause-resume.pause#gradientdescentanimate
+      a(href="#2", title="train a single step (Adjust parameters with gradient descent)").single-step#gradientdescent
+.box
+  h3 Training Data
+  table#trainingtable
+  .v-seperator
+  div
+    h3 Total error on training data
+    p Value of the loss function (to be minimized):
+    .center-formula
+      p#totalerror
+      p.formula
+        span  = 
+        span#totalerrorterm

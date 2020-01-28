@@ -1,4 +1,14 @@
 @import "footer";
+@import "train";
+@import "button";
+@import "slider";
+
+
+.visible {
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
 
 body {
   font-family: "Roboto";
@@ -32,7 +42,7 @@ tr:hover {
 }
 
 .network {
-  width: 70vw;
+  width: 75vw;
   position: relative;
 }
 
@@ -48,8 +58,8 @@ tr:hover {
   column-count: 5;
 }
 
-.training {
-  width: 30vw;
+.train {
+  width: 25vw;
 }
 
 #totalerror {
@@ -63,4 +73,12 @@ tr:hover {
 .center-formula > p {
   margin: 0;
   text-align: center;
+}
+
+
+.helpme {
+  position: absolute;
+  top: 80px;
+  right: -80px;
+  transform: rotate(-90deg);
 }

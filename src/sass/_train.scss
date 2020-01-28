@@ -1,0 +1,165 @@
+.train {
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  font-size: 20px;
+  padding: 30px;
+}
+
+.train .helper {
+  visibility: hidden;
+  opacity: 0;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 5px;
+}
+
+.train .box {
+  background: #FFFFFF;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  padding: 28px;
+}
+
+.train .controls {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  height: 100px;
+  justify-content: center;
+}
+
+.train .controls > a {
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  width: 30%;
+  height: 60%;
+}
+
+.train .controls .reset {
+  visibility: hidden;
+  background-image: url("../../assets/img/reset.svg");
+}
+
+.train .controls .pause-resume.resume {
+  background-image: url("../../assets/img/resume.svg");
+}
+
+.train .controls .pause-resume.pause {
+  background-image: url("../../assets/img/pause.svg");
+}
+
+.train .controls .single-step {
+  background-image: url("../../assets/img/step.svg");
+}
+
+.train .box .info {
+  display: flex;
+  justify-content: space-around;
+}
+
+.train .h-seperator {
+  height: 100%;
+  border: 1px solid #C4C4C4;
+  margin: auto;
+}
+
+.train .v-seperator {
+  width: 100%;
+  border: 1px solid #C4C4C4;
+  margin: auto;
+}
+
+.train .number {
+  font-weight: 500;
+  font-size: 42px;
+  line-height: 49px;
+  text-align: center;
+}
+
+.train .button {
+  font-family: Roboto;
+  font-style: normal;
+  font-size: 32px;
+  line-height: 37px;
+  font-weight: normal;
+  padding: 14px 2px;
+  width: 100%;
+  background: white;
+  border: 2px solid #000000;
+  box-sizing: border-box;
+  border-radius: 10px;
+  /* overwrite if .menu is drawmode */
+  pointer-events: all;
+  z-index: 2;
+}
+
+.train .menu.drawmode .box .button {
+  background: #E1E1E1;
+}
+
+.train .button:hover {
+  background: #EEEEEE;
+}
+/* The switch - the box around the slider */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 34px;
+}
+
+.train .simplenetwork canvas {
+  width: 100%;
+  height: 100%;
+}
+
+.train .advanced {
+  pointer-events: all;
+  display: flex;
+  flex-direction: row;
+  padding: 30px;
+}
+
+.train .advanced .columns {
+  align-items: normal;
+}
+
+.train .advanced canvas {
+  height: 100%;
+  width: 30%;
+}
+
+.train .advanced .options {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  /* align-items: flex-start; */
+  padding: 30px;
+}
+
+.train select {
+  font-family: Roboto;
+  font-style: normal;
+  font-size: 32px;
+  line-height: 37px;
+  font-weight: normal;
+  padding: 14px 2px;
+  width: 100%;
+  background: white;
+  border: 2px solid #000000;
+  box-sizing: border-box;
+  border-radius: 10px;
+  /* overwrite if .menu is drawmode */
+  pointer-events: all;
+  z-index: 2;
+}
+
+.train input[type=range] {
+  width: 100%;
+}
