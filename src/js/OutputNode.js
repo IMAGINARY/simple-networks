@@ -40,4 +40,9 @@ export class OutputNode extends Node {
     this.getdActivation = this.getdActivationBackup;
     updateDynamicVariables();
   }
+
+  errorcolor() {
+    const n = this;
+    return d3.scaleSequential().domain([1, 0]).interpolator(d3.interpolateRdYlGn)(Math.abs(n.target - n.getActivation()));
+  }
 }

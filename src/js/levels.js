@@ -279,7 +279,7 @@ export class FahrenheitLevel extends Level {
     nodes[0].y = 500;
     nodes[0].allownegative = false;
     nodes[1].x = 500;
-    nodes[1].y = 550;
+    nodes[1].y = 450;
     nodes[2].x = 800;
     nodes[2].y = 500;
 

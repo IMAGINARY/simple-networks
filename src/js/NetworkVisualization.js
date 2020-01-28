@@ -72,9 +72,12 @@ export class NetworkVisualization {
       .join("circle")
       .attr("cx", (d) => d.x)
       .attr("cy", (d) => d.y)
-      .attr("r", 50)
-      .attr("fill", "gray")
-      .attr("fill-opacity", 0.5);
+      .attr("r", 95)
+      .attr("fill", d => d.constructor.name == "InputNode" ? "orange" : (d.constructor.name == "OutputNode" ? d.errorcolor() : "black"))
+      .attr("stroke", "black")
+      .attr("stroke-width", 3)
+      .attr("fill-opacity", 0.2)
+      .attr("pointer-events", "none");
 
 
     d3.select("#nodes").select(".parameters").selectAll("circle").data(nodes.filter(node => node.adjustable))
@@ -197,7 +200,7 @@ export class NetworkVisualization {
       .attr("x", n => n.x + 50)
       .attr("y", n => n.y - unit * n.target)
       .attr("opacity", 1)
-      .attr("fill", n => d3.scaleSequential().domain([1, 0]).interpolator(d3.interpolateRdYlGn)(Math.abs(n.target - n.getActivation())));
+      .attr("fill", n => n.errorcolor());
 
     d3.select("#edges").select(".edges").selectAll("path").data(edges).join("path")
       .attr("d", edge => {
