@@ -74,13 +74,29 @@ body {
   user-select: none; }
 
 svg {
-  width: 95vw;
-  height: 70vh; }
+  width: 100%;
+  height: 100%; }
 
 table {
   border-spacing: 0; }
 
 tr:hover {
   opacity: 0.8; }
+
+#main {
+  display: flex;
+  flex-direction: row;
+  width: 100vw;
+  height: 100vh; }
+
+.network {
+  width: 70vw;
+  position: relative; }
+
+.network .text {
+  position: absolute; }
+
+.training {
+  width: 30vw; }
 
 /*# sourceMappingURL=default.css.map */
