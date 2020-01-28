@@ -1,0 +1,55 @@
+//out: index.html, pretty: true
+
+doctype html
+html(lang="en")
+  head
+    title= "Predict the temperature given the cloudiness and being inside!"
+    link(rel='stylesheet', href='assets/css/default.css')
+    script(type='text/javascript', src="src/js/d3.js") //TODO
+    script(src="src/js/LevelController.js", type="module")
+
+  body
+    div(style="display:flex;")
+      div
+        button#backbutton Previous Level
+      div
+        button#nextbutton Next Level
+    
+    h1#leveltitle Adjust the Neural Network
+    p#description
+    
+    svg
+      g#input
+        g.parameters
+        g.activations
+        g.values
+      g#outputs
+        g.flow
+        g.target
+        g.values
+      g#edges
+        g.edges
+        g.activations
+        g.gradient
+        g.parameters
+        g.normalized-parameters
+      g#nodes
+        g.nodes
+        g.gradient
+        g.parameters
+      g#tooltip
+    div(style="display:flex;")
+      div
+        h3 Training Data (click on row to select as input)
+        table(style="border-collapse: collapse;")#trainingtable
+      div
+        h3 Total error on training data
+        p
+          #totalerror
+        p
+          input(type="checkbox")#showgradient
+          label(for="showgradient") show negative gradient of loss function
+        p
+          button#gradientdescent Adjust parameters with gradient descent
+        p
+          button#gradientdescent100 Adjust parameters with 100 gradient descent steps

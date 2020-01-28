@@ -1,0 +1,26 @@
+//out: playground.html, pretty: true
+
+doctype html
+html(lang="en")
+  head
+    title= "A playground for a simple Network"
+    link(rel='stylesheet', href='assets/css/default.css')
+    script(type='text/javascript', src="src/js/d3.js")
+    script(src="src/js/playground.js", type="module")
+  body
+    svg
+      g#input
+        g.parameters
+        g.activations
+      g#outputs
+      g#edges
+        g.edges
+        g.activations
+        g.gradient
+        g.parameters
+        g.normalized-parameters
+      g#nodes
+        g.nodes
+        g.gradient
+        g.parameters
+      

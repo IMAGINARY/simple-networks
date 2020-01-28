@@ -1,0 +1,17 @@
+* {
+  margin: 0px;
+  padding: 3px;
+  border: 0px;
+  font-family: monospace; }
+
+svg {
+  width: 95vw;
+  height: 70vh; }
+
+table {
+  border-spacing: 0px; }
+
+tr:hover {
+  opacity: .8; }
+
+/*# sourceMappingURL=default.css.map */

@@ -1,0 +1,36 @@
+{
+  "name": "mnist-exhibit",
+  "version": "0.1.0",
+  "description": "A widget that trains a neuronal network by the MNIST database",
+  "repository": "github:IMAGINARY/mnist-exhibit",
+  "author": "Aaron Montag <aaron.montag@imaginary.org>",
+  "private": true,
+  "engines": {
+    "node": "^10.14.0"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@babel/core": "^7.4.5",
+    "@babel/preset-env": "^7.4.5",
+    "babelify": "^10.0.0",
+    "bootstrap": "^4.3.1",
+    "browserify": "^16.2.3",
+    "core-js": "^3.3.6",
+    "gulp": "^4.0.2",
+    "gulp-babel": "^8.0.0",
+    "gulp-pug": "^4.0.1",
+    "gulp-rename": "^1.4.0",
+    "gulp-sass": "^4.0.2",
+    "gulp-sourcemaps": "^2.6.5",
+    "gulp-touch-fd": "^2.0.0",
+    "gulp-uglify": "^3.0.2",
+    "node-sass": "^4.12.0",
+    "regenerator-runtime": "^0.13.3",
+    "vinyl-buffer": "^1.0.1",
+    "vinyl-source-stream": "^2.0.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "gulp build"
+  }
+}

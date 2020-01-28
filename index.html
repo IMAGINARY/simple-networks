@@ -1,0 +1,69 @@
+
+<!--out: index.html, pretty: true--><!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Predict the temperature given the cloudiness and being inside!</title>
+    <link rel="stylesheet" href="assets/css/default.css">
+    <script type="text/javascript" src="src/js/d3.js">//TODO</script>
+    <script src="src/js/LevelController.js" type="module"></script>
+  </head>
+  <body>
+    <div style="display:flex;">
+      <div>
+        <button id="backbutton">Previous Level</button>
+      </div>
+      <div>
+        <button id="nextbutton">Next Level</button>
+      </div>
+    </div>
+    <h1 id="leveltitle">Adjust the Neural Network</h1>
+    <p id="description"></p>
+    <svg>
+      <g id="input">
+        <g class="parameters"></g>
+        <g class="activations"></g>
+        <g class="values"></g>
+      </g>
+      <g id="outputs">
+        <g class="flow"></g>
+        <g class="target"></g>
+        <g class="values"></g>
+      </g>
+      <g id="edges">
+        <g class="edges"></g>
+        <g class="activations"></g>
+        <g class="gradient"></g>
+        <g class="parameters"></g>
+        <g class="normalized-parameters"></g>
+      </g>
+      <g id="nodes">
+        <g class="nodes"></g>
+        <g class="gradient"></g>
+        <g class="parameters"></g>
+      </g>
+      <g id="tooltip"></g>
+    </svg>
+    <div style="display:flex;">
+      <div>
+        <h3>Training Data (click on row to select as input)</h3>
+        <table style="border-collapse: collapse;" id="trainingtable"></table>
+      </div>
+      <div>
+        <h3>Total error on training data</h3>
+        <p>
+          <div id="totalerror"></div>
+        </p>
+        <p>
+          <input type="checkbox" id="showgradient">
+          <label for="showgradient">show negative gradient of loss function</label>
+        </p>
+        <p>
+          <button id="gradientdescent">Adjust parameters with gradient descent</button>
+        </p>
+        <p>
+          <button id="gradientdescent100">Adjust parameters with 100 gradient descent steps</button>
+        </p>
+      </div>
+    </div>
+  </body>
+</html>
