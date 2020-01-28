@@ -69,14 +69,14 @@
       </div>
     </div>
     <div class="footer">
-      <div class="navigation">
-        <div>
-          <button id="backbutton">Previous Level</button>
-        </div>
-        <div>
-          <button id="nextbutton">Next Level</button>
-        </div>
+      <!--.navigation-->
+      <!--  a#backbutton.navbutton Previous Level-->
+      <!--  a#nextbutton.navbutton Next Level-->
+      <div class="footerbox"><a class="navbutton" id="backbutton">Previous Level</a></div>
+      <div class="footerbox">
+        <div class="circles" id="navcircles"><a class="circ selected" href="index.html#1"></a><a class="circ" href="index.html#2"></a><a class="circ" href="index.html#3"></a><a class="circ" href="index.html#4"></a></div>
       </div>
+      <div class="footerbox"><a class="navbutton" id="nextbutton">Next Level</a></div>
     </div>
     <script type="text/javascript" src="src/js/d3.js"></script>
     <script type="module" src="src/js/LevelController.js">//TODO: browserfy</script>

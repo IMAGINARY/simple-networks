@@ -1,8 +1,8 @@
-* {
-  margin: 0px;
-  padding: 3px;
-  border: 0px;
-  font-family: monospace;
+@import "footer";
+
+body {
+  font-family: "Roboto";
+  user-select: none;
 }
 
 svg {
@@ -11,9 +11,9 @@ svg {
 }
 
 table {
-  border-spacing: 0px;
+  border-spacing: 0;
 }
 
 tr:hover {
-  opacity: .8;
+  opacity: 0.8;
 }

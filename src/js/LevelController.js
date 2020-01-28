@@ -13,7 +13,6 @@ import {
 
 
 class LevelController {
-
   constructor() {
     this.createEvents();
     this.levels = [ //generators for levels
@@ -28,6 +27,19 @@ class LevelController {
       () => new XorLevel()
     ];
     this.NUMBER_OF_LEVELS = this.levels.length;
+
+    this.updateFooter(0);
+  }
+
+  updateFooter(lid) {
+    d3.select('#navcircles').selectAll("a").data(this.levels)
+      .join("a")
+      .attr("href", (d, i) => `index.html#${i+1}`)
+      .classed("circ", true)
+      .classed("selected", (d, i) => i == lid);
+
+    d3.select('#backbutton').style("visibility", lid == 0 ? "hidden" : "visible");
+    d3.select('#nextbutton').style("visibility", lid == this.NUMBER_OF_LEVELS - 1 ? "hidden" : "visible");
   }
 
   createEvents() {
@@ -83,7 +95,8 @@ class LevelController {
   }
 
   showLevel(lid) {
-    if(this.clevel) {
+    this.updateFooter(lid);
+    if (this.clevel) {
       this.clevel.hide();
     }
     //regenerate level
