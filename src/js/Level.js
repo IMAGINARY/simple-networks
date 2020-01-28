@@ -97,8 +97,12 @@ export class Level {
 
     this.updatetable();
 
+    const closs = this.network.loss(this.trainXs, this.trainYs);
     d3.select("#totalerror")
-      .text(this.network.loss(this.trainXs, this.trainYs).toFixed(2));
+      .text(closs.toFixed(2));
+
+    d3.select("#nextbutton").classed("selected", closs < .02);
+
     d3.select("#totalerrorterm")
       .text(this.rows.map(r => `(${r[r.length-1]} - ${r[r.length-2]})²`).join(" + "));
 
