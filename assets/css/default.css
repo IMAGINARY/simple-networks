@@ -71,7 +71,8 @@
 
 body {
   font-family: "Roboto";
-  user-select: none; }
+  user-select: none;
+  margin: 0px; }
 
 svg {
   width: 100%;
@@ -94,7 +95,13 @@ tr:hover {
   position: relative; }
 
 .network .text {
-  position: absolute; }
+  position: absolute;
+  padding: 20px; }
+
+#description {
+  height: 200px;
+  column-fill: auto;
+  column-count: 5; }
 
 .training {
   width: 30vw; }

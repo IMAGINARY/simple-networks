@@ -3,6 +3,7 @@
 body {
   font-family: "Roboto";
   user-select: none;
+  margin: 0px;
 }
 
 svg {
@@ -32,6 +33,13 @@ tr:hover {
 
 .network .text {
   position: absolute;
+  padding: 20px;
+}
+
+#description {
+  height: 200px;
+  column-fill: auto;
+  column-count: 5;
 }
 
 .training {
