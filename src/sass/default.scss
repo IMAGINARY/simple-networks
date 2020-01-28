@@ -11,7 +11,7 @@ body {
 
 svg {
   width: 100%;
-  height: -webkit-fill-available;
+  height: 100%;
 }
 
 table {
@@ -27,6 +27,7 @@ tr:hover {
   display: flex;
   flex-direction: row;
   width: 100vw;
+  height: 0;
 }
 
 .network {
@@ -37,6 +38,7 @@ tr:hover {
 .network .text {
   position: absolute;
   padding: 20px;
+  pointer-events: none;
 }
 
 #description {

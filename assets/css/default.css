@@ -75,8 +75,7 @@ body {
 
 svg {
   width: 100%;
-  height: -webkit-fill-available;
-  }
+  height: 100%; }
 
 table {
   border-spacing: 0; }
@@ -88,7 +87,8 @@ tr:hover {
   flex: 1;
   display: flex;
   flex-direction: row;
-  width: 100vw; }
+  width: 100vw;
+  height: 0; }
 
 .network {
   width: 70vw;
@@ -96,7 +96,8 @@ tr:hover {
 
 .network .text {
   position: absolute;
-  padding: 20px; }
+  padding: 20px;
+  pointer-events: none; }
 
 #description {
   height: 200px;
