@@ -34,10 +34,10 @@ export class TutorialLevelA extends Level {
       new OutputNode()
     ];
     nodes[0].x = 200;
-    nodes[0].y = 200;
+    nodes[0].y = 500;
     nodes[0].allownegative = true;
-    nodes[1].x = 700;
-    nodes[1].y = 300;
+    nodes[1].x = 800;
+    nodes[1].y = 550;
     nodes[0].addChild(nodes[1], 1);
 
     const f = c => ((c * 2));
@@ -76,12 +76,12 @@ export class TutorialLevelB extends Level {
     ];
     nodes[0].allownegative = true;
     nodes[0].x = 200;
-    nodes[0].y = 200;
-    nodes[1].x = 450;
-    nodes[1].y = 250;
+    nodes[0].y = 500;
+    nodes[1].x = 500;
+    nodes[1].y = 550;
     nodes[1].adjustable = false;
-    nodes[2].x = 700;
-    nodes[2].y = 300;
+    nodes[2].x = 800;
+    nodes[2].y = 500;
     nodes[0].addChild(nodes[1], 2);
     nodes[1].addChild(nodes[2], -1);
 
@@ -121,12 +121,12 @@ export class TutorialLevelC extends Level {
     ];
     nodes[0].allownegative = true;
     nodes[0].x = 200;
-    nodes[0].y = 200;
-    nodes[1].x = 450;
-    nodes[1].y = 250;
+    nodes[0].y = 500;
+    nodes[1].x = 500;
+    nodes[1].y = 550;
     nodes[1].adjustable = true;
-    nodes[2].x = 700;
-    nodes[2].y = 300;
+    nodes[2].x = 800;
+    nodes[2].y = 500;
     nodes[0].addChild(nodes[1], 1);
     nodes[1].addChild(nodes[2], 1);
 
@@ -176,16 +176,16 @@ export class WeatherLevel extends Level {
     }
 
     //output from console
-    nodes[0].x = 155;
-    nodes[0].y = 184;
-    nodes[1].x = 161;
-    nodes[1].y = 315.6588393923159;
-    nodes[2].x = 507;
-    nodes[2].y = 122.3718970730273;
-    nodes[3].x = 611;
-    nodes[3].y = 354.64480032239464;
-    nodes[4].x = 803;
-    nodes[4].y = 232.64302901347446;
+    nodes[0].x = 200;
+    nodes[0].y = 400;
+    nodes[1].x = 200;
+    nodes[1].y = 600;
+    nodes[2].x = 509;
+    nodes[2].y = 300;
+    nodes[3].x = 500;
+    nodes[3].y = 700;
+    nodes[4].x = 800;
+    nodes[4].y = 500;
 
     nodes[0].addChild(nodes[2], 1);
     nodes[0].addChild(nodes[3], 1);
@@ -275,13 +275,13 @@ export class FahrenheitLevel extends Level {
       nodes[[1][i]].bias = 1 + 2 * (Math.random());
     }
 
-    nodes[0].x = 155;
-    nodes[0].y = 300;
+    nodes[0].x = 200;
+    nodes[0].y = 500;
     nodes[0].allownegative = false;
-    nodes[1].x = 507;
-    nodes[1].y = 300;
-    nodes[2].x = 803;
-    nodes[2].y = 300;
+    nodes[1].x = 500;
+    nodes[1].y = 550;
+    nodes[2].x = 800;
+    nodes[2].y = 500;
 
     nodes[0].addChild(nodes[1], 1);
     nodes[1].addChild(nodes[2], 1);
@@ -326,16 +326,16 @@ export class SumLevel extends Level {
 
     nodes[2].bias = 1;
 
-    nodes[0].x = 155;
-    nodes[0].y = 150;
+    nodes[0].x = 200;
+    nodes[0].y = 300;
     nodes[0].allownegative = false;
-    nodes[1].x = 110;
-    nodes[1].y = 300;
+    nodes[1].x = 200;
+    nodes[1].y = 700;
     nodes[1].allownegative = false;
-    nodes[2].x = 507;
-    nodes[2].y = 300;
-    nodes[3].x = 803;
-    nodes[3].y = 300;
+    nodes[2].x = 500;
+    nodes[2].y = 500;
+    nodes[3].x = 800;
+    nodes[3].y = 500;
 
     nodes[0].addChild(nodes[2], 1);
     nodes[1].addChild(nodes[2], 1);
@@ -390,17 +390,16 @@ export class MaxLevel extends Level {
       nodes[[2][i]].bias = 2 * (Math.random() - 0.5);
     }
 
-    //output from console
-    nodes[0].x = 250;
-    nodes[0].y = 150;
-    nodes[1].x = 100;
-    nodes[1].y = 315.6588393923159;
-    nodes[2].x = 507;
-    nodes[2].y = 180;
-    //nodes[3].x = 611;
-    //nodes[3].y = 354.64480032239464;
-    nodes[3].x = 803;
-    nodes[3].y = 300.64302901347446;
+
+    nodes[0].x = 200;
+    nodes[0].y = 350;
+    nodes[1].x = 200;
+    nodes[1].y = 650;
+    nodes[2].x = 500;
+    nodes[2].y = 400;
+
+    nodes[3].x = 800;
+    nodes[3].y = 500;
 
     nodes[0].addChild(nodes[2], 1);
     //nodes[0].addChild(nodes[3], 1);
@@ -454,19 +453,19 @@ export class XorLevel extends Level {
       nodes[[2, 3, 4][i]].bias = 2 * (Math.random() - 0.5);
     }
 
-    //output from console
-    nodes[0].x = 220;
-    nodes[0].y = 184;
-    nodes[1].x = 70;
-    nodes[1].y = 400.6588393923159;
-    nodes[2].x = 507;
-    nodes[2].y = 122.3718970730273;
-    nodes[3].x = 580;
-    nodes[3].y = 305;
-    nodes[4].x = 490;
-    nodes[4].y = 450;
-    nodes[5].x = 803;
-    nodes[5].y = 300.64302901347446;
+
+    nodes[0].x = 200;
+    nodes[0].y = 400;
+    nodes[1].x = 200;
+    nodes[1].y = 600;
+    nodes[2].x = 500;
+    nodes[2].y = 300;
+    nodes[3].x = 500;
+    nodes[3].y = 500;
+    nodes[4].x = 500;
+    nodes[4].y = 700;
+    nodes[5].x = 800;
+    nodes[5].y = 500;
 
     nodes[0].addChild(nodes[2], 1);
     nodes[0].addChild(nodes[3], 1);
@@ -539,19 +538,19 @@ export class AvgLevel extends Level {
 
     //output from console
     nodes[0].x = 200;
-    nodes[0].y = 184;
+    nodes[0].y = 300;
     nodes[0].allownegative = false;
-    nodes[1].x = 100;
-    nodes[1].y = 315.6588393923159;
+    nodes[1].x = 200;
+    nodes[1].y = 500;
     nodes[1].allownegative = false;
-    nodes[2].x = 155;
-    nodes[2].y = 420;
+    nodes[2].x = 200;
+    nodes[2].y = 700;
     nodes[2].allownegative = false;
 
-    nodes[3].x = 611;
-    nodes[3].y = 354.64480032239464;
-    nodes[4].x = 803;
-    nodes[4].y = 232.64302901347446;
+    nodes[3].x = 500;
+    nodes[3].y = 500;
+    nodes[4].x = 800;
+    nodes[4].y = 500;
 
     nodes[0].addChild(nodes[3], 1);
     nodes[1].addChild(nodes[3], 1);

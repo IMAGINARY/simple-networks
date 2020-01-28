@@ -1,25 +1,24 @@
 
-#main
-  .network
-    .text
-      h1#leveltitle Adjust the Neural Network
-      p#description
-    include network
+.network
+  .text
+    h1#leveltitle Adjust the Neural Network
+    p#description
+  include network
 
-  .training
-    div.helper
+.training
+  div.helper
+    p
+      input(type="checkbox")#showgradient
+      label(for="showgradient") show negative gradient of loss function
+    p
+      button#gradientdescent Adjust parameters with gradient descent
+    p
+      button#gradientdescent100 Adjust parameters with 100 gradient descent steps
+  div.data
+    h3 Training Data (click on row to select as input)
+    table(style="border-collapse: collapse;")#trainingtable
+    div
+      h3 Total error on training data
       p
-        input(type="checkbox")#showgradient
-        label(for="showgradient") show negative gradient of loss function
-      p
-        button#gradientdescent Adjust parameters with gradient descent
-      p
-        button#gradientdescent100 Adjust parameters with 100 gradient descent steps
-    div.data
-      h3 Training Data (click on row to select as input)
-      table(style="border-collapse: collapse;")#trainingtable
-      div
-        h3 Total error on training data
-        p
-          #totalerror
-    
+        #totalerror
+  
