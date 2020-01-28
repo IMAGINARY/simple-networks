@@ -102,7 +102,7 @@ export class NetworkVisualization {
       .attr("stroke-width", 2)
       .attr("fill", "none");
 
-    d3.select("#edges").select(".gradient").selectAll("path").data(edges.filter(edge => edge.dloss != 0))
+    d3.select("#edges").select(".normalized-gradient").selectAll("path").data(edges.filter(edge => edge.dloss != 0))
       .join("path")
       .attr("d", (edge) => {
         const p = d3.path();
@@ -115,7 +115,25 @@ export class NetworkVisualization {
       .attr("marker-end", "url(#triangle)")
       .attr("stroke", "orange")
       .attr("stroke-width", 2)
-      .attr("fill", "none");
+      .attr("fill", "none")
+      .style("opacity", edge => 0.5 - Math.abs(edge.from.getActivation()));
+
+
+    d3.select("#edges").select(".gradient").selectAll("path").data(edges.filter(edge => edge.dloss != 0))
+      .join("path")
+      .attr("d", (edge) => {
+        const p = d3.path();
+        const x = edge.parameterPosition()[0];
+        const y = edge.parameterPosition()[1];
+        p.moveTo(x, y);
+        p.lineTo(x, y + unit * (edge.dloss) / edge.from.getActivation());
+        return p;
+      })
+      .attr("marker-end", "url(#triangle)")
+      .attr("stroke", "orange")
+      .attr("stroke-width", 2)
+      .attr("fill", "none")
+      .style("opacity", edge => Math.min(0.5, Math.abs(edge.from.getActivation())));
 
 
     d3.select("#edges").select(".parameters").selectAll("circle").data(edges)
