@@ -234,8 +234,9 @@ export class WeatherLevel extends Level {
       }
     ];
 
-    nodes[0].format = cls => `cloudiness: ${cls.toFixed(1)}`;
-    nodes[1].format = v => Math.round(v) == 1 ? '1 (inside)' : '0 (outside)';
+    //nodes[0].format = cls => `cloudiness: ${cls.toFixed(1)}`;
+    //nodes[1].format = v => Math.round(v) == 1 ? '1 (inside)' : '0 (outside)';
+    nodes[1].format = v => v.toFixed(0);
     nodes[4].format = temp => `${(temp*10).toFixed(0)}°C`;
     super("Can you predict the temperature given the cloudiness and the fact of being inside?", nw,
       ["amount of clouds", "inside?"], trainingdata.map(td => [td.cloudiness, td.inside]),
@@ -249,7 +250,6 @@ export class WeatherLevel extends Level {
       nodes[0].setUserParameter(Math.min(1, Math.max(0, (nodes[0].getActivation()))));
       //round input
       nodes[1].setUserParameter(Math.min(1, Math.max(0, Math.round(nodes[1].getActivation()))));
-
     };
 
   }
