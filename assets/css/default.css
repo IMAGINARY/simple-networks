@@ -46,10 +46,10 @@
 
 .train {
   display: flex;
-  justify-content: center;
   flex-direction: column;
   font-size: 20px;
-  padding: 30px; }
+  padding: 30px;
+  justify-content: space-between; }
 
 .train .helper {
   visibility: hidden;
@@ -57,7 +57,7 @@
   display: flex;
   flex-direction: row;
   align-items: center;
-  padding: 5px; }
+  text-align: center; }
 
 .train .box {
   background: #FFFFFF;
@@ -74,7 +74,7 @@
   height: 100px;
   justify-content: center; }
 
-.train .controls > a {
+.train .controls > div {
   background-size: contain;
   background-position: center;
   background-repeat: no-repeat;
@@ -82,7 +82,7 @@
   height: 60%; }
 
 .train .controls .reset {
-  visibility: hidden;
+  /*visibility: hidden;*/
   background-image: url("../../assets/img/reset.svg"); }
 
 .train .controls .pause-resume.resume {

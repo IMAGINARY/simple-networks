@@ -1,9 +1,9 @@
 .train {
   display: flex;
-  justify-content: center;
   flex-direction: column;
   font-size: 20px;
   padding: 30px;
+  justify-content: space-between;
 }
 
 .train .helper {
@@ -12,7 +12,7 @@
   display: flex;
   flex-direction: row;
   align-items: center;
-  padding: 5px;
+  text-align: center;
 }
 
 .train .box {
@@ -32,7 +32,7 @@
   justify-content: center;
 }
 
-.train .controls > a {
+.train .controls > div {
   background-size: contain;
   background-position: center;
   background-repeat: no-repeat;
@@ -41,7 +41,7 @@
 }
 
 .train .controls .reset {
-  visibility: hidden;
+  /*visibility: hidden;*/
   background-image: url("../../assets/img/reset.svg");
 }
 

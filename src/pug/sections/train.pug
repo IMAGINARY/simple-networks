@@ -6,9 +6,9 @@
   .h-seperator
   div(style="flex:1;") Train with gradient descent
     .controls
-      a(href="#2", title="reset training").reset
-      a(href="#2", title="pause/resume training (Adjust parameters with 100 gradient descent steps)").pause-resume.pause#gradientdescentanimate
-      a(href="#2", title="train a single step (Adjust parameters with gradient descent)").single-step#gradientdescent
+      div(title="reset training").reset
+      div(title="pause/resume training (continious gradient descent steps)").pause-resume.pause
+      div(title="train a single step (Adjust parameters with gradient descent)").single-step
 .box
   h3 Training Data
   table#trainingtable

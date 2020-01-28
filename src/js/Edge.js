@@ -77,4 +77,12 @@ export class Edge {
       return dactivation;
     });
   }
+
+  backup() {
+    this.backupWeight = this.weight;
+  }
+
+  restore() {
+    this.weight = this.backupWeight;
+  }
 }

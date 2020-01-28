@@ -21,6 +21,9 @@ export class Level {
     this.ylabels = ylabels;
 
     this.description = description || "";
+    this.gradientdescentactive = false;
+
+    this.network.backup();
   }
 
   show() {
@@ -44,16 +47,17 @@ export class Level {
 
     this.createTable();
 
-    d3.select('#gradientdescent').on('click', () => {
+    document.querySelector('.reset').onclick = (() => {
+      this.network.restore();
+    });
+
+    document.querySelector('.single-step').onclick = (() => {
+      this.gradientdescentactive = false;
       this.network.gradientstep(this.trainXs, this.trainYs, 0.01);
     });
 
-    d3.select('#gradientdescent100').on('click', () => {
-      for (let i = 0; i < 1000; i++) { //animation
-        setTimeout(() => this.network.gradientstep(this.trainXs, this.trainYs, 0.001),
-          i * 2
-        );
-      }
+    document.querySelector('.pause-resume').onclick = (() => {
+      this.gradientdescentactive = !this.gradientdescentactive;
     });
   }
 
@@ -73,11 +77,24 @@ export class Level {
       });
   }
 
-  animatecallback() { //This function might be suitably overwritten by inherited levels
+  animatecallback() {
+    if (this.animatestep) this.animatestep(); //This function might be suitably overwritten by inherited levels
+    if (this.gradientdescentactive) {
+      for (let k = 0; k < 10; k++)
+        this.network.gradientstep(this.trainXs, this.trainYs, 0.001);
+    }
     this.updateUI();
   }
 
   updateUI() {
+    if (this.gradientdescentactive && d3.select('#gradientanimating')) {
+      document.querySelector('.pause-resume').classList.add("pause");
+      document.querySelector('.pause-resume').classList.remove("resume");
+    } else {
+      document.querySelector('.pause-resume').classList.remove("pause");
+      document.querySelector('.pause-resume').classList.add("resume");
+    }
+
     this.updatetable();
 
     d3.select("#totalerror")

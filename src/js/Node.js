@@ -66,4 +66,12 @@ export class Node {
   format(v) {
     return v.toFixed(1);
   }
+
+  backup() {
+    this.backupBias = this.bias;
+  }
+
+  restore() {
+    this.bias = this.backupBias;
+  }
 }

@@ -130,4 +130,23 @@ export class Network {
     }
   }
 
+  backup() {
+    for (let k in this.nodes) {
+      this.nodes[k].backup();
+    }
+
+    for (let k in this.edges) {
+      this.edges[k].backup();
+    }
+  }
+
+  restore() {
+    for (let k in this.nodes) {
+      this.nodes[k].restore();
+    }
+
+    for (let k in this.edges) {
+      this.edges[k].restore();
+    }
+  }
 }

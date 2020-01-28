@@ -56,8 +56,7 @@ export class TutorialLevelA extends Level {
     );
 
 
-    this.animatecallback = function() {
-      this.updateUI();
+    this.animatestep = function() {
       nodes[1].target = f(nodes[0].getActivation());
     };
 
@@ -101,8 +100,7 @@ export class TutorialLevelB extends Level {
     );
 
 
-    this.animatecallback = function() {
-      this.updateUI();
+    this.animatestep = function() {
       nodes[2].target = f(nodes[0].getActivation());
     };
 
@@ -148,8 +146,7 @@ export class TutorialLevelC extends Level {
     );
 
 
-    this.animatecallback = function() {
-      this.updateUI();
+    this.animatestep = function() {
       nodes[2].target = f(nodes[0].getActivation());
     };
 
@@ -246,8 +243,7 @@ export class WeatherLevel extends Level {
       "Outside (insideness=0), the temperature depends on the amount of clouds: The higher the cloudiness, the lower the temperature. Inside (insideness=1), the temperature is constant 20°C."
     );
 
-    this.animatecallback = function() {
-      this.updateUI();
+    this.animatestep = function() {
       //TODO add some nicer visualization for inside, cloudiness, and temperature.
 
       nodes[0].setUserParameter(Math.min(1, Math.max(0, (nodes[0].getActivation()))));
@@ -303,8 +299,7 @@ export class FahrenheitLevel extends Level {
       ["Fahrenheit"], trainYs.map(v => [v / 10]),
       "Given an positive temperature in Celsius (left, orange slider), the temperature in Fahrenheit is to be computed (output of the network on the right side). Adjust the parameters (blue and white sliders) of the network such that it computes the target value for each input. All values of the table below should be obtained."
     );
-    this.animatecallback = function() {
-      this.updateUI();
+    this.animatestep = function() {
       nodes[2].target = c2f(nodes[0].getActivation() * 10) / 10;
     };
 
@@ -363,8 +358,7 @@ export class SumLevel extends Level {
       ["sum"], trainYs,
       "Adjust the parameters of the network such that the output on the left equals the sum of the two non-negative inputs on the right."
     );
-    this.animatecallback = function() {
-      this.updateUI();
+    this.animatestep = function() {
       nodes[3].target = (nodes[0].getActivation()) + (nodes[1].getActivation());
     };
 
@@ -423,8 +417,7 @@ export class MaxLevel extends Level {
       ["maximum"], trainYs,
       "The output on the right should be the maximum of the input. Hint: max(a, b) = max(0, a-b) + b. Remember that the internal node ignores its input if it is negative."
     );
-    this.animatecallback = function() {
-      this.updateUI();
+    this.animatestep = function() {
       nodes[3].target = Math.max(nodes[0].getActivation(), nodes[1].getActivation());
     };
 
@@ -502,8 +495,7 @@ export class XorLevel extends Level {
       ["XOR"], trainYs,
       "Assume that the network only takes 0 and 1 as input. The output of the network should be 1 if exactly one input is set to 1. Otherwise (both inputs equal) the output should be 0."
     );
-    this.animatecallback = function() {
-      this.updateUI();
+    this.animatestep = function() {
       //round input
       nodes[0].format = v => Math.round(v);
       nodes[1].format = v => Math.round(v);
@@ -570,8 +562,7 @@ export class AvgLevel extends Level {
       ["number 1", "number 2", "number 3"], trainXs, //temperatures are internally divided by 10.
       ["average"], trainYs,
     );
-    this.animatecallback = function() {
-      this.updateUI();
+    this.animatestep = function() {
       nodes[4].target = (nodes[0].getActivation() + nodes[1].getActivation() + nodes[2].getActivation()) / 3;
     };
 
