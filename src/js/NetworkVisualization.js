@@ -92,12 +92,15 @@ export class NetworkVisualization {
       .attr("stroke-opacity", 0.5);
 
 
+    const DLOSS_SCALE = 0.1;
+    const DLOSS_CLAMP = 3;
+    const clamp = (x, mi, ma) => Math.min(ma, Math.max(mi, x));
     d3.select("#nodes").select(".gradient").selectAll("path").data(nodes.filter(node => node.dloss != 0 && node.adjustable))
       .join("path")
       .attr("d", (node) => {
         const p = d3.path();
         p.moveTo(node.x, node.y - unit * node.bias);
-        p.lineTo(node.x, node.y - unit * (node.bias - node.dloss));
+        p.lineTo(node.x, node.y - unit * (node.bias - clamp(node.dloss * DLOSS_SCALE, -DLOSS_CLAMP, DLOSS_CLAMP)));
         return p;
       })
       .attr("marker-end", "url(#triangle)")
@@ -112,7 +115,7 @@ export class NetworkVisualization {
         const x = edge.normalizedParameterPosition()[0];
         const y = edge.normalizedParameterPosition()[1];
         p.moveTo(x, y);
-        p.lineTo(x, y + unit * (edge.dloss));
+        p.lineTo(x, y + unit * clamp(edge.dloss * DLOSS_SCALE, -DLOSS_CLAMP, DLOSS_CLAMP));
         return p;
       })
       .attr("marker-end", "url(#triangle)")
@@ -129,7 +132,7 @@ export class NetworkVisualization {
         const x = edge.parameterPosition()[0];
         const y = edge.parameterPosition()[1];
         p.moveTo(x, y);
-        p.lineTo(x, y + unit * (edge.dloss) / edge.from.getActivation());
+        p.lineTo(x, y + unit * clamp(edge.dloss / edge.from.getActivation() * DLOSS_SCALE, -DLOSS_CLAMP, DLOSS_CLAMP));
         return p;
       })
       .attr("marker-end", "url(#triangle)")
