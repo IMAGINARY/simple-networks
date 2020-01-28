@@ -165,7 +165,7 @@ export class NetworkVisualization {
       .attr("fill-opacity", edge => 0.5 - Math.abs(edge.from.getActivation()))
       .attr("stroke-opacity", edge => 0.5 - Math.abs(edge.from.getActivation()));
 
-    const inputwidth = 60;
+    const inputwidth = 100;
 
     d3.select("#input").select(".activations").selectAll("rect").data(inputnodes).join("rect")
       .attr("x", node => node.x - inputwidth)
@@ -199,11 +199,54 @@ export class NetworkVisualization {
     d3.select("#outputs").select(".target").selectAll("text")
       .data(outputnodes.filter(n => typeof n.target == 'number'))
       .join("text")
+      .attr("font-size", 20)
+      .attr("text-anchor", "middle")
+      .attr("pointer-events", "none")
       .text(n => "target: " + n.format(n.target))
       .attr("x", n => n.x + 50)
       .attr("y", n => n.y - unit * n.target)
       .attr("opacity", 1)
       .attr("fill", n => n.errorcolor());
+      //.attr("fill", "orange");
+
+
+    d3.select("#outputs").select(".target").selectAll("path")
+      .data(outputnodes.filter(n => typeof n.target == 'number'))
+      .join("path")
+      .attr("d", n => {
+        const p = d3.path();
+        p.moveTo(n.x - 0, n.y - unit * n.target);
+        p.lineTo(n.x + 100, n.y - unit * n.target);
+        return p;
+      })
+      //.attr("stroke", "orange")
+      .attr("stroke", n => n.errorcolor())
+      .attr("stroke-width", 2)
+      .attr("fill", "none");
+
+
+    d3.select("#outputs").select(".values").selectAll("text")
+      .data(this.network.outputnodes)
+      .join("text")
+      .attr("font-size", 50)
+      .attr("text-anchor", "middle")
+      .attr("alignment-baseline", "central")
+      .attr("pointer-events", "none")
+      .text(n => n.format(n.getActivation()))
+      .attr("x", n => n.x)
+      .attr("y", n => n.y - 0 * unit * n.getActivation());
+
+    d3.select("#input").select(".values").selectAll("text")
+      .data(this.network.inputnodes)
+      .join("text")
+      .attr("font-size", 50)
+      .attr("text-anchor", "middle")
+      .attr("alignment-baseline", "central")
+      .attr("pointer-events", "none")
+      .text(n => n.format(n.getActivation()))
+      .attr("x", n => n.x - 0 * 25)
+      .attr("y", n => n.y - 0 * unit * n.getActivation());
+
 
     d3.select("#edges").select(".edges").selectAll("path").data(edges).join("path")
       .attr("d", edge => {

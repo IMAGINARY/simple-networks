@@ -111,16 +111,18 @@ export class Level {
     d3.select("#outputs").select(".values").selectAll("text")
       .data(this.network.outputnodes)
       .join("text")
+      .attr("font-size", 30)
       .text(n => n.format(n.getActivation()))
       .attr("x", n => n.x)
-      .attr("y", n => n.y - unit * n.getActivation());
+      .attr("y", n => n.y - 0*unit * n.getActivation());
 
     d3.select("#input").select(".values").selectAll("text")
       .data(this.network.inputnodes)
       .join("text")
+      .attr("font-size", 30)
       .text(n => n.format(n.getActivation()))
       .attr("x", n => n.x - 25)
-      .attr("y", n => n.y - unit * n.getActivation());
+      .attr("y", n => n.y - 0*unit * n.getActivation());
 
 
     if (document.querySelector("#showgradient").checked) {
