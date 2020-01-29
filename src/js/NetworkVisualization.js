@@ -316,8 +316,11 @@ export class NetworkVisualization {
       })
       .on("drag", function() {
         const edge = d3.select(this).data()[0];
+        let sactivation = edge.from.getActivation();
+        
+        if (Math.abs(sactivation) < parameterths) sactivation = (edge.from.getActivation() < 0 ? -1 : 1) * parameterths;
         if (Math.abs(edge.from.getActivation()) > 0.001) {
-          edge.weight = this.weight0 - (d3.event.y - this.y0) / edge.from.getActivation() / unit;
+          edge.weight = this.weight0 - (d3.event.y - this.y0) / sactivation / unit;
         }
         tooltip
           .attr("x", edge.parameterPosition()[0])
