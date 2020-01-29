@@ -108,6 +108,7 @@ export class NetworkVisualization {
       .attr("stroke-width", 2)
       .attr("fill", "none");
 
+/*
     d3.select("#edges").select(".normalized-gradient").selectAll("path").data(edges.filter(edge => edge.dloss != 0))
       .join("path")
       .attr("d", (edge) => {
@@ -123,7 +124,7 @@ export class NetworkVisualization {
       .attr("stroke-width", 2)
       .attr("fill", "none")
       .style("opacity", edge => 0.5 - Math.abs(edge.from.getActivation()));
-
+*/
 
     d3.select("#edges").select(".gradient").selectAll("path").data(edges.filter(edge => edge.dloss != 0))
       .join("path")
@@ -153,7 +154,7 @@ export class NetworkVisualization {
       .attr("fill-opacity", edge => Math.min(0.5, Math.abs(edge.from.getActivation())))
       .attr("stroke-opacity", edge => Math.min(0.5, Math.abs(edge.from.getActivation())));
 
-
+/*
     d3.select("#edges").select(".normalized-parameters").selectAll("circle").data(edges)
       .join("circle")
       .attr("cx", edge => edge.normalizedParameterPosition()[0])
@@ -164,7 +165,7 @@ export class NetworkVisualization {
       .attr("stroke-width", 2)
       .attr("fill-opacity", edge => 0.5 - Math.abs(edge.from.getActivation()))
       .attr("stroke-opacity", edge => 0.5 - Math.abs(edge.from.getActivation()));
-
+*/
     const inputwidth = 100;
 
     d3.select("#input").select(".activations").selectAll("rect").data(inputnodes).join("rect")
@@ -273,7 +274,7 @@ export class NetworkVisualization {
 
     d3.select("#edges").select(".activations").selectAll("path").data(edges).join("path")
       .attr("d", edge => {
-        const p = edge.generateActivatedPath(edge.from.getActivation(), 1/3, 2/3);
+        const p = edge.generateActivatedPath(edge.from.getActivation());
         const b = edge.bezier();
         p.lineTo(b[3][0], b[3][1]);
         p.bezierCurveTo(b[2][0], b[2][1], b[1][0], b[1][1], b[0][0], b[0][1]);
@@ -289,7 +290,7 @@ export class NetworkVisualization {
       .selectAll("path")
       .data(edge => Array(Math.round(Math.max(1, Math.abs(edge.from.getActivation())) * N)).fill(edge))
       .join("path")
-      .attr("d", (edge, k) => edge.generateActivatedPathMiddle(k / N, 1/3, 2/3))
+      .attr("d", (edge, k) => edge.generateActivatedPathMiddle(k / N))
       .attr("stroke", "black")
       .attr("stroke-width", 1)
       .attr("stroke-opacity", 0.5)
@@ -375,7 +376,7 @@ export class NetworkVisualization {
         tooltip.remove();
       })(d3.select("#edges").selectAll("path, circle"));
 
-    d3.drag()
+  /*  d3.drag()
       .on("start", function() {
         const edge = d3.select(this).data()[0];
         var current = d3.select(this);
@@ -393,7 +394,7 @@ export class NetworkVisualization {
           .text(`multiply by ${edge.weight.toFixed(2)}`);
       }).on("end", () => {
         tooltip.remove();
-      })(d3.select("#edges").select(".normalized-parameters").selectAll("circle"));
+      })(d3.select("#edges").select(".normalized-parameters").selectAll("circle"));*/
 
     d3.drag()
       .on("start", function() {

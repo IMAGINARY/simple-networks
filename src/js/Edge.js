@@ -60,6 +60,9 @@ export class Edge {
     this.weight = weight;
     this.dloss = 0;
     this.dweight = new DynamicVariable();
+    
+    this.multvis0 = 1/3;
+    this.multvis1 = 2/3;
   }
 
   bezier() {
@@ -85,16 +88,16 @@ export class Edge {
   }
 
 
-  generateActivatedCubicBezierSplines(sactivation, a1, a2) {
+  generateActivatedCubicBezierSplines(sactivation) {
     const b = this.bezier();
-    const c0 = casteljau2d(b, a1);
-    const c1 = casteljau2d(c0[1], (a2 - a1) / (1 - a1));
+    const c0 = casteljau2d(b, this.multvis0);
+    const c1 = casteljau2d(c0[1], (this.multvis1 - this.multvis0) / (1 - this.multvis0));
     return [c0[0], c1[0], c1[1]];
   }
   generateActivatedPath(sactivation, a1, a2) {
     const eactivation = sactivation * this.weight;
     let p1, p2, p3;
-    [p1, p2, p3] = this.generateActivatedCubicBezierSplines(sactivation, a1, a2);
+    [p1, p2, p3] = this.generateActivatedCubicBezierSplines(sactivation);
     //p.lineTo(edge.to.x, edge.to.y);
     const p = d3.path();
     p.moveTo(p1[0][0], p1[0][1] - unit * sactivation);
@@ -105,9 +108,9 @@ export class Edge {
     return p;
   }
 
-  generateActivatedPathMiddle(sactivation, a1, a2) {
+  generateActivatedPathMiddle(sactivation) {
     const eactivation = sactivation * this.weight;
-    const p2 = this.generateActivatedCubicBezierSplines(sactivation, a1, a2)[1];
+    const p2 = this.generateActivatedCubicBezierSplines(sactivation)[1];
     //p.lineTo(edge.to.x, edge.to.y);
     const p = d3.path();
     p.moveTo(p2[0][0], p2[0][1] - unit * sactivation);
