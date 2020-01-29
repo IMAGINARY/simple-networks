@@ -14,6 +14,40 @@ const casteljau1 = p => [p[0], (p[0] + p[1]) / 2, (p[0] + 2 * p[1] + p[2]) / 4, 
 //2nd half
 const casteljau2 = p => casteljau1(p.reverse()).reverse();
 
+//
+const casteljau1d = (p, alpha) => {
+  const q = [(1 - alpha) * p[0] + alpha * p[1], (1 - alpha) * p[1] + alpha * p[2], (1 - alpha) * p[2] + alpha * p[3]];
+  const r = [(1 - alpha) * q[0] + alpha * q[1], (1 - alpha) * q[1] + alpha * q[2]];
+  const s = [(1 - alpha) * r[0] + alpha * r[1]];
+  return [
+    [p[0], q[0], r[0], s[0]],
+    [s[0], r[1], q[2], p[3]]
+  ];
+};
+
+
+const casteljau2d = (p, alpha) => {
+  const x = casteljau1d(p.map(c => c[0]), alpha);
+  const y = casteljau1d(p.map(c => c[1]), alpha);
+
+  return [
+    [
+      [x[0][0], y[0][0]],
+      [x[0][1], y[0][1]],
+      [x[0][2], y[0][2]],
+      [x[0][3], y[0][3]]
+    ],
+    [
+      [x[1][0], y[1][0]],
+      [x[1][1], y[1][1]],
+      [x[1][2], y[1][2]],
+      [x[1][3], y[1][3]]
+    ]
+  ];
+};
+
+
+
 //https://stackoverflow.com/a/46805290
 const transpose = matrix => matrix[0].map((col, i) => matrix.map(row => row[i]));
 
@@ -48,6 +82,37 @@ export class Edge {
         edge.to.y - unit * (edge.offset)
       ]
     ];
+  }
+
+
+  generateActivatedCubicBezierSplines(sactivation, a1, a2) {
+    const b = this.bezier();
+    const c0 = casteljau2d(b, a1);
+    const c1 = casteljau2d(c0[1], (a2 - a1) / (1 - a1));
+    return [c0[0], c1[0], c1[1]];
+  }
+  generateActivatedPath(sactivation, a1, a2) {
+    const eactivation = sactivation * this.weight;
+    let p1, p2, p3;
+    [p1, p2, p3] = this.generateActivatedCubicBezierSplines(sactivation, a1, a2);
+    //p.lineTo(edge.to.x, edge.to.y);
+    const p = d3.path();
+    p.moveTo(p1[0][0], p1[0][1] - unit * sactivation);
+    p.bezierCurveTo(p1[1][0], p1[1][1] - unit * sactivation, p1[2][0], p1[2][1] - unit * sactivation, p1[3][0], p1[3][1] - unit * sactivation);
+    p.bezierCurveTo(p2[1][0], p2[1][1] - unit * sactivation, p2[2][0], p2[2][1] - unit * eactivation, p2[3][0], p2[3][1] - unit * eactivation);
+    p.bezierCurveTo(p3[1][0], p3[1][1] - unit * eactivation, p3[2][0], p3[2][1] - unit * eactivation, p3[3][0], p3[3][1] - unit * eactivation);
+
+    return p;
+  }
+
+  generateActivatedPathMiddle(sactivation, a1, a2) {
+    const eactivation = sactivation * this.weight;
+    const p2 = this.generateActivatedCubicBezierSplines(sactivation, a1, a2)[1];
+    //p.lineTo(edge.to.x, edge.to.y);
+    const p = d3.path();
+    p.moveTo(p2[0][0], p2[0][1] - unit * sactivation);
+    p.bezierCurveTo(p2[1][0], p2[1][1] - unit * sactivation, p2[2][0], p2[2][1] - unit * eactivation, p2[3][0], p2[3][1] - unit * eactivation);
+    return p;
   }
 
   firstHalfBezier() {

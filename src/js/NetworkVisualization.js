@@ -207,7 +207,7 @@ export class NetworkVisualization {
       .attr("y", n => n.y - unit * n.target)
       .attr("opacity", 1)
       .attr("fill", n => n.errorcolor());
-      //.attr("fill", "orange");
+    //.attr("fill", "orange");
 
 
     d3.select("#outputs").select(".target").selectAll("path")
@@ -273,27 +273,27 @@ export class NetworkVisualization {
 
     d3.select("#edges").select(".activations").selectAll("path").data(edges).join("path")
       .attr("d", edge => {
-        const sactivation = edge.from.getActivation();
-        const eactivation = sactivation * edge.weight;
-        const p = d3.path();
-
+        const p = edge.generateActivatedPath(edge.from.getActivation(), 1/3, 2/3);
         const b = edge.bezier();
-        p.moveTo(b[0][0], b[0][1]);
-        p.bezierCurveTo(b[1][0], b[1][1], b[2][0], b[2][1], b[3][0], b[3][1]);
-
-        p.lineTo(b[3][0], b[3][1] - unit * eactivation);
-
-        const b1 = edge.firstHalfBezier();
-        const b2 = edge.secondHalfBezier();
-
-        p.bezierCurveTo(b2[2][0], b2[2][1] - unit * eactivation, b2[1][0], b2[1][1] - unit * eactivation, b2[0][0], b2[0][1] - unit * eactivation);
-        p.lineTo(b1[3][0], b1[3][1] - unit * sactivation);
-        p.bezierCurveTo(b1[2][0], b1[2][1] - unit * sactivation, b1[1][0], b1[1][1] - unit * sactivation, b1[0][0], b1[0][1] - unit * sactivation);
-
+        p.lineTo(b[3][0], b[3][1]);
+        p.bezierCurveTo(b[2][0], b[2][1], b[1][0], b[1][1], b[0][0], b[0][1]);
+        p.closePath();
         return p;
       })
       .attr("fill", e => e.weight > 0 ? "blue" : "red")
       .attr("fill-opacity", 0.5);
+
+
+    const N = 5;
+    d3.select("#edges").select(".factorlines").selectAll("g").data(edges).join("g")
+      .selectAll("path")
+      .data(edge => Array(Math.round(Math.max(1, Math.abs(edge.from.getActivation())) * N)).fill(edge))
+      .join("path")
+      .attr("d", (edge, k) => edge.generateActivatedPathMiddle(k / N, 1/3, 2/3))
+      .attr("stroke", "black")
+      .attr("stroke-width", 1)
+      .attr("stroke-opacity", 0.5)
+      .attr("fill", "none");
 
     requestAnimationFrame(() => this.animateloop());
   }
