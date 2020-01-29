@@ -1,5 +1,6 @@
 import {
-  unit
+  unit,
+  parameterths
 } from './constants.js';
 
 //jshint: "esversion": 8
@@ -60,9 +61,9 @@ export class Edge {
     this.weight = weight;
     this.dloss = 0;
     this.dweight = new DynamicVariable();
-    
-    this.multvis0 = 1/3;
-    this.multvis1 = 2/3;
+
+    this.multvis0 = 1 / 3;
+    this.multvis1 = 2 / 3;
   }
 
   bezier() {
@@ -94,6 +95,7 @@ export class Edge {
     const c1 = casteljau2d(c0[1], (this.multvis1 - this.multvis0) / (1 - this.multvis0));
     return [c0[0], c1[0], c1[1]];
   }
+
   generateActivatedPath(sactivation, a1, a2) {
     const eactivation = sactivation * this.weight;
     let p1, p2, p3;
@@ -132,8 +134,11 @@ export class Edge {
   }
 
   parameterPosition() {
-    const edge = this;
-    return [(edge.from.x + edge.to.x) / 2, edge.firstHalfBezier()[3][1] - unit * edge.from.getActivation() * edge.weight];
+    let sactivation = this.from.getActivation();
+    if (Math.abs(sactivation) < parameterths) sactivation = (this.from.getActivation() < 0 ? -1 : 1) * parameterths;
+    const p2 = this.generateActivatedCubicBezierSplines(sactivation)[1];
+    const eactivation = sactivation * this.weight;
+    return [p2[3][0], p2[3][1] - unit * eactivation];
   }
 
   getdWeight() {
