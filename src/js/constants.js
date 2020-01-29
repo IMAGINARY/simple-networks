@@ -1,2 +1,2 @@
 export const unit = 35;
-export const parameterths = 0.2;
+export const parameterths = 0.3;

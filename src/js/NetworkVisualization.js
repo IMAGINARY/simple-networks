@@ -256,12 +256,12 @@ export class NetworkVisualization {
       .attr("fill-opacity", 0.5);
 
 
-    const N = 5;
+    const N = 1;
     d3.select("#edges").select(".factorlines").selectAll("g").data(edges).join("g")
       .selectAll("path")
-      .data(edge => Array(Math.floor(Math.max(parameterths, Math.abs(edge.from.getActivation())) * N)).fill(edge))
+      .data(edge => Array(Math.abs(edge.from.getActivation())>parameterths ? 0 : N).fill(edge))
       .join("path")
-      .attr("d", (edge, k) => edge.generateActivatedPathMiddle((edge.from.getActivation() < 0 ? -1 : 1) * (k + 1) / N))
+      .attr("d", (edge, k) => edge.generateActivatedPathMiddle(parameterths * (edge.from.getActivation() < 0 ? -1 : 1) * (k + 1) / N))
       .attr("stroke", "black")
       .attr("stroke-width", 1)
       .attr("stroke-opacity", 0.5)
