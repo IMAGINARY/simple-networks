@@ -131,7 +131,7 @@ export class NetworkVisualization {
       .attr("cx", edge => edge.parameterPosition()[0])
       .attr("cy", edge => edge.parameterPosition()[1])
       .attr("r", 15)
-      .attr("fill", edge => (Math.abs(edge.from.getActivation()) < parameterths) ? "white" : "blue")
+      .attr("fill", edge => (edge.weight > 0 ? "blue" : "red"))
       .attr("stroke", "black")
       .attr("stroke-width", 2)
       .attr("fill-opacity", 0.5)
@@ -252,18 +252,18 @@ export class NetworkVisualization {
         p.closePath();
         return p;
       })
-      .attr("fill", e => e.weight > 0 ? "blue" : "red")
+      .attr("fill", edge => edge.weight >= 0 ? "blue" : "red")
       .attr("fill-opacity", 0.5);
 
 
     const N = 1;
     d3.select("#edges").select(".factorlines").selectAll("g").data(edges).join("g")
       .selectAll("path")
-      .data(edge => Array(Math.abs(edge.from.getActivation())>parameterths ? 0 : N).fill(edge))
+      .data(edge => Array(Math.abs(edge.from.getActivation()) > parameterths ? 0 : N).fill(edge))
       .join("path")
       .attr("d", (edge, k) => edge.generateActivatedPathMiddle(parameterths * (edge.from.getActivation() < 0 ? -1 : 1) * (k + 1) / N))
-      .attr("stroke", "black")
-      .attr("stroke-width", 1)
+      .attr("stroke", edge => (edge.weight >= 0 ? "blue" : "red"))
+      .attr("stroke-width", 2)
       .attr("stroke-opacity", 0.5)
       .attr("fill", "none");
 
@@ -319,7 +319,7 @@ export class NetworkVisualization {
         let sactivation = edge.from.getActivation();
         if (Math.abs(sactivation) < parameterths) sactivation = (edge.from.getActivation() < 0 ? -1 : 1) * parameterths;
         //if (Math.abs(edge.from.getActivation()) > 0.001) {
-          edge.weight = this.weight0 - (d3.event.y - this.y0) / sactivation / unit;
+        edge.weight = this.weight0 - (d3.event.y - this.y0) / sactivation / unit;
         //}
         tooltip
           .attr("x", edge.parameterPosition()[0])
