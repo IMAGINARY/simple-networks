@@ -289,7 +289,7 @@ export class NetworkVisualization {
     const N = 5;
     d3.select("#edges").select(".factorlines").selectAll("g").data(edges).join("g")
       .selectAll("path")
-      .data(edge => Array(Math.round(Math.max(parameterths, Math.abs(edge.from.getActivation())) * N)).fill(edge))
+      .data(edge => Array(Math.floor(Math.max(parameterths, Math.abs(edge.from.getActivation())) * N)).fill(edge))
       .join("path")
       .attr("d", (edge, k) => edge.generateActivatedPathMiddle((edge.from.getActivation() < 0 ? -1 : 1) * (k + 1) / N))
       .attr("stroke", "black")
