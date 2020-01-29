@@ -1,8 +1,8 @@
 {
-  "name": "mnist-exhibit",
+  "name": "simple-networks",
   "version": "0.1.0",
-  "description": "A widget that trains a neuronal network by the MNIST database",
-  "repository": "github:IMAGINARY/mnist-exhibit",
+  "description": "An exhibit to visualize and playfully discover the mechanisms of neural networks.",
+  "repository": "github:IMAGINARY/simple-networks",
   "author": "Aaron Montag <aaron.montag@imaginary.org>",
   "private": true,
   "engines": {
