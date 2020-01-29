@@ -109,24 +109,6 @@ export class NetworkVisualization {
       .attr("stroke-width", 2)
       .attr("fill", "none");
 
-    /*
-        d3.select("#edges").select(".normalized-gradient").selectAll("path").data(edges.filter(edge => edge.dloss != 0))
-          .join("path")
-          .attr("d", (edge) => {
-            const p = d3.path();
-            const x = edge.normalizedParameterPosition()[0];
-            const y = edge.normalizedParameterPosition()[1];
-            p.moveTo(x, y);
-            p.lineTo(x, y + unit * clamp(edge.dloss * DLOSS_SCALE, -DLOSS_CLAMP, DLOSS_CLAMP));
-            return p;
-          })
-          .attr("marker-end", "url(#triangle)")
-          .attr("stroke", "orange")
-          .attr("stroke-width", 2)
-          .attr("fill", "none")
-          .style("opacity", edge => 0.5 - Math.abs(edge.from.getActivation()));
-    */
-
     d3.select("#edges").select(".gradient").selectAll("path").data(edges.filter(edge => edge.dloss != 0))
       .join("path")
       .attr("d", (edge) => {
@@ -155,18 +137,6 @@ export class NetworkVisualization {
       .attr("fill-opacity", 0.5)
       .attr("stroke-opacity", 0.5);
 
-    /*
-        d3.select("#edges").select(".normalized-parameters").selectAll("circle").data(edges)
-          .join("circle")
-          .attr("cx", edge => edge.normalizedParameterPosition()[0])
-          .attr("cy", edge => edge.normalizedParameterPosition()[1])
-          .attr("r", 15)
-          .attr("fill", "white")
-          .attr("stroke", "black")
-          .attr("stroke-width", 2)
-          .attr("fill-opacity", edge => 0.5 - Math.abs(edge.from.getActivation()))
-          .attr("stroke-opacity", edge => 0.5 - Math.abs(edge.from.getActivation()));
-    */
     const inputwidth = 100;
 
     d3.select("#input").select(".activations").selectAll("rect").data(inputnodes).join("rect")
@@ -304,25 +274,6 @@ export class NetworkVisualization {
   addInteraction() {
     const nodes = this.nodes;
 
-    /*
-    d3.drag()
-      .on("start", function() {
-        var current = d3.select(this);
-        this.deltaX = current.attr("cx") - d3.event.x;
-        this.deltaY = current.attr("cy") - d3.event.y;
-      })
-      .on("drag", function() {
-        const node = d3.select(this).data()[0];
-        node.x = d3.event.x + this.deltaX;
-        node.y = d3.event.y + this.deltaX;
-
-        for (let i in nodes) {
-          console.log(
-            `nodes[${i}].x = ${nodes[i].x}; nodes[${i}].y = ${nodes[i].y};`
-          );
-        }
-      })(d3.select("#nodes").selectAll("circle"));
-      */
     const that = this;
     var tooltip;
     d3.drag()
@@ -377,25 +328,6 @@ export class NetworkVisualization {
         tooltip.remove();
       })(d3.select("#edges").selectAll("path, circle"));
 
-    /*  d3.drag()
-        .on("start", function() {
-          const edge = d3.select(this).data()[0];
-          var current = d3.select(this);
-          this.y0 = d3.event.y;
-          this.weight0 = edge.weight;
-          that.network.pauseAnimatedInput();
-          tooltip = d3.select("#tooltip").append("text");
-        })
-        .on("drag", function() {
-          const edge = d3.select(this).data()[0];
-          edge.weight = this.weight0 - (d3.event.y - this.y0) / unit;
-          tooltip
-            .attr("x", edge.normalizedParameterPosition()[0])
-            .attr("y", edge.normalizedParameterPosition()[1])
-            .text(`multiply by ${edge.weight.toFixed(2)}`);
-        }).on("end", () => {
-          tooltip.remove();
-        })(d3.select("#edges").select(".normalized-parameters").selectAll("circle"));*/
 
     d3.drag()
       .on("start", function() {
