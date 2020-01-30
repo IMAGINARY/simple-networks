@@ -42,6 +42,10 @@ export class Level {
   }
 
   createUI() {
+    document.querySelector(".helper").classList.remove("visible");
+    document.querySelector("#helpmebutton").classList.remove("selected");
+
+
     d3.select("#leveltitle").text(this.title);
     d3.select("#description").text(this.description);
 
@@ -105,24 +109,6 @@ export class Level {
 
     d3.select("#totalerrorterm")
       .text(this.rows.map(r => `(${r[r.length-1]} - ${r[r.length-2]})²`).join(" + "));
-
-
-
-    d3.select("#outputs").select(".values").selectAll("text")
-      .data(this.network.outputnodes)
-      .join("text")
-      .attr("font-size", 30)
-      .text(n => n.format(n.getActivation()))
-      .attr("x", n => n.x)
-      .attr("y", n => n.y - 0*unit * n.getActivation());
-
-    d3.select("#input").select(".values").selectAll("text")
-      .data(this.network.inputnodes)
-      .join("text")
-      .attr("font-size", 30)
-      .text(n => n.format(n.getActivation()))
-      .attr("x", n => n.x - 25)
-      .attr("y", n => n.y - 0*unit * n.getActivation());
 
 
     if (document.querySelector("#showgradient").checked) {
