@@ -202,12 +202,12 @@ export class NetworkVisualization {
       .join("text")
       .attr("font-size", 40)
       .attr("text-anchor", "middle")
-      .attr("alignment-baseline", "central")
+      .attr("alignment-baseline", "hanging")
       .attr("pointer-events", "none")
       //.attr("opacity", 0.8)
       .text(n => n.format(n.getActivation()))
       .attr("x", n => n.x)
-      .attr("y", n => n.y - 0 * unit * n.getActivation());
+      .attr("y", n => n.y - clamp(unit * n.getActivation(), -70+40, 70));
 
     d3.select("#edges").select(".edges").selectAll("path").data(edges).join("path")
       .attr("d", edge => {
