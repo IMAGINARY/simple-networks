@@ -1,6 +1,7 @@
 import {
   unit,
-  parameterths
+  parameterths,
+  noderadius,
 } from './constants.js';
 
 import {
@@ -73,11 +74,11 @@ export class NetworkVisualization {
       .join("circle")
       .attr("cx", (d) => d.x)
       .attr("cy", (d) => d.y)
-      .attr("r", 95)
+      .attr("r", noderadius)
       .attr("fill", d => d.constructor.name == "InputNode" ? "orange" : (d.constructor.name == "OutputNode" ? d.errorcolor() : "black"))
       .attr("stroke", "black")
       .attr("stroke-width", 3)
-      .attr("fill-opacity", 0.2)
+      .attr("fill-opacity", n => n.constructor.name == "Node" ? 0.2 : 1)
       .attr("pointer-events", "none");
 
 
@@ -137,19 +138,18 @@ export class NetworkVisualization {
       .attr("fill-opacity", 0.5)
       .attr("stroke-opacity", 0.5);
 
-    const inputwidth = 100;
 
     d3.select("#input").select(".activations").selectAll("rect").data(inputnodes).join("rect")
-      .attr("x", node => node.x - inputwidth)
+      .attr("x", node => node.x)
       .attr("y", node => node.y - Math.max(0, node.getActivation() * unit))
-      .attr("width", inputwidth)
+      .attr("width", noderadius)
       .attr("height", node => Math.abs(node.getActivation() * unit))
       .attr("fill", "blue")
       .attr("fill-opacity", 0.5);
 
     d3.select("#input").select(".parameters").selectAll("circle").data(inputnodes)
       .join("circle")
-      .attr("cx", node => (node.x - inputwidth))
+      .attr("cx", node => (node.x + noderadius))
       .attr("cy", node => node.y - unit * node.getActivation())
       .attr("r", 15)
       .attr("fill", "orange")
@@ -158,12 +158,11 @@ export class NetworkVisualization {
       .attr("stroke-width", 2)
       .attr("stroke-opacity", 0.6);
 
-    const outputwidth = inputwidth;
 
     d3.select("#outputs").select(".flow").selectAll("rect").data(outputnodes).join("rect")
-      .attr("x", node => node.x)
+      .attr("x", node => node.x - noderadius)
       .attr("y", node => node.y - Math.max(0, node.getActivation() * unit))
-      .attr("width", outputwidth)
+      .attr("width", noderadius)
       .attr("height", node => Math.abs(node.getActivation() * unit))
       .attr("fill", "blue")
       .attr("fill-opacity", 0.5);
@@ -212,19 +211,20 @@ export class NetworkVisualization {
     d3.select("#edges").select(".edges").selectAll("path").data(edges).join("path")
       .attr("d", edge => {
         const p = d3.path();
+        const b = edge.bezier();
         if (edge.from.bias <= 0 || edge.from.constructor.name == "InputNode") {
-          p.moveTo(edge.from.x, edge.from.y);
+          p.moveTo(b[0][0], b[0][1]);
         } else {
           //make "waterproof"
-          p.moveTo(edge.from.x, edge.from.y - unit * edge.from.bias);
-          p.lineTo(edge.from.x, edge.from.y);
+          p.moveTo(b[0][0], b[0][1] - unit * edge.from.bias);
+          p.lineTo(b[0][0], b[0][1]);
         }
 
         //p.lineTo(edge.to.x, edge.to.y);
-        const b = edge.bezier();
+
         p.bezierCurveTo(b[1][0], b[1][1], b[2][0], b[2][1], b[3][0], b[3][1]);
         if (edge.offset < 0) //make "waterproof"
-          p.lineTo(edge.to.x, edge.to.y);
+          p.lineTo(b[3][0], b[3][1]);
         return p;
       })
       .attr("stroke", "black")

@@ -1,6 +1,7 @@
 import {
   unit,
-  parameterths
+  parameterths,
+  noderadius
 } from './constants.js';
 
 //jshint: "esversion": 8
@@ -57,21 +58,23 @@ export class Edge {
 
   bezier() {
     const edge = this;
+    const x0 = edge.from.x + ((edge.from.constructor.name == "InputNode") ? noderadius : 0);
+    const x1 = edge.to.x - ((edge.to.constructor.name == "OutputNode") ? noderadius : 0);
     return [
       [
-        edge.from.x,
+        x0,
         edge.from.y
       ],
       [
-        (edge.from.x + edge.to.x) / 2,
+        (x0 + x1) / 2,
         edge.from.y
       ],
       [
-        (edge.from.x + edge.to.x) / 2,
+        (x0 + x1) / 2,
         edge.to.y - unit * (edge.offset)
       ],
       [
-        edge.to.x,
+        x1,
         edge.to.y - unit * (edge.offset)
       ]
     ];
