@@ -109,7 +109,7 @@ export class NetworkVisualization {
       .attr("stroke-width", 2)
       .attr("fill", "none");
 
-    d3.select("#edges").select(".gradient").selectAll("path").data(edges.filter(edge => edge.dloss != 0))
+    d3.select("#edges").select(".gradient").selectAll("path").data(edges.filter(edge => edge.dloss != 0 && edge.adjustable))
       .join("path")
       .attr("d", (edge) => {
         const p = d3.path();
@@ -126,7 +126,7 @@ export class NetworkVisualization {
       .style("opacity", edge => Math.min(0.5, Math.abs(edge.from.getActivation())));
 
 
-    d3.select("#edges").select(".parameters").selectAll("circle").data(edges)
+    d3.select("#edges").select(".parameters").selectAll("circle").data(edges.filter(edge => edge.adjustable))
       .join("circle")
       .attr("cx", edge => edge.parameterPosition()[0])
       .attr("cy", edge => edge.parameterPosition()[1])
@@ -257,7 +257,7 @@ export class NetworkVisualization {
 
 
     const N = 1;
-    d3.select("#edges").select(".factorlines").selectAll("g").data(edges).join("g")
+    d3.select("#edges").select(".factorlines").selectAll("g").data(edges.filter(e => e.adjustable)).join("g")
       .selectAll("path")
       .data(edge => Array(Math.abs(edge.from.getActivation()) > parameterths ? 0 : N).fill(edge))
       .join("path")
@@ -308,23 +308,27 @@ export class NetworkVisualization {
     d3.drag()
       .on("start", function() {
         const edge = d3.select(this).data()[0];
-        var current = d3.select(this);
-        this.y0 = d3.event.y;
-        this.weight0 = edge.weight;
-        that.network.pauseAnimatedInput();
-        tooltip = d3.select("#tooltip").append("text");
+        if (edge.adjustable) {
+          var current = d3.select(this);
+          this.y0 = d3.event.y;
+          this.weight0 = edge.weight;
+          that.network.pauseAnimatedInput();
+          tooltip = d3.select("#tooltip").append("text");
+        }
       })
       .on("drag", function() {
         const edge = d3.select(this).data()[0];
-        let sactivation = edge.from.getActivation();
-        if (Math.abs(sactivation) < parameterths) sactivation = (edge.from.getActivation() < 0 ? -1 : 1) * parameterths;
-        //if (Math.abs(edge.from.getActivation()) > 0.001) {
-        edge.weight = this.weight0 - (d3.event.y - this.y0) / sactivation / unit;
-        //}
-        tooltip
-          .attr("x", edge.parameterPosition()[0])
-          .attr("y", edge.parameterPosition()[1])
-          .text(`multiply by ${edge.weight.toFixed(2)}`);
+        if (edge.adjustable) {
+          let sactivation = edge.from.getActivation();
+          if (Math.abs(sactivation) < parameterths) sactivation = (edge.from.getActivation() < 0 ? -1 : 1) * parameterths;
+          //if (Math.abs(edge.from.getActivation()) > 0.001) {
+          edge.weight = this.weight0 - (d3.event.y - this.y0) / sactivation / unit;
+          //}
+          tooltip
+            .attr("x", edge.parameterPosition()[0])
+            .attr("y", edge.parameterPosition()[1])
+            .text(`multiply by ${edge.weight.toFixed(2)}`);
+        }
       })
       .on("end", () => {
         tooltip.remove();

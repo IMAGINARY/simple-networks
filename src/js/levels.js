@@ -79,6 +79,7 @@ export class TutorialLevelB extends Level {
     nodes[1].x = 500;
     nodes[1].y = 550;
     nodes[1].adjustable = false;
+
     nodes[2].x = 800;
     nodes[2].y = 500;
     nodes[0].addChild(nodes[1], 2);
@@ -127,6 +128,9 @@ export class TutorialLevelC extends Level {
     nodes[2].y = 500;
     nodes[0].addChild(nodes[1], 1);
     nodes[1].addChild(nodes[2], 1);
+
+    nodes[0].outedges[0].adjustable = false;
+    nodes[1].outedges[0].adjustable = false;
 
     nodes[1].bias = 1;
 
@@ -281,7 +285,7 @@ export class FahrenheitLevel extends Level {
 
     nodes[0].addChild(nodes[1], 1);
     nodes[1].addChild(nodes[2], 1);
-
+    nodes[1].outedges[0].adjustable = false;
 
     const c2f = c => ((c * 1.8) + 32);
     const trainXs = [0, 10, 20, 30];

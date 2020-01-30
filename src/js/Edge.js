@@ -49,6 +49,7 @@ export class Edge {
     this.weight = weight;
     this.dloss = 0;
     this.dweight = new DynamicVariable();
+    this.adjustable = true;
 
     this.multvis0 = 1 / 3;
     this.multvis1 = 2 / 3;

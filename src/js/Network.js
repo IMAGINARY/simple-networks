@@ -112,13 +112,14 @@ export class Network {
     this.gradientLoss(trainXs, trainYs);
 
     for (let i in this.nodes) {
-      if (this.nodes[i].constructor.name == "Node") { //only internal nodes
+      if (this.nodes[i].constructor.name == "Node" && this.nodes[i].adjustable) { //only internal nodes
         this.nodes[i].bias -= stepsize * this.nodes[i].dloss;
       }
     }
 
     for (let i in this.edges) {
-      this.edges[i].weight -= stepsize * this.edges[i].dloss;
+      if(this.edges[i].adjustable)
+        this.edges[i].weight -= stepsize * this.edges[i].dloss;
     }
     updateDynamicVariables();
   }
