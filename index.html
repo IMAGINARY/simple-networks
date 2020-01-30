@@ -48,9 +48,7 @@
           </g>
           <g id="tooltip"></g>
         </svg>
-        <div class="helpme">
-          <div class="button" id="helpme">Help me</div>
-        </div>
+        <div class="icon" id="helpmebutton"></div>
       </div>
       <div class="train">
         <div class="helper">
@@ -82,6 +80,16 @@
           </div>
         </div>
       </div>
+      <div id="screenoverlay"></div>
+      <div class="credits">
+        <p>Icons made by <a href="https://www.flaticon.com/authors/bqlqn" title="bqlqn">bqlqn</a> from <a href="https://www.flaticon.com/" title="Flaticon"> www.flaticon.com</a></p>
+        <p>
+          This site was created by IMAGINARY, a travelling exhibition that shows mathematics can be beautiful,
+          interactive, something you can touch, or a way to express your emotions beyond what words can achieve.
+          It has visited over 55 countries since 2007.
+        </p>
+        <p><a href="http://about.imaginary.org">Learn more about IMAGINARY</a></p>
+      </div>
     </div>
     <div class="footer">
       <!--.navigation-->
@@ -91,7 +99,9 @@
       <div class="footerbox">
         <div class="circles" id="navcircles"><a class="circ selected" href="index.html#1"></a><a class="circ" href="index.html#2"></a><a class="circ" href="index.html#3"></a><a class="circ" href="index.html#4"></a></div>
       </div>
-      <div class="footerbox"><a class="button" id="nextbutton">Next Level</a></div>
+      <div class="footerbox"><a class="button" id="nextbutton">Next Level</a>
+        <div class="icon" id="creditsbutton" onclick="document.querySelector('.credits').classList.toggle('visible')"></div>
+      </div>
     </div>
     <script type="text/javascript" src="src/js/d3.js"></script>
     <script type="module" src="src/js/main.js">//TODO: browserfy</script>

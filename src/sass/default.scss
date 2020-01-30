@@ -2,18 +2,17 @@
 @import "train";
 @import "button";
 @import "slider";
-
+@import "credits";
 
 .visible {
   visibility: visible !important;
   opacity: 1 !important;
 }
 
-
 body {
   font-family: "Roboto";
   user-select: none;
-  margin: 0px;
+  margin: 0;
   display: flex;
   flex-direction: column;
   height: 100vh;
@@ -75,10 +74,30 @@ tr:hover {
   text-align: center;
 }
 
-
-.helpme {
+#helpmebutton {
   position: absolute;
   top: 80px;
-  right: -80px;
-  transform: rotate(-90deg);
+  right: 0;
+  background-image: url("../../assets/img/bulb.svg");
+}
+
+.icon {
+  background-size: contain;
+  background-repeat: no-repeat;
+  width: 60px;
+  height: 60px;
+  margin: 20px;
+}
+
+.icon.selected {
+  filter: drop-shadow(0 0 3px rgba(0,0,0,.4));
+}
+
+#screenoverlay {
+  visibility: hidden;
+  position: absolute;
+  width: 100vw;
+  height: 100vh;
+  z-index: 20;
+  background: rgba(0,0,0,.5);
 }

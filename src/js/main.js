@@ -6,17 +6,21 @@ import {
 new LevelController();
 
 
-var helping = false;
+
 window.addEventListener('DOMContentLoaded', (event) => {
-  document.querySelector("#helpme").onclick = () => {
-    helping = !helping;
-    if (helping) {
-      document.querySelector(".helper").classList.add("visible");
-      document.querySelector("#helpme").classList.add("selected");
-    } else {
-      document.querySelector(".helper").classList.remove("visible");
-      document.querySelector("#helpme").classList.remove("selected");
-    }
+  document.querySelector("#helpmebutton").onclick = () => {
+    document.querySelector(".helper").classList.toggle("visible");
+    document.querySelector("#helpmebutton").classList.toggle("selected");
+  };
+  document.querySelector("#creditsbutton").onclick = () => {
+    document.querySelector(".credits").classList.toggle("visible");
+    document.querySelector("#screenoverlay").classList.toggle("visible");
+    document.querySelector("#creditsbutton").classList.toggle("selected");
   };
 
+  document.querySelector("#screenoverlay").onclick = () => {
+    document.querySelector(".credits").classList.remove("visible");
+    document.querySelector("#screenoverlay").classList.remove("visible");
+    document.querySelector("#creditsbutton").classList.remove("selected");
+  };
 });
