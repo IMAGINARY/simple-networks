@@ -3,7 +3,7 @@
   //  a#backbutton.navbutton Previous Level
   //  a#nextbutton.navbutton Next Level
   .footerbox
-    a#backbutton.button Previous Level
+    #backbutton.button Previous Level
   .footerbox
     #navcircles.circles
       a.circ(href="index.html#1").selected
@@ -11,5 +11,7 @@
       a.circ(href="index.html#3")
       a.circ(href="index.html#4")
   .footerbox
-    a#nextbutton.button Next Level
-    #creditsbutton.icon(onclick="document.querySelector('.credits').classList.toggle('visible')")
+    #nextbutton.button Next Level
+  .footerbox(style="flex:0")
+    #creditsbutton.icon
+    #internationalbutton.icon

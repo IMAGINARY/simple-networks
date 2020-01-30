@@ -176,7 +176,7 @@ export class TutorialLevelC extends Level {
     };
 
     this.onenter = function() {
-      addnodeinfo(nodes[1], `The bias: Adding a constant value to the input of an internal node.`);
+      addnodeinfo(nodes[1], `A constant bias is added to the input of an internal node.`);
     };
 
 

@@ -96,12 +96,18 @@
       <!--.navigation-->
       <!--  a#backbutton.navbutton Previous Level-->
       <!--  a#nextbutton.navbutton Next Level-->
-      <div class="footerbox"><a class="button" id="backbutton">Previous Level</a></div>
+      <div class="footerbox">
+        <div class="button" id="backbutton">Previous Level</div>
+      </div>
       <div class="footerbox">
         <div class="circles" id="navcircles"><a class="circ selected" href="index.html#1"></a><a class="circ" href="index.html#2"></a><a class="circ" href="index.html#3"></a><a class="circ" href="index.html#4"></a></div>
       </div>
-      <div class="footerbox"><a class="button" id="nextbutton">Next Level</a>
-        <div class="icon" id="creditsbutton" onclick="document.querySelector('.credits').classList.toggle('visible')"></div>
+      <div class="footerbox">
+        <div class="button" id="nextbutton">Next Level</div>
+      </div>
+      <div class="footerbox" style="flex:0">
+        <div class="icon" id="creditsbutton"></div>
+        <div class="icon" id="internationalbutton"></div>
       </div>
     </div>
     <script type="text/javascript" src="src/js/d3.js"></script>
