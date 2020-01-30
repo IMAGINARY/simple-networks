@@ -29,12 +29,16 @@ svg {
 }
 
 table {
-  border-spacing: 0;
-  border-collapse: collapse;
+
 }
 
 tr:hover {
   opacity: 0.8;
+}
+
+td {
+  border-radius: 10px;
+  text-align: center;
 }
 
 .main {
