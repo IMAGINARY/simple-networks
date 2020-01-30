@@ -55,7 +55,7 @@ export class TutorialLevelA extends Level {
     const trainXs = [1, 2, 3];
     const trainYs = trainXs.map(f);
 
-    super("A simple Network: Double its input.",
+    super("A simple Network: Double its input!",
       new Network(
         nodes,
         [nodes[0]], //input nodes
@@ -107,15 +107,15 @@ export class TutorialLevelB extends Level {
     const trainXs = [-2, -1, 0, 1, 2, 3];
     const trainYs = trainXs.map(f);
 
-    super("A Network with an internal node that ignores negative inputs",
+    super("Ignores negative inputs!",
       new Network(
         nodes,
         [nodes[0]], //input nodes
         [nodes[2]] //output nodes
       ),
       ["input"], trainXs.map(x => [x]), //temperatures are internally divided by 10.
-      ["desired output"], trainYs.map(x => [x]),
-      "Can you modify this network such that it outputs its positive input or zero if the input was negative?"
+      ["output"], trainYs.map(x => [x]),
+      "Can you modify this network such that it outputs its positive input or zero if the input was negative? It should predict the data of the training table below."
     );
 
 
@@ -159,14 +159,14 @@ export class TutorialLevelC extends Level {
     const trainXs = [-2, -1, 0, 1, 2, 3];
     const trainYs = trainXs.map(f);
 
-    super("Add bias to the internal nodes.",
+    super("Internal nodes with bias",
       new Network(
         nodes,
         [nodes[0]], //input nodes
         [nodes[2]] //output nodes
       ),
       ["input"], trainXs.map(x => [x]), //temperatures are internally divided by 10.
-      ["desired output"], trainYs.map(x => [x]),
+      ["output"], trainYs.map(x => [x]),
       "Can you modify the parameter of this network such that it outputs by how much the input is greater than 1. If the input is smaller than 1 it should output zero."
     );
 
@@ -268,7 +268,7 @@ export class WeatherLevel extends Level {
     nodes[1].format = v => v.toFixed(0);
     nodes[4].format = temp => `${(temp*10).toFixed(0)}°C`;
     super("Can you predict the temperature given the cloudiness and the fact of being inside?", nw,
-      ["amount of clouds", "inside?"], trainingdata.map(td => [td.cloudiness, td.inside]),
+      ["cloudiness", "inside?"], trainingdata.map(td => [td.cloudiness, td.inside]),
       ["temperature"], trainingdata.map(td => [td.temperature]),
       "Outside (insideness=0), the temperature depends on the amount of clouds: The higher the cloudiness, the lower the temperature. Inside (insideness=1), the temperature is constant 20°C."
     );
