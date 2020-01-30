@@ -37,7 +37,8 @@
   display: flex;
   justify-content: center;
   flex-direction: row;
-  align-items: center; }
+  align-items: center;
+  margin: 0 10px 0 10px; }
 
 .footer .footerbox:first-child > a {
   margin-right: auto; }
@@ -365,18 +366,11 @@ tr:hover {
   margin: 0;
   text-align: center; }
 
-#helpmebutton {
-  position: absolute;
-  top: 80px;
-  right: 0;
-  background-image: url("../../assets/img/bulb.svg"); }
-
 .icon {
   background-size: contain;
   background-repeat: no-repeat;
   width: 60px;
-  height: 60px;
-  margin: 20px; }
+  height: 60px; }
 
 .icon.selected {
   filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.4)); }
@@ -388,5 +382,13 @@ tr:hover {
   height: 100vh;
   z-index: 20;
   background: rgba(0, 0, 0, 0.5); }
+
+#helpmebutton {
+  position: absolute;
+  top: 40px;
+  right: 0;
+  width: 120px;
+  height: 120px;
+  background-image: url("../../assets/img/bulb.svg"); }
 
 /*# sourceMappingURL=default.css.map */
