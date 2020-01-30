@@ -229,7 +229,7 @@ export class NetworkVisualization {
 
         p.bezierCurveTo(b[1][0], b[1][1], b[2][0], b[2][1], b[3][0], b[3][1]);
         if (edge.offset < 0) //make "waterproof"
-          p.lineTo(b[3][0], b[3][1]);
+          p.lineTo(b[3][0], b[3][1] + unit * edge.offset);
         return p;
       })
       .attr("stroke", "black")
