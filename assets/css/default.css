@@ -181,7 +181,9 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  visibility: hidden; }
+  visibility: hidden;
+  text-align: center;
+  align-items: center; }
 
 .train .tabbed {
   display: flex;
