@@ -107,7 +107,7 @@ export class TutorialLevelB extends Level {
     const trainXs = [-2, -1, 0, 1, 2, 3];
     const trainYs = trainXs.map(f);
 
-    super("Ignores negative inputs!",
+    super("Propagate only positive values!",
       new Network(
         nodes,
         [nodes[0]], //input nodes
