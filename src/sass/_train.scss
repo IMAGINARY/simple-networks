@@ -163,3 +163,7 @@
 .train input[type=range] {
   width: 100%;
 }
+
+.train .trainingdata {
+  visibility: hidden;
+}

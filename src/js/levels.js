@@ -25,6 +25,17 @@ import {
   unit
 } from './constants.js';
 
+
+const addnodeinfo = (node, text) => {
+  d3.select("#levelinfo").append("text")
+    .text(text)
+    .attr("pointer-events", "none")
+    .attr("text-anchor", "middle")
+    .attr("font-size", 20)
+    .attr("x", node.x)
+    .attr("y", node.y + 120);
+};
+
 export class TutorialLevelA extends Level {
   constructor() {
     const omega1 = 1 + Math.random();
@@ -52,15 +63,22 @@ export class TutorialLevelA extends Level {
       ),
       ["input"], trainXs.map(x => [x]), //temperatures are internally divided by 10.
       ["desired output"], trainYs.map(x => [x]),
-      "This is a minimalistic neural Network. On the left you can adjust its input. On the right you see what it outputs. The gray circles corrspond to neurons of the network and the amount of the blue corresponds their activation. Through conenctions between neurons their activation is spread. You can modify the parameter on the connection on the middle to perform a multiplication. Can you adjust the network such that it doubles the input?"
+      "This is a minimalistic neural Network. Can you adjust the network such that it doubles the input?"
     );
-
 
     this.animatestep = function() {
       nodes[1].target = f(nodes[0].getActivation());
     };
 
+    this.onenter = function() {
+      addnodeinfo(nodes[0], "You can adjust the input of the network.");
+      addnodeinfo(nodes[1], "The output of the neural network.");
+      document.querySelector(".trainingdata").classList.remove("visible");
+    };
 
+    this.onleave = function() {
+      document.querySelector(".trainingdata").classList.add("visible");
+    };
   }
 }
 
@@ -97,7 +115,7 @@ export class TutorialLevelB extends Level {
       ),
       ["input"], trainXs.map(x => [x]), //temperatures are internally divided by 10.
       ["desired output"], trainYs.map(x => [x]),
-      "This network has one internal node. It processes its input in a special way (it is a so called ReLU node). Whenever it recives an negative input, it does not propagate its input further. It is ignored. Can you modify this network such that it outputs its positive input or zero if the input was negative?"
+      "Can you modify this network such that it outputs its positive input or zero if the input was negative?"
     );
 
 
@@ -105,6 +123,9 @@ export class TutorialLevelB extends Level {
       nodes[2].target = f(nodes[0].getActivation());
     };
 
+    this.onenter = function() {
+      addnodeinfo(nodes[1], `Internal nodes ignore negative inputs.`);
+    };
 
   }
 }
@@ -146,12 +167,16 @@ export class TutorialLevelC extends Level {
       ),
       ["input"], trainXs.map(x => [x]), //temperatures are internally divided by 10.
       ["desired output"], trainYs.map(x => [x]),
-      "The internal nodes can also have an bias: A constant value is added to their input activation. With this, more complicated functions can be computed. Can you modify the parameters of this network such that it outputs by how much the input is greater than 1. If the input is smaller than 1 it should output zero."
+      "Can you modify the parameter of this network such that it outputs by how much the input is greater than 1. If the input is smaller than 1 it should output zero."
     );
 
 
     this.animatestep = function() {
       nodes[2].target = f(nodes[0].getActivation());
+    };
+
+    this.onenter = function() {
+      addnodeinfo(nodes[1], `The bias: Adding a constant value to the input of an internal node.`);
     };
 
 

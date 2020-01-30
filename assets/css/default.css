@@ -189,6 +189,9 @@
 .train input[type=range] {
   width: 100%; }
 
+.train .trainingdata {
+  visibility: hidden; }
+
 .button {
   font-family: Roboto;
   font-style: normal;

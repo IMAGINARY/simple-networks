@@ -32,6 +32,8 @@ export class Level {
     const nv = this.nv = new NetworkVisualization(this.network, () => this.animatecallback());
     nv.animate();
     nv.addInteraction();
+    if(this.onenter)
+      this.onenter();
   }
 
   hide() {
@@ -39,6 +41,10 @@ export class Level {
       this.nv.stop();
     if (this.table)
       this.table.html('');
+    if(this.onleave)
+      this.onleave();
+
+    d3.select("#levelinfo").html('');
   }
 
   createUI() {
