@@ -448,4 +448,7 @@ tr:hover {
 p {
   margin: 0.5em; }
 
+.successful {
+  background: rgba(100, 255, 0, 0.2) !important; }
+
 /*# sourceMappingURL=default.css.map */

@@ -113,7 +113,12 @@ export class Level {
     d3.select("#totalerror")
       .text(closs.toFixed(2));
 
-    d3.select("#nextbutton").classed("selected", closs < .02);
+    d3.select("#nextbutton")
+      .classed("selected", closs < 0.02)
+      .classed("successful", closs < 0.02);
+
+    d3.select(".tabbed")
+      .classed("successful", closs < 0.02);
 
     d3.select("#totalerrorterm")
       .text(this.rows.map(r => `(${r[r.length-1]} - ${r[r.length-2]})²`).join(" + "));
