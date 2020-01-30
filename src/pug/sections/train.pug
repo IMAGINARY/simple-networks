@@ -19,12 +19,13 @@
             div(title="pause/resume training (continious gradient descent steps)").pause-resume.pause
             div(title="train a single step (Adjust parameters with gradient descent)").single-step
 .box.trainingdata.visible
-  h3 Training Data
-  table#trainingtable
+  div
+    p(style="font-weight:600;") Training Data
+  div
+    table#trainingtable
   .v-seperator
   div
-    h3 Total error on training data
-    p Value of the loss function (to be minimized):
+    p Total error on training data (loss function):
     .center-formula
       p#totalerror
       p.formula

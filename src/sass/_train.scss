@@ -2,8 +2,8 @@
   display: flex;
   flex-direction: column;
   font-size: 20px;
-  padding: 30px;
-  justify-content: space-between;
+  padding: 5px;
+  justify-content: space-around;
 }
 
 
@@ -13,7 +13,7 @@
   border-radius: 10px;
   display: flex;
   flex-direction: column;
-  padding: 28px;
+  padding: 14px;
   margin: 14px;
 }
 
@@ -158,6 +158,10 @@
 }
 
 .train .trainingdata {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+
   visibility: hidden;
 }
 
@@ -194,21 +198,24 @@
   background-color: rgba(0, 0, 0, 0.1);
 }
 
+$mission-help-box-height: 180px;
 .tabbed .content {
   flex: 1;
   margin: 10px;
-  height: 200px;
+  height: $mission-help-box-height;
 }
+
+
 
 .mission {
   visibility: hidden;
-  height: 200px;
+  height: $mission-help-box-height;
   text-align: justify;
 }
 
 .train .helper {
   visibility: hidden;
-  height: 200px;
+  height: $mission-help-box-height;
   opacity: 0;
   display: flex;
   flex-direction: column;
@@ -222,4 +229,8 @@
 #missionbutton {
   background-image: url("../../assets/img/mission.svg");
   border-top-right-radius: 10px;
+}
+
+th {
+  font-weight: 400;
 }
