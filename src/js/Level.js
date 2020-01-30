@@ -32,7 +32,7 @@ export class Level {
     const nv = this.nv = new NetworkVisualization(this.network, () => this.animatecallback());
     nv.animate();
     nv.addInteraction();
-    if(this.onenter)
+    if (this.onenter)
       this.onenter();
   }
 
@@ -41,7 +41,7 @@ export class Level {
       this.nv.stop();
     if (this.table)
       this.table.html('');
-    if(this.onleave)
+    if (this.onleave)
       this.onleave();
 
     d3.select("#levelinfo").html('');
@@ -49,8 +49,9 @@ export class Level {
 
   createUI() {
     document.querySelector(".helper").classList.remove("visible");
+    document.querySelector(".mission").classList.add("visible");
     document.querySelector("#helpmebutton").classList.remove("selected");
-
+    document.querySelector("#missionbutton").classList.add("selected");
 
     d3.select("#leveltitle").text(this.title);
     d3.select("#description").text(this.description);

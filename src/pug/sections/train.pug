@@ -1,14 +1,23 @@
-.helper
-  div(style="flex:1;") Show gradient of loss function
-    label.switch
-      input(type="checkbox")#showgradient
-      span.slider.round
-  .h-seperator
-  div(style="flex:1;") Train with gradient descent
-    .controls
-      div(title="reset training").reset
-      div(title="pause/resume training (continious gradient descent steps)").pause-resume.pause
-      div(title="train a single step (Adjust parameters with gradient descent)").single-step
+  
+.box.tabbed
+  .tabs
+    #missionbutton.tab.selected
+    #helpmebutton.tab
+  .content.relative
+    .mission.absolute.visible
+      #description
+    .helper.absolute
+      div(style="flex:1;")
+        p Show gradient
+          label.switch
+            input(type="checkbox")#showgradient
+            span.slider.round
+      div(style="flex:1; width: 100%;")
+        p Train with gradient descent:
+          .controls
+            div(title="reset training").reset
+            div(title="pause/resume training (continious gradient descent steps)").pause-resume.pause
+            div(title="train a single step (Adjust parameters with gradient descent)").single-step
 .box.trainingdata.visible
   h3 Training Data
   table#trainingtable

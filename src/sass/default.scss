@@ -4,6 +4,11 @@
 @import "slider";
 @import "credits";
 
+.hidden {
+  visibility: hidden;
+  opacity: 0;
+}
+
 .visible {
   visibility: visible !important;
   opacity: 1 !important;
@@ -41,7 +46,7 @@ tr:hover {
 }
 
 .network {
-  width: 75vw;
+  width: 70vw;
   position: relative;
 }
 
@@ -51,14 +56,8 @@ tr:hover {
   pointer-events: none;
 }
 
-#description {
-  height: 200px;
-  column-fill: auto;
-  column-count: 5;
-}
-
 .train {
-  width: 25vw;
+  width: 30vw;
 }
 
 #totalerror {
@@ -93,19 +92,23 @@ tr:hover {
   height: 100vh;
   z-index: 20;
   background: rgba(0,0,0,.5);
-
   backdrop-filter: blur(10px);
-}
-
-#helpmebutton {
-  position: absolute;
-  top: 40px;
-  right: 0;
-  width: 120px;
-  height: 120px;
-  background-image: url("../../assets/img/bulb.svg");
 }
 
 #internationalbutton {
   background-image: url("../../assets/img/international.svg");
+}
+
+.absolute {
+  position: absolute;
+  left: 0;
+  right: 0;
+}
+
+.relative {
+  position: relative;
+}
+
+p {
+  margin: 0.5em;
 }

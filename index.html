@@ -22,7 +22,6 @@
       <div class="network">
         <div class="text">
           <h1 id="leveltitle">Adjust the Neural Network</h1>
-          <p id="description"></p>
         </div>
         <svg viewBox="100 100 900 900">
           <g id="input">
@@ -49,21 +48,34 @@
           <g id="tooltip"></g>
           <g id="levelinfo"></g>
         </svg>
-        <div class="icon" id="helpmebutton"></div>
       </div>
-      <div class="train">
-        <div class="helper">
-          <div style="flex:1;">Show gradient of loss function
-            <label class="switch">
-              <input type="checkbox" id="showgradient"><span class="slider round"></span>
-            </label>
+      <div class="train"> 
+        <div class="box tabbed">
+          <div class="tabs">
+            <div class="tab selected" id="missionbutton"></div>
+            <div class="tab" id="helpmebutton"></div>
           </div>
-          <div class="h-seperator"></div>
-          <div style="flex:1;">Train with gradient descent
-            <div class="controls">
-              <div class="reset" title="reset training"></div>
-              <div class="pause-resume pause" title="pause/resume training (continious gradient descent steps)"></div>
-              <div class="single-step" title="train a single step (Adjust parameters with gradient descent)"></div>
+          <div class="content relative">
+            <div class="mission absolute visible">
+              <div id="description"></div>
+            </div>
+            <div class="helper absolute">
+              <div style="flex:1;">
+                <p>Show gradient
+                  <label class="switch">
+                    <input type="checkbox" id="showgradient"><span class="slider round"></span>
+                  </label>
+                </p>
+              </div>
+              <div style="flex:1; width: 100%;">
+                <p>Train with gradient descent:
+                  <div class="controls">
+                    <div class="reset" title="reset training"></div>
+                    <div class="pause-resume pause" title="pause/resume training (continious gradient descent steps)"></div>
+                    <div class="single-step" title="train a single step (Adjust parameters with gradient descent)"></div>
+                  </div>
+                </p>
+              </div>
             </div>
           </div>
         </div>

@@ -6,14 +6,6 @@
   justify-content: space-between;
 }
 
-.train .helper {
-  visibility: hidden;
-  opacity: 0;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  text-align: center;
-}
 
 .train .box {
   background: #FFFFFF;
@@ -22,14 +14,15 @@
   display: flex;
   flex-direction: column;
   padding: 28px;
+  margin: 14px;
 }
 
 .train .controls {
   display: flex;
   flex-direction: row;
+    justify-content: center;
   width: 100%;
   height: 100px;
-  justify-content: center;
 }
 
 .train .controls > div {
@@ -166,4 +159,67 @@
 
 .train .trainingdata {
   visibility: hidden;
+}
+
+.train .tabbed {
+  display: flex;
+  flex-direction: row-reverse;
+  padding: 0;
+}
+
+.tabs {
+  flex: 0;
+  height: 100%;
+  width: 100px;
+  display: flex;
+  flex-direction: column;
+}
+
+.tab {
+  display: inline-block;
+  height: calc(50%);
+  width: 100px;
+  background-size: 70%;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.tab.selected {
+  box-shadow: 3px 0 3px 0 rgba(0, 0, 0, 0.1);
+  position: relative;
+  z-index: 10;
+}
+
+.tab:not(.selected) {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.tabbed .content {
+  flex: 1;
+  margin: 10px;
+  height: 200px;
+}
+
+.mission {
+  visibility: hidden;
+  height: 200px;
+  text-align: justify;
+}
+
+.train .helper {
+  visibility: hidden;
+  height: 200px;
+  opacity: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+#helpmebutton {
+  background-image: url("../../assets/img/bulb.svg");
+  border-bottom-right-radius: 10px;
+}
+
+#missionbutton {
+  background-image: url("../../assets/img/mission.svg");
+  border-top-right-radius: 10px;
 }
