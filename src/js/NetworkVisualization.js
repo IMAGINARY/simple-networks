@@ -197,28 +197,17 @@ export class NetworkVisualization {
       .attr("fill", "none");
 
 
-    d3.select("#outputs").select(".values").selectAll("text")
-      .data(this.network.outputnodes)
+    d3.select("#nodes").select(".values").selectAll("text")
+      .data(this.network.nodes)
       .join("text")
-      .attr("font-size", 50)
+      .attr("font-size", 40)
       .attr("text-anchor", "middle")
       .attr("alignment-baseline", "central")
       .attr("pointer-events", "none")
+      //.attr("opacity", 0.8)
       .text(n => n.format(n.getActivation()))
       .attr("x", n => n.x)
       .attr("y", n => n.y - 0 * unit * n.getActivation());
-
-    d3.select("#input").select(".values").selectAll("text")
-      .data(this.network.inputnodes)
-      .join("text")
-      .attr("font-size", 50)
-      .attr("text-anchor", "middle")
-      .attr("alignment-baseline", "central")
-      .attr("pointer-events", "none")
-      .text(n => n.format(n.getActivation()))
-      .attr("x", n => n.x - 0 * 25)
-      .attr("y", n => n.y - 0 * unit * n.getActivation());
-
 
     d3.select("#edges").select(".edges").selectAll("path").data(edges).join("path")
       .attr("d", edge => {
