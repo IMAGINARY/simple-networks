@@ -316,7 +316,7 @@ export class NetworkVisualization {
           tooltip
             .attr("x", edge.parameterPosition()[0])
             .attr("y", edge.parameterPosition()[1])
-            .text(`multiply by ${edge.weight.toFixed(2)}`);
+            .text(`× ${edge.weight.toFixed(2)}`);
         }
       })
       .on("end", () => {
