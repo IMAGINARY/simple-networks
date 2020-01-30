@@ -84,6 +84,7 @@ export class Level {
       .selectAll('th')
       .data(this.columns).enter()
       .append('th')
+      .style("background-color", (d, i) => (i >= this.xlabels.length) ? "orange" : "yellow")
       .text(function(column) {
         return column;
       });
