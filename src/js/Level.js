@@ -32,6 +32,7 @@ export class Level {
     const nv = this.nv = new NetworkVisualization(this.network, () => this.animatecallback());
     nv.animate();
     nv.addInteraction();
+    nv.resizeSVG(120);
     if (this.onenter)
       this.onenter();
   }

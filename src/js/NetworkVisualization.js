@@ -50,6 +50,12 @@ export class NetworkVisualization {
     this.animateloop();
   }
 
+  resizeSVG(margin = 0) {
+    var svg = document.querySelector("svg");
+    var bbox = svg.getBBox();
+    svg.setAttribute("viewBox", `${bbox.x - margin} ${bbox.y - margin} ${Math.min(1000, bbox.width) + 2* margin} ${Math.min(1000, bbox.height) + 2*margin}`);
+  }
+
   animateloop() {
     if (!this.animating) return;
 
@@ -173,7 +179,7 @@ export class NetworkVisualization {
       .attr("text-anchor", "left")
       .attr("pointer-events", "none")
       .text(n => "target: " + n.format(n.target))
-      .attr("x", n => n.x-noderadius)
+      .attr("x", n => n.x - noderadius)
       .attr("y", n => n.y - unit * n.target)
       .attr("opacity", 1)
       .attr("fill", n => n.errorcolor());
@@ -254,7 +260,6 @@ export class NetworkVisualization {
       .attr("stroke-width", 2)
       .attr("stroke-opacity", 0.5)
       .attr("fill", "none");
-
     requestAnimationFrame(() => this.animateloop());
   }
 
