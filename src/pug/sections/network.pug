@@ -1,7 +1,6 @@
 
-svg(viewBox="100 100 900 900")
+svg
   g#input
-    g.parameters
     g.activations
   g#outputs
     g.flow
@@ -9,13 +8,15 @@ svg(viewBox="100 100 900 900")
     g.edges
     g.activations
     g.gradient
-    g.parameters
     g.factorlines
   g#nodes
     g.nodes
-    g.parameters
     g.gradient
     g.target
     g.values
+  g#parameters
+    g.input
+    g.edges
+    g.nodes
   g#tooltip
   g#levelinfo
