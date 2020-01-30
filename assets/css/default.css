@@ -381,7 +381,8 @@ tr:hover {
   width: 100vw;
   height: 100vh;
   z-index: 20;
-  background: rgba(0, 0, 0, 0.5); }
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px); }
 
 #helpmebutton {
   position: absolute;
