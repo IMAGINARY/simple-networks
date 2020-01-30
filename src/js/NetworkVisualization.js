@@ -171,11 +171,11 @@ export class NetworkVisualization {
     d3.select("#outputs").select(".target").selectAll("text")
       .data(outputnodes.filter(n => typeof n.target == 'number'))
       .join("text")
-      .attr("font-size", 20)
-      .attr("text-anchor", "middle")
+      .attr("font-size", 40)
+      .attr("text-anchor", "left")
       .attr("pointer-events", "none")
       .text(n => "target: " + n.format(n.target))
-      .attr("x", n => n.x + 50)
+      .attr("x", n => n.x)
       .attr("y", n => n.y - unit * n.target)
       .attr("opacity", 1)
       .attr("fill", n => n.errorcolor());
@@ -187,13 +187,13 @@ export class NetworkVisualization {
       .join("path")
       .attr("d", n => {
         const p = d3.path();
-        p.moveTo(n.x - 0, n.y - unit * n.target);
-        p.lineTo(n.x + 100, n.y - unit * n.target);
+        p.moveTo(n.x - 10, n.y - unit * n.target);
+        p.lineTo(n.x + 200, n.y - unit * n.target);
         return p;
       })
       //.attr("stroke", "orange")
       .attr("stroke", n => n.errorcolor())
-      .attr("stroke-width", 2)
+      .attr("stroke-width", 4)
       .attr("fill", "none");
 
 
@@ -207,7 +207,7 @@ export class NetworkVisualization {
       //.attr("opacity", 0.8)
       .text(n => n.format(n.getActivation()))
       .attr("x", n => n.x)
-      .attr("y", n => n.y - clamp(unit * n.getActivation(), -70+40, 70));
+      .attr("y", n => n.y - clamp(unit * n.getActivation(), -70 + 40, 70));
 
     d3.select("#edges").select(".edges").selectAll("path").data(edges).join("path")
       .attr("d", edge => {
