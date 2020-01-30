@@ -78,8 +78,7 @@ export class NetworkVisualization {
       .attr("fill", d => d.constructor.name == "InputNode" ? "orange" : (d.constructor.name == "OutputNode" ? d.errorcolor() : "black"))
       .attr("stroke", "black")
       .attr("stroke-width", 3)
-      .attr("fill-opacity", n => n.constructor.name == "Node" ? 0.2 : 1)
-      .attr("pointer-events", "none");
+      .attr("fill-opacity", n => n.constructor.name == "Node" ? 0.2 : 1);
 
 
     d3.select("#nodes").select(".parameters").selectAll("circle").data(nodes.filter(node => node.adjustable))
@@ -276,6 +275,11 @@ export class NetworkVisualization {
           tooltip = d3.select("#tooltip").append("text");
         }
 
+        if (node.constructor.name == "InputNode") {
+          this.v0 = node.getActivation();
+          node.setUserParameter(this.v0);
+        }
+
       })
       .on("drag", function() {
         const node = d3.select(this).data()[0];
@@ -285,13 +289,18 @@ export class NetworkVisualization {
           tooltip
             .attr("x", node.x)
             .attr("y", node.y - unit * node.bias)
-            .text(`add bias ${node.bias.toFixed(2)}`);
+            .text(`+ ${node.bias.toFixed(2)}`);
+        }
+        if (node.constructor.name == "InputNode") {
+          node.setUserParameter(this.v0 - (d3.event.y - this.y0) / unit);
+          for (let k in that.network.outputnodes) {
+            delete that.network.outputnodes[k].target;
+          }
         }
       })
       .on("end", () => {
-        const node = d3.select(this).data()[0];
-        tooltip.remove();
-
+        if (tooltip)
+          tooltip.remove();
       })(d3.select("#nodes").selectAll("circle"));
 
     d3.drag()
@@ -340,6 +349,7 @@ export class NetworkVisualization {
         }
         //node.y = d3.event.y + this.deltaX;
       })(d3.select("#input").selectAll("circle, rect"));
+
 
   }
 }
