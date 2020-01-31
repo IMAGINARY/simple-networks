@@ -87,7 +87,7 @@ export class TutorialLevelB extends Level {
     const omega1 = 1 + Math.random();
 
     const nodes = [
-      new InputNode(() => -0.2 + 1 * Math.sin(omega1 * Date.now() / 1000) * Math.exp(-0.1 * (Date.now() - this.t0) / 1000)),
+      new InputNode(() => 0.5 + 2 * Math.sin(omega1 * Date.now() / 1000) * Math.exp(-0.1 * (Date.now() - this.t0) / 1000)),
       new Node(),
       new OutputNode()
     ];
@@ -100,8 +100,9 @@ export class TutorialLevelB extends Level {
 
     nodes[2].x = 800;
     nodes[2].y = 500;
-    nodes[0].addChild(nodes[1], 2);
-    nodes[1].addChild(nodes[2], -1);
+    nodes[0].addChild(nodes[1], -2);
+    nodes[1].addChild(nodes[2], 1);
+    nodes[1].outedges[0].adjustable = false;
 
     const f = c => Math.max(0, (c * 1));
     const trainXs = [-2, -1, 0, 1, 2, 3];
