@@ -28,7 +28,6 @@ import {
 
 
 const addnodeinfo = (node, text, offset = noderadius + 30) => {
-
   d3.select("#levelinfo").append("text")
     .text(text)
     .attr("pointer-events", "none")
@@ -37,6 +36,7 @@ const addnodeinfo = (node, text, offset = noderadius + 30) => {
     .attr("x", node.x)
     .attr("y", node.y + offset);
 };
+
 
 export class TutorialLevelA extends Level {
   constructor() {
@@ -75,6 +75,15 @@ export class TutorialLevelA extends Level {
     this.onenter = function() {
       addnodeinfo(nodes[0], "You can adjust the input of the network.");
       addnodeinfo(nodes[1], "The output of the neural network.");
+      
+      d3.select("#levelinfo").append("text")
+        .text("Adjust the multiplication factor along the connection.")
+        .attr("pointer-events", "none")
+        .attr("text-anchor", "middle")
+        .attr("font-size", 20)
+        .attr("x", (nodes[0].x + nodes[1].x)/2)
+        .attr("y", (nodes[0].y + nodes[1].y)/2 - 100);
+        
       document.querySelector(".trainingdata").classList.remove("visible");
     };
 
@@ -232,32 +241,26 @@ export class WeatherLevel extends Level {
     const trainingdata = [{
         cloudiness: 0,
         inside: 0,
-        temperature: 2.8
       },
       {
         cloudiness: 0.5,
         inside: 0,
-        temperature: 1.7
       },
       {
         cloudiness: 1,
         inside: 0,
-        temperature: 1.2
       },
       {
         cloudiness: 1,
         inside: 1,
-        temperature: 2.0
       },
       {
         cloudiness: 0.5,
         inside: 1,
-        temperature: 2.0
       },
       {
         cloudiness: 0,
         inside: 1,
-        temperature: 2.1
       }
     ];
     const formula = (c, i) => (i == 1) ? (2.1 - 0.1 * c) : (2.5 - 1.2 * c);
