@@ -305,7 +305,7 @@ export class FahrenheitLevel extends Level {
     nodes[0].y = 500;
     nodes[0].allownegative = false;
     nodes[1].x = 500;
-    nodes[1].y = 450;
+    nodes[1].y = 550;
     nodes[2].x = 800;
     nodes[2].y = 500;
 
@@ -318,6 +318,7 @@ export class FahrenheitLevel extends Level {
     const trainYs = trainXs.map(c2f);
 
     nodes[0].format = temp => `${(temp*10).toFixed(0)}°C`;
+    nodes[1].format = temp => `${(temp*10).toFixed(0)}`;
     nodes[2].format = temp => `${(temp*10).toFixed(0)}°F`;
     super("Convert Celsius to Fahrenheit.",
       new Network(
