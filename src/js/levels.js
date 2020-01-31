@@ -272,7 +272,7 @@ export class WeatherLevel extends Level {
     super("Can you predict the temperature given the cloudiness and the fact of being inside?", nw,
       ["cloudiness", "inside?"], trainingdata.map(td => [td.cloudiness, td.inside]),
       ["temperature"], trainingdata.map(td => [formula(td.cloudiness, td.inside)]),
-      "Outside (insideness=0), the temperature depends on the amount of clouds: The higher the cloudiness, the lower the temperature. Inside (insideness=1), the temperature is constant 20°C."
+      "Outside (insideness=0), the temperature depends on the amount of clouds: The higher the cloudiness, the lower the temperature. Inside (insideness=1), the temperature is almost constant 20°C."
     );
 
     this.animatestep = function() {
