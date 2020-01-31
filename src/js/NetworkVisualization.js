@@ -9,6 +9,8 @@ import {
   updateDynamicVariables
 } from './DynamicVariable.js';
 
+const clamp = (x, mi, ma) => Math.min(ma, Math.max(mi, x));
+
 export class NetworkVisualization {
   constructor(network, animatecallback) {
     const nodes = this.nodes = network.nodes;
@@ -101,7 +103,7 @@ export class NetworkVisualization {
 
     const DLOSS_SCALE = 0.1;
     const DLOSS_CLAMP = 3;
-    const clamp = (x, mi, ma) => Math.min(ma, Math.max(mi, x));
+
     d3.select("#nodes").select(".gradient").selectAll("path").data(nodes.filter(node => node.dloss != 0 && node.adjustable))
       .join("path")
       .attr("d", (node) => {
@@ -289,7 +291,7 @@ export class NetworkVisualization {
       .on("drag", function() {
         const node = d3.select(this).data()[0];
         if (node.adjustable) {
-          node.bias = this.v0 - (d3.event.y - this.y0) / unit;
+          node.bias = clamp(this.v0 - (d3.event.y - this.y0) / unit, -4, 4);
           //node.y = d3.event.y + this.deltaX;
           tooltip
             .attr("x", node.x)
@@ -297,7 +299,7 @@ export class NetworkVisualization {
             .text(`+ ${node.format(node.bias)}`);
         }
         if (node.constructor.name == "InputNode") {
-          node.setUserParameter(this.v0 - (d3.event.y - this.y0) / unit);
+          node.setUserParameter(clamp(this.v0 - (d3.event.y - this.y0) / unit, -4, 4));
           for (let k in that.network.outputnodes) {
             delete that.network.outputnodes[k].target;
           }
@@ -331,7 +333,7 @@ export class NetworkVisualization {
           let sactivation = edge.from.getActivation();
           if (Math.abs(sactivation) < parameterths) sactivation = (edge.from.getActivation() < 0 ? -1 : 1) * parameterths;
           //if (Math.abs(edge.from.getActivation()) > 0.001) {
-          edge.weight = this.weight0 - (d3.event.y - this.y0) / sactivation / unit;
+          edge.weight = clamp(this.weight0 - (d3.event.y - this.y0) / sactivation / unit, -4, 4);
           //}
           tooltip
             .attr("x", edge.parameterPosition()[0])
