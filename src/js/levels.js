@@ -22,18 +22,20 @@ import {
 } from './Level.js';
 
 import {
-  unit
+  unit,
+  noderadius
 } from './constants.js';
 
 
-const addnodeinfo = (node, text) => {
+const addnodeinfo = (node, text, offset = noderadius + 30) => {
+
   d3.select("#levelinfo").append("text")
     .text(text)
     .attr("pointer-events", "none")
     .attr("text-anchor", "middle")
     .attr("font-size", 20)
     .attr("x", node.x)
-    .attr("y", node.y + 120);
+    .attr("y", node.y + offset);
 };
 
 export class TutorialLevelA extends Level {
@@ -228,9 +230,9 @@ export class WeatherLevel extends Level {
     );
 
     const trainingdata = [{
-        cloudiness: 1,
+        cloudiness: 0,
         inside: 0,
-        temperature: 1.2
+        temperature: 2.8
       },
       {
         cloudiness: 0.5,
@@ -238,14 +240,9 @@ export class WeatherLevel extends Level {
         temperature: 1.7
       },
       {
-        cloudiness: 0,
+        cloudiness: 1,
         inside: 0,
-        temperature: 2.8
-      },
-      {
-        cloudiness: 0.3,
-        inside: 0,
-        temperature: 2.3
+        temperature: 1.2
       },
       {
         cloudiness: 1,
@@ -263,6 +260,7 @@ export class WeatherLevel extends Level {
         temperature: 2.1
       }
     ];
+    const formula = (c, i) => (i == 1) ? (2.1 - 0.1 * c) : (2.5 - 1.2 * c);
 
     //nodes[0].format = cls => `cloudiness: ${cls.toFixed(1)}`;
     //nodes[1].format = v => Math.round(v) == 1 ? '1 (inside)' : '0 (outside)';
@@ -270,7 +268,7 @@ export class WeatherLevel extends Level {
     nodes[4].format = temp => `${(temp*10).toFixed(0)}°C`;
     super("Can you predict the temperature given the cloudiness and the fact of being inside?", nw,
       ["cloudiness", "inside?"], trainingdata.map(td => [td.cloudiness, td.inside]),
-      ["temperature"], trainingdata.map(td => [td.temperature]),
+      ["temperature"], trainingdata.map(td => [formula(td.cloudiness, td.inside)]),
       "Outside (insideness=0), the temperature depends on the amount of clouds: The higher the cloudiness, the lower the temperature. Inside (insideness=1), the temperature is constant 20°C."
     );
 
@@ -280,8 +278,15 @@ export class WeatherLevel extends Level {
       nodes[0].setUserParameter(Math.min(1, Math.max(0, (nodes[0].getActivation()))));
       //round input
       nodes[1].setUserParameter(Math.min(1, Math.max(0, Math.round(nodes[1].getActivation()))));
+
+      nodes[4].target = formula(nodes[0].getActivation(), nodes[1].getActivation());
     };
 
+    this.onenter = function() {
+      addnodeinfo(nodes[0], `amount of clouds`, -noderadius - 20);
+      addnodeinfo(nodes[1], `inside/outside`);
+      addnodeinfo(nodes[4], `predicted temperature`);
+    };
   }
 
 }
@@ -328,7 +333,7 @@ export class FahrenheitLevel extends Level {
       ),
       ["Celsius"], trainXs.map(v => [v / 10]), //temperatures are internally divided by 10.
       ["Fahrenheit"], trainYs.map(v => [v / 10]),
-      "Given an positive temperature in Celsius (left, orange slider), the temperature in Fahrenheit is to be computed (output of the network on the right side). Adjust the parameters (blue and white sliders) of the network such that it computes the target value for each input. All values of the table below should be obtained."
+      "Given a positive temperature in Celsius (left, yellow slider), the temperature in Fahrenheit is to be computed (output of the network on the right side). Adjust the parameters (blue and white sliders) of the network such that it computes the target value for each input. All values of the table below should be obtained."
     );
     this.animatestep = function() {
       nodes[2].target = c2f(nodes[0].getActivation() * 10) / 10;
