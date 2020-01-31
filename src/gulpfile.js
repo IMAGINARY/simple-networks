@@ -28,6 +28,10 @@ const paths = {
     src: './js/*.js',
     dest: `${OUTPUT_DIR}/assets/js`,
   },
+  fonts: {
+    src: './node_modules/typeface-roboto/**/*',
+    dest: `${OUTPUT_DIR}/assets/fonts/typeface-roboto`,
+  }
 };
 
 function html() {
@@ -90,15 +94,21 @@ function scripts(cb) {
     .pipe(gulp.dest(paths.scripts.dest));
 }
 
+function fonts() {
+  return gulp.src(paths.fonts.src)
+    .pipe(gulp.dest(paths.fonts.dest));
+}
+
 function watch() {
   gulp.watch(paths.styles.src, styles);
   gulp.watch(paths.scripts.src, scripts);
   for (let k in paths.html.src) {
     gulp.watch(paths.html.src[k], html);
   }
+  gulp.watch(paths.fonts.src, fonts);
 }
 
-const build = gulp.parallel(html, styles, scripts);
+const build = gulp.parallel(html, styles, scripts, fonts);
 
 exports.html = html;
 exports.styles = styles;
