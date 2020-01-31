@@ -294,7 +294,7 @@ export class NetworkVisualization {
           tooltip
             .attr("x", node.x)
             .attr("y", node.y - unit * node.bias)
-            .text(`+ ${node.bias.toFixed(2)}`);
+            .text(`+ ${node.format(node.bias)}`);
         }
         if (node.constructor.name == "InputNode") {
           node.setUserParameter(this.v0 - (d3.event.y - this.y0) / unit);
