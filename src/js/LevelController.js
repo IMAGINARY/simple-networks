@@ -7,6 +7,7 @@ import {
   SumLevel,
   MaxLevel,
   XorLevel,
+  AndLevel,
   AvgLevel
 } from './levels.js';
 
@@ -17,11 +18,12 @@ export class LevelController {
     this.createEvents();
     this.levels = [ //generators for levels
       () => new TutorialLevelA(),
+      () => new SumLevel(),
+      () => new AvgLevel(),
       () => new TutorialLevelB(),
       () => new TutorialLevelC(),
       () => new FahrenheitLevel(),
-      () => new SumLevel(),
-      () => new AvgLevel(),
+      () => new AndLevel(),
       () => new MaxLevel(),
       () => new WeatherLevel(),
       () => new XorLevel()

@@ -272,7 +272,7 @@ export class WeatherLevel extends Level {
     super("Can you predict the temperature given the cloudiness and the fact of being inside?", nw,
       ["cloudiness", "inside?"], trainingdata.map(td => [td.cloudiness, td.inside]),
       ["temperature"], trainingdata.map(td => [formula(td.cloudiness, td.inside)]),
-      "Outside (insideness=0), the temperature depends on the amount of clouds: The higher the cloudiness, the lower the temperature. Inside (insideness=1), the temperature is almost constant 20°C."
+      "Outside (insideness = 0), the temperature depends on the amount of clouds: The higher the cloudiness, the lower the temperature. Inside (insideness = 1), the temperature is almost constant 20°C."
     );
 
     this.animatestep = function() {
@@ -354,26 +354,23 @@ export class SumLevel extends Level {
     const nodes = [
       new InputNode(() => 0.5 + 0.5 * Math.sin(omega1 * Date.now() / 1000) * Math.exp(-0.3 * (Date.now() - this.t0) / 1000)),
       new InputNode(() => 0.5 + 0.5 * Math.sin(omega2 * Date.now() / 1000) * Math.exp(-0.3 * (Date.now() - this.t0) / 1000)),
-      new Node(), //TODO: No ReLu Nodes here!
       new OutputNode()
     ];
 
-    nodes[2].bias = 1;
+    nodes[2].bias = 0;
 
     nodes[0].x = 200;
     nodes[0].y = 300;
-    nodes[0].allownegative = false;
+    nodes[0].allownegative = true;
     nodes[1].x = 200;
     nodes[1].y = 700;
-    nodes[1].allownegative = false;
-    nodes[2].x = 500;
+    nodes[1].allownegative = true;
+
+    nodes[2].x = 800;
     nodes[2].y = 500;
-    nodes[3].x = 800;
-    nodes[3].y = 500;
 
     nodes[0].addChild(nodes[2], 1);
-    nodes[1].addChild(nodes[2], 1);
-    nodes[2].addChild(nodes[3], 1);
+    nodes[1].addChild(nodes[2], -1);
 
 
     const c2f = c => ((c * 1.8) + 32);
@@ -387,23 +384,86 @@ export class SumLevel extends Level {
     ];
     const trainYs = trainXs.map(p => [p[0] + p[1]]);
 
-    super("Compute the sum of the input activations.",
+    super("Can you compute the sum of the sum of the input activations?",
       new Network(
         nodes,
         [nodes[0], nodes[1]], //input nodes
-        [nodes[3]] //output nodes
+        [nodes[2]] //output nodes
       ),
       ["summand 1", "summand 2"], trainXs, //temperatures are internally divided by 10.
       ["sum"], trainYs,
-      "Adjust the parameters of the network such that the output on the left equals the sum of the two non-negative inputs on the right."
+      "Adjust the parameters of the network such that the output on the left equals the sum of the two inputs. The predictions of the network should be equal to all the values in the training table below."
     );
     this.animatestep = function() {
-      nodes[3].target = (nodes[0].getActivation()) + (nodes[1].getActivation());
+      nodes[2].target = (nodes[0].getActivation()) + (nodes[1].getActivation());
     };
 
   }
 }
 
+
+export class AndLevel extends Level {
+  constructor() {
+    const omega1 = 1 + Math.random();
+    const omega2 = 1 + Math.random();
+
+    const nodes = [
+      new InputNode(() => 1),
+      new InputNode(() => 1),
+
+      new Node(),
+
+      new OutputNode()
+    ];
+
+    for (let i in [2]) {
+      nodes[[2][i]].bias = 2 * (Math.random());
+    }
+
+
+    nodes[0].x = 200;
+    nodes[0].y = 350;
+    nodes[1].x = 200;
+    nodes[1].y = 650;
+    nodes[2].x = 500;
+    nodes[2].y = 500;
+
+    nodes[3].x = 800;
+    nodes[3].y = 500;
+
+    nodes[0].addChild(nodes[2], 1);
+    //nodes[0].addChild(nodes[3], 1);
+    nodes[1].addChild(nodes[2], -0.2);
+
+
+    nodes[2].addChild(nodes[3], 1);
+    //nodes[1].addChild(nodes[3], 1);
+
+    const nw = new Network(
+      nodes,
+      [nodes[0], nodes[1]], //input nodes
+      [nodes[3]] //output nodes
+    );
+    const trainXs = [0, 0, 0, 0, 0, 0, 0].map(v => [Math.random(), Math.random()]);
+    const trainYs = trainXs.map(p => [Math.max(p[0], p[1])]);
+
+    super("Are both inputs set to 1?",
+      nw,
+      ["bit 1", "bit 2"], trainXs, //temperatures are internally divided by 10.
+      ["AND"], trainYs,
+      "The inputs of this network are eigther 0 or 1. The output on the right should be 1 only if both inputs are 1. Otherwise, it should be 0."
+    );
+    this.animatestep = function() {
+      nodes[0].format = v => Math.round(v);
+      nodes[1].format = v => Math.round(v);
+      nodes[0].setUserParameter(Math.min(1, Math.max(0, Math.round(nodes[0].getActivation()))));
+      nodes[1].setUserParameter(Math.min(1, Math.max(0, Math.round(nodes[1].getActivation()))));
+      
+      nodes[3].target = (nodes[0].getActivation()*nodes[1].getActivation());
+    };
+
+  }
+}
 
 export class MaxLevel extends Level {
   constructor() {
@@ -558,51 +618,49 @@ export class AvgLevel extends Level {
       new InputNode(() => 0.5 + 0.5 * Math.sin(omega2 * Date.now() / 1000) * Math.exp(-0.3 * (Date.now() - this.t0) / 1000)),
       new InputNode(() => 0.5 + 0.5 * Math.sin(omega2 * Date.now() / 1000) * Math.exp(-0.3 * (Date.now() - this.t0) / 1000)),
 
-      new Node(),
+      //new Node(),
 
       new OutputNode()
     ];
 
-    for (let i in [3]) {
-      nodes[[3][i]].bias = 2 * (Math.random() - 0.5);
-    }
 
     //output from console
     nodes[0].x = 200;
     nodes[0].y = 300;
-    nodes[0].allownegative = false;
+    nodes[0].allownegative = true;
     nodes[1].x = 200;
     nodes[1].y = 500;
-    nodes[1].allownegative = false;
+    nodes[1].allownegative = true;
     nodes[2].x = 200;
     nodes[2].y = 700;
-    nodes[2].allownegative = false;
+    nodes[2].allownegative = true;
 
-    nodes[3].x = 500;
+    nodes[3].x = 800;
     nodes[3].y = 500;
-    nodes[4].x = 800;
-    nodes[4].y = 500;
+    //nodes[4].x = 800;
+    //nodes[4].y = 500;
 
     nodes[0].addChild(nodes[3], 1);
     nodes[1].addChild(nodes[3], 1);
     nodes[2].addChild(nodes[3], 1);
-    nodes[3].addChild(nodes[4], 1);
+    //nodes[3].addChild(nodes[4], 1);
 
     const nw = new Network(
       nodes,
       [nodes[0], nodes[1], nodes[2]], //input nodes
-      [nodes[4]] //output nodes
+      [nodes[3]] //output nodes
     );
     const trainXs = [0, 0, 0, 0, 0, 0, 0].map(v => [Math.random(), Math.random(), Math.random()]);
     const trainYs = trainXs.map(p => [(p[0] + p[1] + p[2]) / 3]);
 
-    super("Compute the average of the input values.",
+    super("Can you compute the average of the input values?",
       nw,
       ["number 1", "number 2", "number 3"], trainXs, //temperatures are internally divided by 10.
       ["average"], trainYs,
+      "Given three inputs, can you adjust the weights such that the output always equals to the average of the input activations? In particular, the network should produce correct outputs for all values in the table below."
     );
     this.animatestep = function() {
-      nodes[4].target = (nodes[0].getActivation() + nodes[1].getActivation() + nodes[2].getActivation()) / 3;
+      nodes[3].target = (nodes[0].getActivation() + nodes[1].getActivation() + nodes[2].getActivation()) / 3;
     };
 
   }
