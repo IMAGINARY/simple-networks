@@ -75,15 +75,15 @@ export class TutorialLevelA extends Level {
     this.onenter = function() {
       addnodeinfo(nodes[0], "You can adjust the input of the network.");
       addnodeinfo(nodes[1], "The output of the neural network.");
-      
+
       d3.select("#levelinfo").append("text")
         .text("Adjust the multiplication factor along the connection.")
         .attr("pointer-events", "none")
         .attr("text-anchor", "middle")
         .attr("font-size", 20)
-        .attr("x", (nodes[0].x + nodes[1].x)/2)
-        .attr("y", (nodes[0].y + nodes[1].y)/2 - 100);
-        
+        .attr("x", (nodes[0].x + nodes[1].x) / 2)
+        .attr("y", (nodes[0].y + nodes[1].y) / 2 - 100);
+
       document.querySelector(".trainingdata").classList.remove("visible");
     };
 
@@ -384,7 +384,7 @@ export class SumLevel extends Level {
     ];
     const trainYs = trainXs.map(p => [p[0] + p[1]]);
 
-    super("Can you compute the sum of the sum of the input activations?",
+    super("The sum of the input activations.",
       new Network(
         nodes,
         [nodes[0], nodes[1]], //input nodes
@@ -444,8 +444,13 @@ export class AndLevel extends Level {
       [nodes[0], nodes[1]], //input nodes
       [nodes[3]] //output nodes
     );
-    const trainXs = [0, 0, 0, 0, 0, 0, 0].map(v => [Math.random(), Math.random()]);
-    const trainYs = trainXs.map(p => [Math.max(p[0], p[1])]);
+    const trainXs = [
+      [0, 0],
+      [1, 0],
+      [0, 1],
+      [1, 1]
+    ];
+    const trainYs = trainXs.map(p => [(p[0] * p[1])]);
 
     super("Are both inputs set to 1?",
       nw,
@@ -458,8 +463,8 @@ export class AndLevel extends Level {
       nodes[1].format = v => Math.round(v);
       nodes[0].setUserParameter(Math.min(1, Math.max(0, Math.round(nodes[0].getActivation()))));
       nodes[1].setUserParameter(Math.min(1, Math.max(0, Math.round(nodes[1].getActivation()))));
-      
-      nodes[3].target = (nodes[0].getActivation()*nodes[1].getActivation());
+
+      nodes[3].target = (nodes[0].getActivation() * nodes[1].getActivation());
     };
 
   }
@@ -653,7 +658,7 @@ export class AvgLevel extends Level {
     const trainXs = [0, 0, 0, 0, 0, 0, 0].map(v => [Math.random(), Math.random(), Math.random()]);
     const trainYs = trainXs.map(p => [(p[0] + p[1] + p[2]) / 3]);
 
-    super("Can you compute the average of the input values?",
+    super("The average of the input values.",
       nw,
       ["number 1", "number 2", "number 3"], trainXs, //temperatures are internally divided by 10.
       ["average"], trainYs,
