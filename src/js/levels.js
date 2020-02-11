@@ -392,7 +392,7 @@ export class SumLevel extends Level {
       ),
       ["summand 1", "summand 2"], trainXs, //temperatures are internally divided by 10.
       ["sum"], trainYs,
-      "Adjust the parameters of the network such that the output on the left equals the sum of the two inputs. The predictions of the network should be correct for all the values in the training table below."
+      "Adjust the parameters of the network such that the output on the right equals the sum of the two inputs. The predictions of the network should be correct for all the values in the training table below."
     );
     this.animatestep = function() {
       nodes[2].target = (nodes[0].getActivation()) + (nodes[1].getActivation());
@@ -456,7 +456,7 @@ export class AndLevel extends Level {
       nw,
       ["bit 1", "bit 2"], trainXs, //temperatures are internally divided by 10.
       ["AND"], trainYs,
-      "The inputs of this network are eigther 0 or 1. The output on the right should be 1 only if both inputs are 1. Otherwise, it should be 0."
+      "The inputs of this network are either 0 or 1. The output on the right should be 1 only if both inputs are 1. Otherwise, it should be 0."
     );
     this.animatestep = function() {
       nodes[0].format = v => Math.round(v);
