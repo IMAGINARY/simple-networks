@@ -12,22 +12,21 @@ import {
 export class OutputNode extends Node {
   constructor() {
     super();
+    this.bias = 0;
     this.adjustable = false;
   }
 
   getActivation() {
-    this.activation = 0; //no bias
-    for (let eid in this.inedges) {
-      const edge = this.inedges[eid];
-      this.activation += edge.weight * edge.from.getActivation();
-    }
-    this.activation = this.activation; // no ReLu
-    return this.activation;
+    return this.computeSum(); // no bias, no ReLu
   }
 
-  //this function might be overwriten
+  //this function might be overwriten, such that it is dependent on loss function
   getdActivation() {
-    return 1; //TODO: make dependent on loss function
+    return 1; //likely will be overwritten
+  }
+
+  active() {
+    return true;
   }
 
   temporarilyReplaceGetdActivation(tempdActivation) {

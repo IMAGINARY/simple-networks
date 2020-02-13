@@ -11,11 +11,10 @@ import {
 
 export class Node {
   constructor() {
-    this.activation = new DynamicVariable(0);
     this.dactivation = new DynamicVariable(0);
+    this.sum = new DynamicVariable(0);
     this.bias = 0;
     this.dloss = 0;
-    this.dbias = new DynamicVariable(0);
     this.outedges = [];
     this.inedges = [];
     this.adjustable = true;
@@ -29,15 +28,24 @@ export class Node {
     }
   }
 
-  getActivation() {
-    return this.activation.update(() => {
+  computeSum() {
+    return this.sum.update(() => {
       let activation = this.bias;
       for (let eid in this.inedges) {
         const edge = this.inedges[eid];
         activation += edge.weight * edge.from.getActivation();
       }
-      return Math.max(0, activation); //ReLu
+      return activation;
     });
+  }
+
+  getActivation() {
+    return Math.max(0, this.computeSum()); //ReLu
+  }
+
+
+  active() {
+    return this.computeSum() >= 0;
   }
 
   getdActivation() {
@@ -45,7 +53,7 @@ export class Node {
       let dactivation = 0;
       for (let eid in this.outedges) {
         const edge = this.outedges[eid];
-        if (edge.to.getActivation() > 0 || edge.to.constructor.name == "OutputNode") {
+        if (edge.to.active()) {
           dactivation += edge.weight * edge.to.getdActivation();
         }
       }
@@ -54,13 +62,7 @@ export class Node {
   }
 
   getdBias() {
-    return this.dbias.update(() => {
-      let dbias = 0;
-      if (this.getActivation() > 0) {
-        dbias = this.getdActivation();
-      }
-      return dbias;
-    });
+    return (this.active() ? this.getdActivation() : 0);
   }
 
   format(v) {
