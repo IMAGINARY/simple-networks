@@ -26,7 +26,7 @@
     "gulp-sourcemaps": "^2.6.5",
     "gulp-touch-fd": "^2.0.0",
     "gulp-uglify": "^3.0.2",
-    "jquery": "1.9.1",
+    "jquery": "^3.5.1",
     "node-sass": "^4.14.1",
     "popper.js": "^1.16.1-lts",
     "regenerator-runtime": "^0.13.7",
