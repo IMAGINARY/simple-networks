@@ -21,13 +21,13 @@ window.addEventListener('DOMContentLoaded', (event) => {
     document.querySelector("#helpmebutton").classList.remove("selected");
     document.querySelector("#missionbutton").classList.add("selected");
   };
-
+/* FIXME: There is no #creditsbutton id, so why is this code here if it breaks anyway?
   document.querySelector("#creditsbutton").onclick = () => {
     document.querySelector(".credits").classList.toggle("visible");
     document.querySelector("#screenoverlay").classList.toggle("visible");
     document.querySelector("#creditsbutton").classList.toggle("selected");
   };
-
+*/
   document.querySelector("#screenoverlay").onclick = () => {
     document.querySelector(".credits").classList.remove("visible");
     document.querySelector("#screenoverlay").classList.remove("visible");

@@ -18,6 +18,7 @@
     "bootstrap": "^4.5.2",
     "browserify": "^16.5.2",
     "core-js": "^3.6.5",
+    "d3": "^5.16.0",
     "gulp": "^4.0.2",
     "gulp-babel": "^8.0.0",
     "gulp-pug": "^4.0.1",

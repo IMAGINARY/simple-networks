@@ -17,7 +17,12 @@ const JS_BUNDLE_NAME = 'bundle';
 
 const paths = {
   html: {
-    src: ['./pug/**/*.pug', '!./pug/include/**/*.pug', '!./pug/tpl/**/*.pug', '!./pug/sections/**/*.pug'],
+    src: [
+      './pug/**/*.pug',
+      '!./pug/include/**/*.pug',
+      '!./pug/tpl/**/*.pug',
+      '!./pug/sections/**/*.pug',
+    ],
     dest: `${OUTPUT_DIR}`,
   },
   styles: {
@@ -57,27 +62,15 @@ function styles() {
     .pipe(gulp.dest(paths.styles.dest));
 }
 
-function scripts(cb) {
-  cb();
-  return; //ignore
+function scripts() {
   return browserify({
-      extensions: ['.js', '.jsx'],
-      entries: './js/main.js',
-    })
+    extensions: ['.js', '.jsx'],
+    entries: './js/main.js',
+    debug: true,
+  })
     .transform('babelify', {
-      "presets": [
-        [
-          "@babel/preset-env",
-          {
-            //"exclude": "@babel/plugin-transform-regenerator"
-            //"useBuiltIns": "entry",
-            //"plugins": [
-            //  "transform-runtime",
-            //  "transform-async-to-generator"
-            //]
-          }
-        ]
-      ]
+      "presets": ["@babel/preset-env"],
+      sourceMaps: true,
     })
     .on('error', (msg) => {
       // eslint-disable-next-line no-console

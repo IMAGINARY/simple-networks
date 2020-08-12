@@ -26,6 +26,5 @@ html
   body(class!=body.class.join(' '))
     block body
     block scripts
-    script(type='text/javascript', src="src/js/d3.js")
-    script(type="module", src="src/js/main.js") //TODO: browserfy
+    script(type="module", src="assets/js/bundle.min.js")
     block closing
