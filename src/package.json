@@ -6,7 +6,7 @@
   "author": "Aaron Montag <aaron.montag@imaginary.org>",
   "private": true,
   "engines": {
-    "node": "^10.14.0"
+    "node": ">=10.14.0"
   },
   "dependencies": {
     "typeface-roboto": "0.0.75"
