@@ -107,7 +107,7 @@ function scripts() {
     .pipe(buffer())
     .pipe(sourcemaps.init({ loadMaps: true }))
     .pipe(gulp.dest(paths.scripts.dest))
-    .pipe(uglify())
+    .pipe(uglify({ keep_fnames: true }))
     .pipe(rename(`${JS_BUNDLE_NAME}.min.js`))
     .pipe(sourcemaps.write('.'))
     .pipe(gulp.dest(paths.scripts.dest));
