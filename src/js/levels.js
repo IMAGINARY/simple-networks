@@ -1,5 +1,5 @@
 //jshint: "esversion": 8
-
+import * as d3 from 'd3';
 
 import {
   Node,
