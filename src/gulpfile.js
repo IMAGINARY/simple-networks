@@ -31,7 +31,7 @@ const paths = {
     dest: `${OUTPUT_DIR}/assets/css`,
   },
   scripts: {
-    src: './js/*.js',
+    src: './js/**/*.js',
     dest: `${OUTPUT_DIR}/assets/js`,
   },
   dependencies: {
