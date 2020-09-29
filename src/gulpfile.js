@@ -6,7 +6,7 @@ const pug = require('gulp-pug');
 const sass = require('gulp-sass');
 require('gulp-babel');
 const sourcemaps = require('gulp-sourcemaps');
-const uglify = require('gulp-uglify');
+const terser = require('gulp-terser');
 const rename = require('gulp-rename');
 const touch = require('gulp-touch-fd');
 const pugData = require('./pug/data.js');
@@ -81,7 +81,7 @@ function dependencies() {
     .pipe(buffer())
     .pipe(sourcemaps.init({ loadMaps: true }))
     .pipe(gulp.dest(paths.scripts.dest))
-    .pipe(uglify())
+    .pipe(terser())
     .pipe(rename('dependencies.min.js'))
     .pipe(sourcemaps.write('.'))
     .pipe(gulp.dest(paths.dependencies.dest));
@@ -107,7 +107,7 @@ function scripts() {
     .pipe(buffer())
     .pipe(sourcemaps.init({ loadMaps: true }))
     .pipe(gulp.dest(paths.scripts.dest))
-    .pipe(uglify({ keep_fnames: true }))
+    .pipe(terser({ keep_fnames: true }))
     .pipe(rename(`${JS_BUNDLE_NAME}.min.js`))
     .pipe(sourcemaps.write('.'))
     .pipe(gulp.dest(paths.scripts.dest));
