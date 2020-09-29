@@ -28,14 +28,25 @@ const paths = {
   },
   styles: {
     src: './sass/**/*.scss',
+    watchSrc: [
+      './sass/**/*.scss',
+      './package-lock.json',
+    ],
     dest: `${OUTPUT_DIR}/assets/css`,
   },
   scripts: {
     src: './js/**/*.js',
+    watchSrc: [
+      './js/**/*.js',
+      './package-lock.json',
+    ],
     dest: `${OUTPUT_DIR}/assets/js`,
   },
   dependencies: {
     packages: ['d3'],
+    watchSrc: [
+      './package-lock.json',
+    ],
     dest: `${OUTPUT_DIR}/assets/js`,
   },
   fonts: {
@@ -120,6 +131,7 @@ function fonts() {
 
 function watch() {
   gulp.watch(paths.styles.watchSrc || paths.styles.src, styles);
+  gulp.watch(paths.dependencies.watchSrc || paths.dependencies.src, dependencies);
   gulp.watch(paths.scripts.watchSrc || paths.scripts.src, scripts);
   gulp.watch(paths.html.watchSrc || paths.html.src, html);
   gulp.watch(paths.fonts.watchSrc || paths.fonts.src, fonts);
