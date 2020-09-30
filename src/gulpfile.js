@@ -9,7 +9,7 @@ const sourcemaps = require('gulp-sourcemaps');
 const terser = require('gulp-terser');
 const rename = require('gulp-rename');
 const touch = require('gulp-touch-fd');
-const pugData = require('./pug/data.js');
+const fs = require('fs');
 
 const OUTPUT_DIR = '..';
 
@@ -23,7 +23,8 @@ const paths = {
       '!./pug/tpl/**/*.pug',
       '!./pug/sections/**/*.pug',
     ],
-    watchSrc: ['./pug/**/*.pug'],
+    watchSrc: ['./pug/**/*'],
+    data: { config: './pug/config.json' },
     dest: `${OUTPUT_DIR}`,
   },
   styles: {
@@ -56,6 +57,11 @@ const paths = {
 };
 
 function html() {
+  const loadJson = function(filename) {
+    return JSON.parse(fs.readFileSync(filename));
+  };
+  const pugData = Object.fromEntries(Object.entries(paths.html.data)
+    .map(([propName, filename]) => [propName, loadJson(filename)]));
   return gulp.src(paths.html.src)
     .pipe(pug({
       pretty: true,
