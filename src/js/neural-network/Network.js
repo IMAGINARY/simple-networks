@@ -66,6 +66,18 @@ class Node {
     this.p = Object.assign({}, properties);
   }
 
+  isInput() {
+    return this.in.length === 0;
+  }
+
+  isOutput() {
+    return this.out.length === 0;
+  }
+
+  isInner() {
+    return !this.isInput() && !this.isOutput();
+  }
+
   _freeze() {
     Object.freeze(this);
     Object.freeze(this.in);
