@@ -64,18 +64,18 @@
             </div>
             <div class="helper absolute">
               <div style="flex:1;">
-                <p>Show gradient
+                <p>Gradienten anzeigen
                   <label class="switch">
                     <input type="checkbox" id="showgradient"><span class="slider round"></span>
                   </label>
                 </p>
               </div>
               <div style="flex:1; width: 100%;">
-                <p>Train with gradient descent:
+                <p>Mit dem Gradientenverfahren trainieren:
                   <div class="controls">
-                    <div class="reset" title="reset training"></div>
-                    <div class="pause-resume pause" title="pause/resume training (continious gradient descent steps)"></div>
-                    <div class="single-step" title="train a single step (Adjust parameters with gradient descent)"></div>
+                    <div class="reset" title="Setze Traing zurück"></div>
+                    <div class="pause-resume pause" title="Training pausieren/fortsetzen (fortlaufende Schritte mit dem Gradientenverfahren)"></div>
+                    <div class="single-step" title="Trainiere einen einzelnen Schritt (Parameteranpassung mit Gradientenverfahren)"></div>
                   </div>
                 </p>
               </div>
@@ -84,14 +84,14 @@
         </div>
         <div class="box trainingdata visible">
           <div>
-            <p style="font-weight:600;">Training Data</p>
+            <p style="font-weight:600;">Trainingsdaten</p>
           </div>
           <div>
             <table id="trainingtable"></table>
           </div>
           <!--.v-seperator-->
           <div>
-            <p>Total error on training data (loss function):</p>
+            <p>Gesamter Fehler in Trainingsdaten (Verlustfunktion):</p>
             <div class="center-formula">
               <p id="totalerror"></p>
               <p class="formula"><span> = </span><span id="totalerrorterm"></span></p>
@@ -118,19 +118,20 @@
       <!--  a#backbutton.navbutton Previous Level-->
       <!--  a#nextbutton.navbutton Next Level-->
       <div class="footerbox">
-        <div class="button" id="backbutton">Previous Level</div>
+        <div class="button" id="backbutton">Voriges Level</div>
       </div>
       <div class="footerbox">
         <div class="circles" id="navcircles"><a class="circ selected" href="index.html#1"></a><a class="circ" href="index.html#2"></a><a class="circ" href="index.html#3"></a><a class="circ" href="index.html#4"></a></div>
       </div>
       <div class="footerbox">
-        <div class="button" id="nextbutton">Next Level</div>
+        <div class="button" id="nextbutton">Nächstes Level</div>
       </div>
       <!--.footerbox(style="flex:0")
       //#creditsbutton.icon
       //#internationalbutton.icon
       -->
     </div>
-    <script type="module" src="assets/js/bundle.min.js"></script>
+    <script src="assets/js/dependencies.min.js"></script>
+    <script src="assets/js/bundle.min.js"></script>
   </body>
 </html>

@@ -182,7 +182,7 @@ export class NetworkVisualization {
       .attr("font-size", 40)
       .attr("text-anchor", "left")
       .attr("pointer-events", "none")
-      .text(n => "target: " + n.format(n.target))
+      .text(n => "Zielwert: " + n.format(n.target))
       .attr("x", n => n.x - noderadius)
       .attr("y", n => n.y - unit * n.target)
       .attr("opacity", 1)

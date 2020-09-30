@@ -8,24 +8,24 @@
       #description
     .helper.absolute
       div(style="flex:1;")
-        p Show gradient
+        p Gradienten anzeigen
           label.switch
             input(type="checkbox")#showgradient
             span.slider.round
       div(style="flex:1; width: 100%;")
-        p Train with gradient descent:
+        p Mit dem Gradientenverfahren trainieren:
           .controls
-            div(title="reset training").reset
-            div(title="pause/resume training (continious gradient descent steps)").pause-resume.pause
-            div(title="train a single step (Adjust parameters with gradient descent)").single-step
+            div(title="Setze Traing zurück").reset
+            div(title="Training pausieren/fortsetzen (fortlaufende Schritte mit dem Gradientenverfahren)").pause-resume.pause
+            div(title="Trainiere einen einzelnen Schritt (Parameteranpassung mit Gradientenverfahren)").single-step
 .box.trainingdata.visible
   div
-    p(style="font-weight:600;") Training Data
+    p(style="font-weight:600;") Trainingsdaten
   div
     table#trainingtable
   //.v-seperator
   div
-    p Total error on training data (loss function):
+    p Gesamter Fehler in Trainingsdaten (Verlustfunktion):
     .center-formula
       p#totalerror
       p.formula

@@ -75,7 +75,7 @@ export class Level {
   }
 
   createTable() {
-    this.columns = this.xlabels.concat(this.ylabels).concat(this.ylabels.map(k => "predicted " + k));
+    this.columns = this.xlabels.concat(this.ylabels).concat(this.ylabels.map(k => k + " (vorausgesagt)"));
     this.table = d3.select('#trainingtable');
     this.thead = this.table.append('thead');
     this.tbody = this.table.append('tbody');
