@@ -1,0 +1,66 @@
+nodes: [ 'a', 'b', 'h', 'max(a,b)' ]
+edges:
+  - 'a -> h'
+  - 'b -> h'
+  - 'b -> max(a,b)'
+  - 'h -> max(a,b)'
+
+activationFunctions:
+  negate:
+    f: 'z => -z' # TODO: sandbox evaluation (via sandboxed <iframe>?)
+    df: 'z => -1' # TODO: sandbox evaluation (via sandboxed <iframe>?)
+
+globalProperties:
+  nodes:
+    input: { range: [ 0, 1 ], value: 0 }
+    bias: { range: { min: -1, max: 1 }, value: 0 }
+    activationFunc: 'relu'
+  edges:
+    weight: { range: { min: 0, max: 1 }, value: 0.5 }
+
+properties:
+  'a':
+    input: 1
+  'b':
+    input: 2
+  'h':
+    bias: { train: false }
+    activationFunc: 'negate'
+  'a -> h':
+    weight: 0.5
+
+layout: [
+  [ 'a', 'b' ],
+  [ 'h', '_' ],
+  [ 'max(a,b)' ],
+]
+
+training:
+  'a': [ 0, 1, 2, 3 ]
+  'b': [ 3, 2, 1, 0 ]
+  'max(a,b)': [ 3, 2, 2, 3 ]
+
+title: 'Compute the maximum of the inputs'
+description:
+  en: 'In this level ...'
+  de: 'In diesem Level ...'
+labels:
+  'a':
+    node:
+      text: 'a'
+    bias:
+      permanent: true
+      highlight: true
+      text: "This is the bias of 'a'."
+  'b':
+    node:
+      text: 'b'
+  'max(a,b)':
+    node:
+      text: 'max(a,b)'
+  'a -> h':
+    weight:
+      text:
+        en: "This is the weight of the edge between 'a' and 'h'."
+        de: "Das ist die Gewichtung der Kante zwischen 'a' und 'b'."
+
