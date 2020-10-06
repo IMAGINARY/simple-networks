@@ -3,12 +3,13 @@ import { deepFreeze } from '../util/deep-freeze.js';
 export default class FeedForwardNetwork {
   /***
    *
-   * @param nodes [{id, properties}]
+   * @param nodes [{linear, properties}]
    * @param edges [{from, to, properties}]
    */
   constructor(nodes = [], edges = []) {
+    const nId = n => Node.canonicalizeId(n.id);
     const eId = e => Edge.edgeIdFromNodeIds(e.from, e.to);
-    const uniqueNodes = Object.fromEntries(nodes.map(n => [n.id, n]));
+    const uniqueNodes = Object.fromEntries(nodes.map(n => [nId(n), n]));
     const uniqueEdges = Object.fromEntries(edges.map(e => [eId(e), e]));
 
     this.nodeMap = Object.fromEntries(
@@ -25,8 +26,9 @@ export default class FeedForwardNetwork {
     this.nodes = Object.values(this.nodeMap);
     this.edges = Object.values(this.edgeMap);
 
-    this.inputNodes = this.nodes.filter(n => n.in.length === 0);
-    this.outputNodes = this.nodes.filter(n => n.out.length === 0);
+    this.inputNodes = this.nodes.filter(n => n.isInput());
+    this.innerNodes = this.nodes.filter(n => n.isInner());
+    this.outputNodes = this.nodes.filter(n => n.isOutput());
 
     this.topSort = topSort(this);
     this.topSortNoInputs = this.topSort.filter(n => n.in.length > 0);
@@ -62,7 +64,7 @@ class Node {
   constructor(id, properties) {
     this.in = [];
     this.out = [];
-    this.id = id;
+    this.id = Node.canonicalizeId(id);
     this.p = Object.assign({}, properties);
   }
 
@@ -76,6 +78,10 @@ class Node {
 
   isInner() {
     return !this.isInput() && !this.isOutput();
+  }
+
+  static canonicalizeId(id) {
+    return id.trim();
   }
 
   _freeze() {
@@ -100,7 +106,31 @@ class Edge {
   }
 
   static edgeIdFromNodeIds(fromId, toId) {
-    return `(${fromId})->(${toId})`;
+    fromId = Node.canonicalizeId(fromId);
+    toId = Node.canonicalizeId(toId);
+    let separator = ' -> ';
+    while (fromId.includes(separator) || toId.includes(separator)) {
+      separator = ` ${separator} `;
+    }
+    return `${fromId}${separator}${toId}`;
+  }
+
+  static nodeIdsFromEdgeId(edgeId) {
+    let separator = ' -> ';
+    let parts;
+    while ((parts = edgeId.split()).length > 2) {
+      separator = ` ${separator} `;
+    }
+    if (parts.length === 2) {
+      return {
+        from: Node.canonicalizeId(parts[0]),
+        to: Node.canonicalizeId(parts[1]),
+      };
+    } else {
+      // https://en.wikipedia.org/wiki/Extended_Backus%E2%80%93Naur_form
+      const edgeEBNF = 'edgeId = nodeId arrow nodeId ; arrow  = " " arrow " " | "->" ;';
+      throw new Error(`Invalid edge id format: ${edgeId} does not match the EBNF: ${edgeEBNF}`);
+    }
   }
 }
 
