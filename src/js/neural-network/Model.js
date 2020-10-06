@@ -1,25 +1,17 @@
 import FeedForwardNetwork from './Network';
 import * as ActivationFunctions from './ActivationFunctions';
+import cloneDeep from 'lodash/cloneDeep';
 
 export default class Model {
   constructor(nodes, edges) {
-    this.network = new FeedForwardNetwork(nodes, edges);
+    const n = new FeedForwardNetwork(nodes, edges);
 
-    const defaultNodeProps = {
-      bias: 0,
-      sum: 0,
-      activation: 0,
-      activationFunc: ActivationFunctions.relu,
-      error: 0,
-      'dC/dBias': 0,
-    };
-    this.network.nodes.forEach(n => assignUndefined(n.p, defaultNodeProps));
+    n.inputNodes.forEach(n => assignUndefinedCloneDeep(n.p, Model.DEFAULT_INPUT_NODE_PROPERTIES));
+    n.innerNodes.forEach(n => assignUndefinedCloneDeep(n.p, Model.DEFAULT_INNER_NODE_PROPERTIES));
+    n.outputNodes.forEach(n => assignUndefinedCloneDeep(n.p, Model.DEFAULT_OUTPUT_NODE_PROPERTIES));
+    n.edges.forEach(e => assignUndefinedCloneDeep(e.p, Model.DEFAULT_EDGE_PROPERTIES));
 
-    const defaultEdgeProps = {
-      weight: 1,
-      'dC/dWeight': 0,
-    };
-    this.network.edges.forEach(e => assignUndefined(e.p, defaultEdgeProps));
+    this.network = n;
   }
 
   feedForward() {
@@ -77,9 +69,12 @@ export default class Model {
 
   gradientDescentStep(learningRate) {
     for (let u of this.network.nodes) {
-      u.p.bias -= learningRate * u.p['dC/dBias'];
+      if (u.p.biasProps.train) {
+        u.p.bias = limit(u.p.bias - learningRate * u.p['dC/dBias'], u.p.biasProps.range);
+      }
       for (let e of u.out) {
-        e.p.weight -= learningRate * e.p['dC/dWeight'];
+        if (e.p.weightProps.train)
+          e.p.weight = limit(e.p.weight - learningRate * e.p['dC/dWeight'], e.p.weightProps.range);
       }
     }
     return this;
@@ -113,3 +108,86 @@ export default class Model {
 function assignUndefined(target, ...sources) {
   return Object.assign(target, ...(sources.map(s => Object.assign({}, s, target))));
 }
+
+function assignUndefinedCloneDeep(target, ...sources) {
+  return Object.assign(target, ...(sources.map(s => Object.assign({}, cloneDeep(s), target))));
+}
+
+/***
+ *
+ * @param value {number}
+ * @param range {{min:number, max:number}|undefined}
+ * @returns {number}
+ */
+function limit(value, range) {
+  if (typeof range === 'undefined') {
+    return value;
+  } else {
+    return Math.min(Math.max(range.min, value), range.max);
+  }
+}
+
+Object.defineProperty(
+  Model,
+  'DEFAULT_INNER_NODE_PROPERTIES',
+  {
+    value: {
+      bias: 0,
+      biasProps: { range: { min: -1, max: 1 }, train: true },
+      sum: 0,
+      activation: 0,
+      activationFunc: ActivationFunctions.relu,
+      error: 0,
+      'dC/dBias': 0,
+    },
+    configurable: false,
+    enumerable: true,
+  }
+);
+Object.freeze(Model.DEFAULT_INNER_NODE_PROPERTIES);
+
+Object.defineProperty(
+  Model,
+  'DEFAULT_INPUT_NODE_PROPERTIES',
+  {
+    value: Object.assign(
+      cloneDeep(Model.DEFAULT_INNER_NODE_PROPERTIES),
+      {
+        activationFunc: ActivationFunctions.linear,
+      }),
+    configurable: false,
+    enumerable: true,
+  }
+);
+Object.freeze(Model.DEFAULT_INPUT_NODE_PROPERTIES);
+
+Object.defineProperty(
+  Model,
+  'DEFAULT_OUTPUT_NODE_PROPERTIES',
+  {
+    value: Object.assign(
+      cloneDeep(Model.DEFAULT_INNER_NODE_PROPERTIES),
+      {
+        activationFunc: ActivationFunctions.linear,
+      }),
+    configurable: false,
+    enumerable: true,
+  }
+);
+Object.freeze(Model.DEFAULT_OUTPUT_NODE_PROPERTIES);
+
+
+Object.defineProperty(
+  Model,
+  'DEFAULT_EDGE_PROPERTIES',
+  {
+    value: {
+      weight: 1,
+      weightProps: { range: { min: -1, max: 1 }, train: true },
+      'dC/dWeight': 0,
+    },
+    configurable: false,
+    enumerable: true,
+  }
+);
+Object.freeze(Model.DEFAULT_EDGE_PROPERTIES);
