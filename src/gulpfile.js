@@ -44,7 +44,7 @@ const paths = {
     dest: `${OUTPUT_DIR}/assets/js`,
   },
   dependencies: {
-    packages: ['d3', 'd3-force'],
+    packages: ['d3', 'interval-arithmetic'],
     watchSrc: [
       './package-lock.json',
     ],
