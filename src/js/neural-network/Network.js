@@ -58,6 +58,22 @@ export default class FeedForwardNetwork {
   getEdge(fromId, toId) {
     return this.edgeMap[Edge.edgeIdFromNodeIds(fromId, toId)];
   }
+
+  static canolicalizeNodeId(id) {
+    return Node.canonicalizeId(id);
+  }
+
+  static canonicalizeEdgeId(edgeId) {
+    return Edge.canonicalizeId(edgeId);
+  }
+
+  static edgeIdFromNodeIds(fromId, toId) {
+    return Edge.edgeIdFromNodeIds(fromId, toId);
+  }
+
+  static nodeIdsFromEdgeId(edgeId) {
+    return Edge.nodeIdsFromEdgeId(edgeId);
+  }
 }
 
 class Node {
@@ -131,6 +147,11 @@ class Edge {
       const edgeEBNF = 'edgeId = nodeId arrow nodeId ; arrow  = " " arrow " " | "->" ;';
       throw new Error(`Invalid edge id format: ${edgeId} does not match the EBNF: ${edgeEBNF}`);
     }
+  }
+
+  static canonicalizeId(edgeId) {
+    const { from, to } = Edge.nodeIdsFromEdgeId(edgeId);
+    return Edge.edgeIdFromNodeIds(from, to);
   }
 }
 
