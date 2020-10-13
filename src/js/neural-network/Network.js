@@ -44,7 +44,7 @@ export default class FeedForwardNetwork {
   }
 
   hasNode(id) {
-    return typeof this.getNode(id) === 'undefined';
+    return typeof this.getNode(id) !== 'undefined';
   }
 
   getNode(id) {
