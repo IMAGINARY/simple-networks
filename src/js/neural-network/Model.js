@@ -94,16 +94,26 @@ export default class Model {
     return this;
   }
 
+  resetGradients() {
+    for (let u of this.network.nodes) {
+      u.p['dC/dBias'] = 0;
+      for (let e of u.out) {
+        e.p['dC/dWeight'] = 0;
+      }
+    }
+    return this;
+  }
+
   updateGradients() {
     for (let u of this.network.nodes) {
       // Compute the rate of change of the cost with respect to the bias of u using
       // http://neuralnetworksanddeeplearning.com/chap2.html#eqtnBP3
-      u.p['dC/dBias'] = u.p.error;
+      u.p['dC/dBias'] += u.p.error;
 
       // Compute the rate of change of the cost with respect to the weights of (u,v) for all v using
       // http://neuralnetworksanddeeplearning.com/chap2.html#eqtnBP4
       for (let e of u.out) {
-        e.p['dC/dWeight'] = u.p.activation * e.to.p.error;
+        e.p['dC/dWeight'] += u.p.activation * e.to.p.error;
       }
     }
     return this;
@@ -137,12 +147,33 @@ export default class Model {
   }
 
   train(x, y, learningRate) {
-    this.assignInputs(x)
+    this.resetGradients()
+      .assignInputs(x)
       .feedForward()
       .assignTargets(y)
       .backpropagateError()
       .updateGradients()
       .gradientDescentStep(learningRate);
+    return this;
+  }
+
+  trainBatch(batch, learningRate) {
+    this.resetGradients();
+    for (let [x, y] of batch) {
+      this.assignInputs(x)
+        .feedForward()
+        .assignTargets(y)
+        .backpropagateError()
+        .updateGradients();
+    }
+    this.gradientDescentStep(learningRate);
+    return this;
+  }
+
+  trainBatches(batches, learningRate) {
+    for (let batch of batches) {
+      this.trainBatch(batch, learningRate);
+    }
     return this;
   }
 }
