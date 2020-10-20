@@ -46,6 +46,7 @@ const paths = {
   dependencies: {
     packages: [
       'bezier-js',
+      'expression-eval',
       'interval-arithmetic',
       '@svgdotjs/svg.js',
     ],

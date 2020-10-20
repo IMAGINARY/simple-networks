@@ -3,6 +3,7 @@ import View from './neural-network-mvc/view';
 import Controller from './neural-network-mvc/controller';
 
 import { linear, relu } from './neural-network/ActivationFunctions';
+import MathExpression from './util/math-expression';
 
 function main() {
   //new LevelController();
@@ -77,12 +78,14 @@ function mainMaxModel() {
 
   const nodeMaxAB = network.getNode('max(a,b)');
 
+
+  const max = new MathExpression(model, "max(get('a'),b)");
+
   for (let i = 0; i < 10; ++i) {
     const a = 2 * Math.random() - 1;
     const b = 2 * Math.random() - 1;
-    const max = Math.max(a, b);
     const inputs = [a, b];
-    const targets = [max];
+    const targets = [max({ a, b })];
     model.train(inputs, targets, 0.1);
     const pred = nodeMaxAB.p.activation;
     console.log(`a=${a}, b=${b}, max(a,b)=${max}, pred(a,b)=${pred}, error=${nodeMaxAB.p.error}, C=${Model.C(
@@ -106,7 +109,7 @@ function mainMaxModel() {
   const oldSvg = document.querySelector('svg');
   oldSvg.parentElement.insertBefore(parent, oldSvg); // TODO: move to pug/CSS
   const view = new View(model, layout, parent);
-  const controller = new Controller(model, view);
+  const controller = new Controller(model, [max], view);
 }
 
 mainMaxModel();

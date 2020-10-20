@@ -275,6 +275,8 @@ Object.defineProperty(
       cloneDeep(Model.DEFAULT_INNER_NODE_PROPERTIES),
       {
         activationFunc: ActivationFunctions.linear,
+        target: 0,
+        targetProps: {},
       }),
     configurable: false,
     enumerable: true,

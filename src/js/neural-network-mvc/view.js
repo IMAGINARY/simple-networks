@@ -207,6 +207,13 @@ export default class View extends EventEmitter {
       .attr({
         'text-anchor': 'start',
       });
+    const svgTargetLabel = this._labelLayer.plain()
+      .x(inp.gridPos.x + View.NODE_SIZE.x)
+      .dx(3) // TODO: don't hardcode
+      .attr({
+        'text-anchor': 'start',
+      })
+      .css({ visibility: node.isOutput() ? 'visible' : 'hidden' });
 
     const biasLinePathBuilder = () => new SVGPathBuilder()
       .M(inp.gridPos)
@@ -257,6 +264,16 @@ export default class View extends EventEmitter {
       .stroke({ color: 'black' })
       .fill('none');
 
+    const targetLineBuilder = () => new SVGPathBuilder()
+      .M(inp.gridPos)
+      .m({ x: View.NODE_SIZE.x / 2, y: -mnp.zeroGridOffsetY - node.p.target * this._flowScale })
+      .h(View.NODE_SIZE.x / 2)
+      .build();
+    const svgTargetLine = !node.isOutput() ? this._edgeLayer.group() : this._edgeLayer
+      .path(targetLineBuilder())
+      .stroke({ color: 'cyan' })
+      .fill('none');
+
     // set up update function
     const update = () => {
       svgNodeRect
@@ -294,6 +311,13 @@ export default class View extends EventEmitter {
         svgActivationArea.plot(activationAreaPathBuilder())
           .fill({ color: activationColor(node.p.activation), opacity: 0.5 });
         svgInOutConnectorPolyLine.plot(inOutConnectorPolyLinePathBuilder());
+      }
+      if (node.isOutput()) {
+        svgTargetLine.plot(targetLineBuilder());
+        svgTargetLabel.plain(formatNumber(node.p.target))
+          .y(inp.gridPos.y - mnp.zeroGridOffsetY)
+          .dy(-node.p.target * this._flowScale)
+          .dy(-3); // TODO: don't hardcode
       }
     };
 

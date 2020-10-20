@@ -1,16 +1,22 @@
 export default class Controller {
-  constructor(model, view) {
+  constructor(model, targetActivationFuncs, view) {
     this.model = model;
     this.view = view;
+    this.targetActivationFuncs = targetActivationFuncs;
 
     this.view.on('input-changed', this.handleInputChange.bind(this));
     this.view.on('bias-changed', this.handleBiasChange.bind(this));
     this.view.on('weight-changed', this.handleWeightChange.bind(this));
+
+    this.model.clamp();
+    this.model.assignTargets(this._computeTargetActivations());
+    this._feedForwardAndUpdateView();
   }
 
   handleInputChange(node, input) {
     node.p.activation = input;
     this.model.clampInput(node);
+    this.model.assignTargets(this._computeTargetActivations());
     this._feedForwardAndUpdateView();
   }
 
@@ -29,5 +35,12 @@ export default class Controller {
   _feedForwardAndUpdateView() {
     this.model.feedForward();
     this.view.update();
+  }
+
+  _computeTargetActivations() {
+    const inputs = Object.fromEntries(
+      this.model.network.inputNodes.map(n => [n.id, n.p.activation])
+    );
+    return this.targetActivationFuncs.map(taf => taf(inputs));
   }
 }
