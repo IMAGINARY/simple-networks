@@ -74,6 +74,40 @@ export default class FeedForwardNetwork {
   static nodeIdsFromEdgeId(edgeId) {
     return Edge.nodeIdsFromEdgeId(edgeId);
   }
+
+  toNodeArray(mixed) {
+    if (typeof mixed === 'undefined') {
+      return [];
+    } else {
+      const array = Array.isArray(mixed) ? mixed.flat(Number.MAX_SAFE_INTEGER) : [mixed];
+      return array.map(nodeOrId => {
+        if (typeof nodeOrId === 'string') {
+          return this.getNode(nodeOrId);
+        } else if (nodeOrId instanceof Node) {
+          return nodeOrId;
+        } else {
+          throw new Error(`Not a node or node id: ${nodeOrId}`);
+        }
+      });
+    }
+  }
+
+  toEdgeArray(mixed) {
+    if (typeof mixed === 'undefined') {
+      return [];
+    } else {
+      const array = Array.isArray(mixed) ? mixed.flat(Number.MAX_SAFE_INTEGER) : [mixed];
+      return array.map(edgeOrId => {
+        if (typeof edgeOrId === 'string') {
+          return this.getEdge(edgeOrId);
+        } else if (edgeOrId instanceof Edge) {
+          return edgeOrId;
+        } else {
+          throw new Error(`Not an edge or edge id: ${edgeOrId}`);
+        }
+      });
+    }
+  }
 }
 
 class Node {
