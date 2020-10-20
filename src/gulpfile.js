@@ -90,6 +90,7 @@ function dependencies() {
   })
     .require(paths.dependencies.packages)
     .transform('babelify', {
+      global: true,
       presets: ['@babel/preset-env'],
       sourceMaps: true,
     })
