@@ -44,7 +44,11 @@ const paths = {
     dest: `${OUTPUT_DIR}/assets/js`,
   },
   dependencies: {
-    packages: ['d3', 'interval-arithmetic'],
+    packages: [
+      'bezier-js',
+      'interval-arithmetic',
+      '@svgdotjs/svg.js',
+    ],
     watchSrc: [
       './package-lock.json',
     ],
