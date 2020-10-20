@@ -122,14 +122,47 @@ export default class Model {
   gradientDescentStep(learningRate) {
     for (let u of this.network.nodes) {
       if (u.p.biasProps.train) {
-        u.p.bias = limit(u.p.bias - learningRate * u.p['dC/dBias'], u.p.biasProps.range);
+        u.p.bias = clamp(u.p.bias - learningRate * u.p['dC/dBias'], u.p.biasProps.range);
       }
       for (let e of u.out) {
         if (e.p.weightProps.train)
-          e.p.weight = limit(e.p.weight - learningRate * e.p['dC/dWeight'], e.p.weightProps.range);
+          e.p.weight = clamp(e.p.weight - learningRate * e.p['dC/dWeight'], e.p.weightProps.range);
       }
     }
     return this;
+  }
+
+  clampBias(mixed) {
+    const nodes = typeof mixed === 'undefined' ?
+      this.network.nodes :
+      this.network.toNodeArray(mixed);
+    for (let u of nodes) {
+      u.p.bias = clamp(u.p.bias, u.p.biasProps.range);
+    }
+  }
+
+  clampInput(mixed) {
+    const nodes = typeof mixed === 'undefined' ?
+      this.network.inputNodes :
+      this.network.toNodeArray(mixed).filter(n => n.isInput());
+    for (let u of nodes) {
+      u.p.activation = clamp(u.p.activation, u.p.inputProps.range);
+    }
+  }
+
+  clampWeight(mixed) {
+    const edges = typeof mixed === 'undefined' ?
+      this.network.edges :
+      this.network.toEdgeArray(mixed);
+    for (let uv of edges) {
+      uv.p.weight = clamp(uv.p.weight, uv.p.weightProps.range);
+    }
+  }
+
+  clamp() {
+    this.clampBias();
+    this.clampInput();
+    this.clampWeight();
   }
 
   assignInputs(x) {
@@ -192,7 +225,7 @@ function assignUndefinedCloneDeep(target, ...sources) {
  * @param range {Interval}
  * @returns {number}
  */
-function limit(value, range) {
+function clamp(value, range) {
   return Math.min(Math.max(range.lo, value), range.hi);
 }
 
