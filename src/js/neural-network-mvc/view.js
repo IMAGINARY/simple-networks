@@ -21,11 +21,8 @@ export default class View extends EventEmitter {
     this._addImmutableProps();
     this._updateMutableProps();
 
-    // TODO: set up <svg> and overlay <div> and store all important DOM nodes (in node/edge maps?)
-    this._viewUpdaters = null;
-    this._createSubViews();
-    // TODO: expose all elements that need interaction through the controller
-    // TODO: Register events handlers and emit 'bias', 'weight' and 'input'
+    this._viewUpdaters = this._createSubViews();
+  }
 
   _computeFlowScale() {
     const hull = arr => arr.reduce((acc, cur) => IOps.hull(acc, cur), Interval.EMPTY);
@@ -212,7 +209,7 @@ export default class View extends EventEmitter {
       .attr({ stroke: 'black', fill: 'transparent' })
       .css({ cursor: 'hand' });
 
-    this._viewUpdaters = [].concat(
+    return [].concat(
       this._model.network.nodes.map(n => this._createNodeView(n)),
       this._model.network.edges.map(e => this._createEdgeView(e)),
     );
