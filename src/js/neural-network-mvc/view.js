@@ -10,8 +10,10 @@ export default class View extends EventEmitter {
     super();
     this._model = model;
     this._parent = parentElement;
-    this._flowScale = View.NODE_MAX_INNER_HEIGHT / IOps.width(this._model.flowRange);
+
     this._coords = new NodeCoordinates(layout);
+
+    this._flowScale = this._computeFlowScale();
 
     this._nodeProps = Object.fromEntries(model.network.nodes.map(n => [n.id, { i: {}, m: {} }]));
     this._edgeProps = Object.fromEntries(model.network.edges.map(e => [e.id, { i: {}, m: {} }]));
@@ -24,6 +26,94 @@ export default class View extends EventEmitter {
     this._createSubViews();
     // TODO: expose all elements that need interaction through the controller
     // TODO: Register events handlers and emit 'bias', 'weight' and 'input'
+
+  _computeFlowScale() {
+    const hull = arr => arr.reduce((acc, cur) => IOps.hull(acc, cur), Interval.EMPTY);
+    const arr2i = arr => hull(arr.map(x => new Interval(x)));
+    const ensureInterval = arrOrI => IOps.isInterval(arrOrI) ? arrOrI : arr2i(arrOrI);
+
+    const network = this._model.network;
+    const activationRanges = {};
+
+    /***
+     * The relative flow is higher if there are fewer nodes in a layer. This is to account for the
+     * fact that nodes that have free vertical space in a layer can grow larger than nodes with
+     * less vertical space.
+     */
+    const maxLength = this._coords.height + 1;
+    let maxRelFlow = {
+      value: 0,
+      update: function (range, layer) {
+        const weight = layer.length / maxLength;
+        const relFlow = IOps.width(range) * weight;
+        this.value = Math.max(this.value, relFlow);
+      },
+    };
+
+    // This checks all partial sum and activation hulls and returns the largest one.
+    // Traversing the tree takes 2^(summands.length) time.
+    // I ran out of time thinking of a better way to compute this. :-(
+    const traverseNodeHullTree = (summands, partialSum, partialSumHull, activationRangeFunc) => {
+      if (summands.length === 0) {
+        return IOps.hull(partialSumHull, activationRangeFunc(partialSum));
+      } else {
+        const summand = summands[0];
+        const otherSummands = summands.slice(1);
+
+        const partialSumLo = IOps.add(partialSum, new Interval(summand.lo));
+        const hullLo = traverseNodeHullTree(
+          otherSummands,
+          partialSumLo,
+          IOps.hull(partialSumHull, partialSumLo),
+          activationRangeFunc,
+        );
+
+        const partialSumHi = IOps.add(partialSum, new Interval(summand.hi));
+        const hullHi = traverseNodeHullTree(
+          otherSummands,
+          partialSumHi,
+          IOps.hull(partialSumHull, partialSumHi),
+          activationRangeFunc,
+        );
+
+        return IOps.width(hullLo) > IOps.width(hullHi) ? hullLo : hullHi;
+      }
+    };
+
+    for (let node of network.inputNodes) {
+      const layer = this._coords.layerOf(node.id);
+      const activationRange = ensureInterval(node.p.inputProps.range);
+      activationRanges[node.id] = activationRange;
+      maxRelFlow.update(new Interval(0, Math.max(0, activationRange.hi)), layer);
+      maxRelFlow.update(new Interval(Math.min(activationRange.lo, 0), 0), layer);
+    }
+
+    const edgeToActivation = e => IOps.mul(activationRanges[e.from.id], e.p.weightProps.range);
+    for (let node of network.topSortNoInputs) {
+      const layer = this._coords.layerOf(node.id);
+      const getActivationRange = node.p.activationFunc.range.bind(node.p.activationFunc);
+      const orderedInEdges = getOrderedInEdges(node, this._coords);
+      const summands = [node.p.biasProps.range, ...orderedInEdges.map(edgeToActivation)];
+      const sumRange = summands.reduce((acc, cur) => IOps.add(acc, cur), Interval.ZERO);
+      const activationRange = getActivationRange(sumRange);
+      activationRanges[node.id] = activationRange;
+
+      /***
+       * FIXME: This is quite expensive since it needs 2^(#inEdges+1) steps to compute the maximum
+       *        hull of the node. For simple networks, it shouldn't be an issue, but for everything
+       *        with more than couple of nodes, this can become a bottleneck quite easily.
+       */
+      const nodeHull = traverseNodeHullTree(
+        summands,
+        Interval.ZERO,
+        Interval.ZERO,
+        getActivationRange
+      );
+
+      maxRelFlow.update(nodeHull, layer);
+    }
+
+    return View.NODE_MAX_INNER_HEIGHT / maxRelFlow.value;
   }
 
   _addImmutableProps() {
@@ -465,7 +555,7 @@ View.NODE_SIZE = {
   x: Math.min(View.GRID_SCALE.x, View.GRID_SCALE.y) / 4,
   y: Math.min(View.GRID_SCALE.x, View.GRID_SCALE.y) / 4,
 };
-View.NODE_MAX_INNER_HEIGHT = (View.GRID_SCALE.x - View.NODE_SIZE.y) * 0.9; // TODO: compute better range to determine max inner height
+View.NODE_MAX_INNER_HEIGHT = (View.GRID_SCALE.y - View.NODE_SIZE.y) * 0.9;
 View.NODE_RADIUS = View.NODE_SIZE.y * 0.5 * 0.7;
 View.LABEL_FONT_SIZE = 16; // TODO: Move to CSS if possible // px
 View.HANDLE_RADIUS = 10;

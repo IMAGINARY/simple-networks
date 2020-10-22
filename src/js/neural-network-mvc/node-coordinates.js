@@ -65,6 +65,15 @@ export default class NodeCoordinates {
     return this._layout.map(l => l.map(cell => cell.id));
   }
 
+  layerOf(nodeId) {
+    const layout = this.layout();
+    for (let layer of layout) {
+      if (layer.includes(nodeId)) {
+        return layer;
+      }
+    }
+  }
+
   list() {
     return this.layout().flat();
   }

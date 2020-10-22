@@ -13,10 +13,6 @@ export default class Model {
     n.edges.forEach(e => assignUndefinedCloneDeep(e.p, Model.DEFAULT_EDGE_PROPERTIES));
 
     this.network = n;
-
-    // computes node.(sum|activation)Props.range for inner and output nodes
-    // and this.flowRange
-    this._computeRanges();
   }
 
   feedForward() {
@@ -27,43 +23,6 @@ export default class Model {
       );
       node.p.activation = node.p.activationFunc.f(node.p.sum);
     }
-    return this;
-  }
-
-  _computeRanges() {
-    const hull = arr => arr.reduce((acc, cur) => IOps.hull(acc, cur), Interval.EMPTY);
-    const arr2i = arr => hull(arr.map(x => Interval.singleton(x)));
-    const ensureInterval = arrOrI => IOps.isInterval(arrOrI) ? arrOrI : arr2i(arrOrI);
-    const edgeActivationRange = edge => IOps.mul(
-      edge.from.p.activationProps.range,
-      edge.p.weightProps.range
-    );
-
-    // This is essentially this.assignInputs(...).feedForward(),
-    // but with intervals instead of numbers
-    this.network.inputNodes.forEach(
-      n => n.p.activationProps.range = ensureInterval(n.p.inputProps.range)
-    );
-    for (let node of this.network.topSortNoInputs) {
-      const weightedActivations = node.in.map(edgeActivationRange);
-      node.p.sumProps.range = weightedActivations.reduce(
-        (acc, cur) => IOps.add(acc, cur),
-        node.p.biasProps.range,
-      );
-      node.p.sumProps.intermediateRange = weightedActivations.reduce(
-        (acc, cur) => IOps.hull(acc, IOps.add(acc, cur)),
-        node.p.biasProps.range,
-      );
-      node.p.activationProps.range = node.p.activationFunc.range(node.p.sumProps.range);
-    }
-
-    // Now
-    const activationRange = hull(this.network.nodes.map(n => n.p.activationProps.range));
-    const sumIntermediateRange = hull(this.network.topSortNoInputs.map(n => n.p.sumProps.intermediateRange));
-    const biasRange = hull(this.network.topSortNoInputs.map(n => n.p.biasProps.range));
-    const edgeRange = hull(this.network.edges.map(edgeActivationRange));
-    this.flowRange = hull([activationRange, sumIntermediateRange, biasRange, edgeRange]);
-
     return this;
   }
 
