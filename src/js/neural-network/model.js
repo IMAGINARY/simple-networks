@@ -1,5 +1,5 @@
-import FeedForwardNetwork from './Network';
-import * as ActivationFunctions from './ActivationFunctions';
+import FeedForwardNetwork from './network';
+import * as ActivationFunctions from './activation-functions';
 import cloneDeep from 'lodash/cloneDeep';
 import IOps, { Interval } from 'interval-arithmetic';
 

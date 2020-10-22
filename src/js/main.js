@@ -1,8 +1,8 @@
-import Model from './neural-network/Model';
+import Model from './neural-network/model';
 import View from './neural-network-mvc/view';
 import Controller from './neural-network-mvc/controller';
 
-import { linear, relu } from './neural-network/ActivationFunctions';
+import { linear, relu } from './neural-network/activation-functions';
 import MathExpression from './util/math-expression';
 
 function main() {
