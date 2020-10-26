@@ -1,9 +1,6 @@
-import Model from './neural-network/model';
 import View from './neural-network-mvc/view';
 import Controller from './neural-network-mvc/controller';
-
-import { linear, relu } from './neural-network/activation-functions';
-import MathExpression from './util/math-expression';
+import { load as loadLevel } from './level/load';
 
 function main() {
   //new LevelController();
@@ -42,65 +39,21 @@ function rand(min, max) {
   return Math.random() * (max - min) - min;
 }
 
-function mainMaxModel() {
-  window.Model = Model;
-  const createModel = () => {
-    const nodes = [
-      { id: 'a', properties: { activation: 1 } },
-      { id: 'b', properties: { activation: 1 } },
-      {
-        id: 'h',
-        properties: { bias: 1, activationFunc: relu }
-      },
-      {
-        id: 'max(a,b)',
-        properties: { bias: 1, activationFunc: linear }
-      },
-    ];
-    const edges = [
-      { from: 'a', to: 'h', properties: { weight: 1 } },
-      { from: 'b', to: 'h', properties: { weight: 1 } },
-      { from: 'h', to: 'max(a,b)', properties: { weight: 1 } },
-      { from: 'b', to: 'max(a,b)', properties: { weight: 1 } },
-    ];
-    return new Model(nodes, edges);
-  };
-  const model = window.model = createModel();
+async function mainMaxModel() {
+  const levelUrl = new URL('assets/levels/Max.yaml', window.location.href);
+  const { model, layout, training, strings } = await loadLevel(levelUrl);
   const network = model.network;
-  console.log(model);
 
-  const invalidNodeIds = network.nodes
-    .filter(node => node.isInput() && node.isOutput())
-    .map(node => node.id);
-  if (invalidNodeIds.length > 0) {
-    throw new Error(`Network must not contain isolated nodes: ${JSON.stringify(invalidNodeIds)}`);
-  }
-
-  const nodeMaxAB = network.getNode('max(a,b)');
-
-
-  const max = new MathExpression("max(get('a'),b)");
-
-  for (let i = 0; i < 10; ++i) {
-    const a = 2 * Math.random() - 1;
-    const b = 2 * Math.random() - 1;
-    const inputs = [a, b];
-    const targets = [max({ a, b })];
+  for (let i = 0; i < training.inputs.length; ++i) {
+    const inputs = training.inputs[i];
+    const inputsMap = Object.fromEntries(network.inputNodes.map(({ id }, i) => [id, inputs[i]]));
+    const targets = training.targetActivationFuncs.map(f => f(inputsMap));
     model.train(inputs, targets, 0.1);
-    const pred = nodeMaxAB.p.activation;
-    console.log(`a=${a}, b=${b}, max(a,b)=${targets[0]}, pred(a,b)=${pred}, error=${nodeMaxAB.p.error}, C=${Model.C(
-      pred,
-      targets[0])}`);
   }
 
+  model.assignInputs(network.inputNodes.map(n => n.p.input));
   model.clamp();
   model.feedForward();
-
-  const layout = [
-    ['a', 'b'],
-    ['h', ''],
-    ['max(a,b)']
-  ];
 
   const parent = document.createElement('div');
   parent.style.position = 'absolute';
@@ -109,7 +62,7 @@ function mainMaxModel() {
   const oldSvg = document.querySelector('svg');
   oldSvg.parentElement.insertBefore(parent, oldSvg); // TODO: move to pug/CSS
   const view = new View(model, layout, parent);
-  const controller = new Controller(model, [max], view);
+  const controller = new Controller(model, training.targetActivationFuncs, view);
 }
 
 mainMaxModel();
