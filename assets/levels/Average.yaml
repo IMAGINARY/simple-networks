@@ -1,0 +1,14 @@
+nodes:
+  - 'a'
+  - 'b'
+  - 'c'
+  - 'avg(a,b,c)'
+
+edges:
+  - 'a -> avg(a,b,c)'
+  - 'b -> avg(a,b,c)'
+  - 'c -> avg(a,b,c)'
+
+training:
+  outputs:
+    'avg(a,b,c)': '(a+b+c)/3'

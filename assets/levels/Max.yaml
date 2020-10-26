@@ -1,4 +1,9 @@
-nodes: [ 'a', 'b', 'h', 'max(a,b)' ]
+nodes:
+  - 'a'
+  - 'b'
+  - 'h'
+  - 'max(a,b)'
+
 edges:
   - 'a -> h'
   - 'b -> h'
@@ -7,9 +12,9 @@ edges:
 
 properties:
   'a':
-    input: {value: 0, range: {min: -5, max: 5}}
+    input: { value: 0, range: { min: -5, max: 5 } }
   'b':
-    input: {value: 1, range: {min: -5, max: 5}}
+    input: { value: 1, range: { min: -5, max: 5 } }
 
 layout: [
   [ 'a', 'b' ],

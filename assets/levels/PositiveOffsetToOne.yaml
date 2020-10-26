@@ -1,0 +1,28 @@
+nodes:
+  - 'x'
+  - 'offset of x to one'
+
+edges:
+  - 'x -> offset of x to one'
+
+properties:
+  'x':
+    input:
+      value: 1
+      range:
+        min: -5
+        max: 5
+  'offset of x to one':
+    bias:
+      range:
+        min: -2
+        max: 2
+  'x -> offset of x to one':
+    weight:
+      range:
+        min: -2
+        max: 2
+
+training:
+  outputs:
+    'offset of x to one': 'max(x-1, 0)'
