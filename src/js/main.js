@@ -79,7 +79,7 @@ function mainMaxModel() {
   const nodeMaxAB = network.getNode('max(a,b)');
 
 
-  const max = new MathExpression(model, "max(get('a'),b)");
+  const max = new MathExpression("max(get('a'),b)");
 
   for (let i = 0; i < 10; ++i) {
     const a = 2 * Math.random() - 1;
@@ -88,9 +88,9 @@ function mainMaxModel() {
     const targets = [max({ a, b })];
     model.train(inputs, targets, 0.1);
     const pred = nodeMaxAB.p.activation;
-    console.log(`a=${a}, b=${b}, max(a,b)=${max}, pred(a,b)=${pred}, error=${nodeMaxAB.p.error}, C=${Model.C(
+    console.log(`a=${a}, b=${b}, max(a,b)=${targets[0]}, pred(a,b)=${pred}, error=${nodeMaxAB.p.error}, C=${Model.C(
       pred,
-      max)}`);
+      targets[0])}`);
   }
 
   model.clamp();
