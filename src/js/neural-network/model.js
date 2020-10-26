@@ -1,16 +1,17 @@
 import FeedForwardNetwork from './network';
 import * as ActivationFunctions from './activation-functions';
 import cloneDeep from 'lodash/cloneDeep';
+import defaultsDeep from 'lodash/defaultsDeep';
 import IOps, { Interval } from 'interval-arithmetic';
 
 export default class Model {
   constructor(nodes, edges) {
     const n = new FeedForwardNetwork(nodes, edges);
 
-    n.inputNodes.forEach(n => assignUndefinedCloneDeep(n.p, Model.DEFAULT_INPUT_NODE_PROPERTIES));
-    n.innerNodes.forEach(n => assignUndefinedCloneDeep(n.p, Model.DEFAULT_INNER_NODE_PROPERTIES));
-    n.outputNodes.forEach(n => assignUndefinedCloneDeep(n.p, Model.DEFAULT_OUTPUT_NODE_PROPERTIES));
-    n.edges.forEach(e => assignUndefinedCloneDeep(e.p, Model.DEFAULT_EDGE_PROPERTIES));
+    n.inputNodes.forEach(n => defaultsForInputNode(n.p));
+    n.innerNodes.forEach(n => defaultsForInnerNode(n.p));
+    n.outputNodes.forEach(n => defaultsForOutputNode(n.p));
+    n.edges.forEach(e => defaultsForEdge(e.p));
 
     this.network = n;
   }
@@ -170,14 +171,6 @@ export default class Model {
   }
 }
 
-function assignUndefined(target, ...sources) {
-  return Object.assign(target, ...(sources.map(s => Object.assign({}, s, target))));
-}
-
-function assignUndefinedCloneDeep(target, ...sources) {
-  return Object.assign(target, ...(sources.map(s => Object.assign({}, cloneDeep(s), target))));
-}
-
 /***
  *
  * @param value {number}
@@ -273,3 +266,29 @@ Object.defineProperty(
   }
 );
 Object.freeze(Model.DEFAULT_EDGE_PROPERTIES);
+
+function defaultsForInputNode(p) {
+  if (typeof p.inputProps?.range !== 'undefined') {
+    // inputProps.range might be an array, but defaultsDeep will overwrite it with an object
+    // such that we need to save it beforehand and restore it afterwards
+    const range = p.inputProps.range;
+    delete p.inputProps.range;
+    defaultsDeep(p, Model.DEFAULT_INPUT_NODE_PROPERTIES);
+    p.inputProps.range = range;
+    return p;
+  } else {
+    return defaultsDeep(p, Model.DEFAULT_INPUT_NODE_PROPERTIES);
+  }
+}
+
+function defaultsForInnerNode(p) {
+  return defaultsDeep(p, Model.DEFAULT_INNER_NODE_PROPERTIES);
+}
+
+function defaultsForOutputNode(p) {
+  return defaultsDeep(p, Model.DEFAULT_OUTPUT_NODE_PROPERTIES);
+}
+
+function defaultsForEdge(p) {
+  return defaultsDeep(p, Model.DEFAULT_EDGE_PROPERTIES);
+}
