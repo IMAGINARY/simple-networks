@@ -1,4 +1,6 @@
 import jsYaml from 'js-yaml';
+import cloneDeep from 'lodash/cloneDeep';
+import isEmpty from 'lodash/isEmpty';
 
 import { validate } from './validate';
 import Model from '../neural-network/model';
@@ -18,10 +20,14 @@ async function load(url) {
     throw new Error(`Unable to validate level file ${url.href}. Please check the developer console for details.`);
   }
 
-  const allProperties = levelObj.properties ?? {};
-  const nodes = processNodes(levelObj.nodes, allProperties);
-  const edges = processEdges(levelObj.edges, allProperties);
+  console.log(levelObj.defaultProperties);
+  const { nodeDefaults, edgeDefaults } = processDefaultProperties(levelObj.defaultProperties);
 
+  const allProperties = levelObj.properties ?? {};
+  const nodes = processNodes(levelObj.nodes, allProperties, nodeDefaults);
+  const edges = processEdges(levelObj.edges, allProperties, edgeDefaults);
+
+  console.log({ nodes, edges });
   const model = new Model(nodes, edges);
   const layout = levelObj.layout ?? generateLayout(model.network);
   const training = processTraining(levelObj.training, model.network);
@@ -36,57 +42,93 @@ async function load(url) {
   return { model, layout, training, strings };
 }
 
-function processNodes(nodeIds, allProperties) {
+function processDefaultProperties(defaultProperties) {
+  if (typeof defaultProperties === 'undefined') {
+    defaultProperties = {};
+  }
+
+  const nodeDefaults = {};
+  if ('input' in defaultProperties) {
+    const { value, props } = processValueOrRange(defaultProperties.input);
+    assignIfDefined(nodeDefaults, 'input', value);
+    assignIfDefined(nodeDefaults, 'inputProps', props);
+  }
+  if ('bias' in defaultProperties) {
+    const { value, props } = processValueOrRange(defaultProperties.bias);
+    assignIfDefined(nodeDefaults, 'bias', value);
+    assignIfDefined(nodeDefaults, 'biasProps', props);
+  }
+  if ('activationFunc' in defaultProperties) {
+    nodeDefaults.activationFunc = processActivationFunc(propsIn.activationFunc);
+  }
+
+  const edgeDefaults = {};
+  if ('weight' in defaultProperties) {
+    const { value, props } = processValueOrRange(defaultProperties.weight);
+    assignIfDefined(edgeDefaults, 'weight', value);
+    assignIfDefined(edgeDefaults, 'weightProps', props);
+  }
+
+  return { nodeDefaults, edgeDefaults };
+}
+
+function processNodes(nodeIds, allProperties, defaultProperties) {
   return nodeIds
     .map(nodeId => FeedForwardNetwork.canonicalizeNodeId(nodeId))
     .map(nodeId => {
       const result = { id: nodeId };
       const nodeProperties = allProperties[nodeId];
-      if (typeof nodeProperties !== 'undefined') {
-        result.properties = processNodeProperties(nodeProperties);
+      const processedProperties = processNodeProperties(nodeProperties, defaultProperties);
+      if (!isEmpty(processedProperties)) {
+        result.properties = processedProperties;
       }
       return result;
     });
 }
 
-function processNodeProperties(propsIn) {
-  const propsOut = {};
-  if (typeof propsIn.input !== 'undefined') {
-    const { value, props } = processValueOrRange(propsIn.input);
-    assignIfDefined(propsOut, 'input', value);
-    assignIfDefined(propsOut, 'inputProps', props);
-  }
-  if (typeof propsIn.bias !== 'undefined') {
-    const { value, props } = processValueOrRange(propsIn.bias);
-    assignIfDefined(propsOut, 'bias', value);
-    assignIfDefined(propsOut, 'biasProps', props);
-  }
-  if (typeof propsIn.activationFunc !== 'undefined') {
-    propsOut.activationFunc = processActivationFunc(propsIn.activationFunc);
+function processNodeProperties(propsIn, defaults) {
+  const propsOut = cloneDeep(defaults);
+  if (typeof propsIn !== 'undefined') {
+    if (typeof propsIn.input !== 'undefined') {
+      const { value, props } = processValueOrRange(propsIn.input);
+      assignIfDefined(propsOut, 'input', value);
+      assignIfDefined(propsOut, 'inputProps', props);
+    }
+    if (typeof propsIn.bias !== 'undefined') {
+      const { value, props } = processValueOrRange(propsIn.bias);
+      assignIfDefined(propsOut, 'bias', value);
+      assignIfDefined(propsOut, 'biasProps', props);
+    }
+    if (typeof propsIn.activationFunc !== 'undefined') {
+      propsOut.activationFunc = processActivationFunc(propsIn.activationFunc);
+    }
   }
   return propsOut;
 }
 
-function processEdges(edgeIds, allProperties) {
+function processEdges(edgeIds, allProperties, defaults) {
   return edgeIds
     .map(edgeId => FeedForwardNetwork.canonicalizeEdgeId(edgeId))
     .map(edgeId => {
       const { from, to } = FeedForwardNetwork.nodeIdsFromEdgeId(edgeId);
       const result = { from, to };
       const edgeProperties = allProperties[edgeId];
-      if (typeof edgeProperties !== 'undefined') {
-        result.properties = processEdgeProperties(edgeProperties);
+      const processedProperties = processEdgeProperties(edgeProperties, defaults);
+      if (!isEmpty(processedProperties)) {
+        result.properties = processedProperties;
       }
       return result;
     });
 }
 
-function processEdgeProperties(propsIn) {
-  const propsOut = {};
-  if (typeof propsIn.weight !== 'undefined') {
-    const { value, props } = processValueOrRange(propsIn.weight);
-    assignIfDefined(propsOut, 'weight', value);
-    assignIfDefined(propsOut, 'weightProps', props);
+function processEdgeProperties(propsIn, defaults) {
+  const propsOut = cloneDeep(defaults);
+  if (typeof propsIn !== 'undefined') {
+    if (typeof propsIn.weight !== 'undefined') {
+      const { value, props } = processValueOrRange(propsIn.weight);
+      assignIfDefined(propsOut, 'weight', value);
+      assignIfDefined(propsOut, 'weightProps', props);
+    }
   }
   return propsOut;
 }

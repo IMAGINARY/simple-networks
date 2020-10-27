@@ -56,6 +56,9 @@ const schema = {
         }
       ],
     },
+    "activationFunc": {
+      "enum": ["binary", "linear", "relu", "sigmoid"]
+    },
     "stringOrI18N": {
       "oneOf": [
         { "type": "string" },
@@ -101,6 +104,16 @@ const schema = {
       "type": "array",
       "items": { "$ref": "#/definitions/edgeId" },
     },
+    "defaultProperties": {
+      "type": "object",
+      "properties": {
+        "input": { "$ref": "#/definitions/inputValueOrRange" },
+        "bias": { "$ref": "#/definitions/trainableValueOrRange" },
+        "activationFunc": { "$ref": "#/definitions/activationFunc" },
+        "weight": { "$ref": "#/definitions/trainableValueOrRange" },
+      },
+      "additionalProperties": false,
+    },
     "properties": {
       "type": "object",
       "patternProperties": {
@@ -117,7 +130,7 @@ const schema = {
               "type": "object",
               "properties": {
                 "bias": { "$ref": "#/definitions/trainableValueOrRange" },
-                "activationFunc": { "enum": ["binary", "linear", "relu", "sigmoid"] },
+                "activationFunc": { "$ref": "#/definitions/activationFunc" },
               },
               "additionalProperties": false,
             },

@@ -10,11 +10,16 @@ edges:
   - 'b -> max(a,b)'
   - 'h -> max(a,b)'
 
+defaultProperties:
+  input: { range: { min: -5, max: 5 } }
+  bias: { value: 0, range: { min: -2, max: 2 } }
+  weight: { value: 1, range: { min: -2, max: 2 } }
+
 properties:
   'a':
-    input: { value: 0, range: { min: -5, max: 5 } }
+    input: 4
   'b':
-    input: { value: 1, range: { min: -5, max: 5 } }
+    input: -5
 
 layout: [
   [ 'a', 'b' ],
@@ -52,4 +57,3 @@ labels:
       text:
         en: "This is the weight of the edge between 'a' and 'h'."
         de: "Das ist die Gewichtung der Kante zwischen 'a' und 'b'."
-
