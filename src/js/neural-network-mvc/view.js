@@ -420,6 +420,12 @@ export default class View extends EventEmitter {
     const svgEdgeGroup = this._edgeLayer.group()
       .attr({ 'fill-opacity': 0.5, stroke: 'none', });
     const svgEdge = svgEdgeGroup.path(mep.edgePath).attr({ stroke: 'black', fill: 'none' });
+    /*
+    const svgEdgeActivated = svgEdgeGroup.path(mep.edgeActivatedPath).attr({
+      stroke: 'black',
+      fill: 'none'
+    });
+     */
     const svgFromActivation = svgEdgeGroup.path(mep.fromActivationEdgePath);
     const svgToActivation = svgEdgeGroup.path(mep.toActivationEdgePath);
     const svgWeightLabel = this._labelLayer.plain('')
@@ -436,6 +442,7 @@ export default class View extends EventEmitter {
 
     const update = () => {
       svgEdge.plot(mep.edgePath);
+      //svgEdgeActivated.plot(mep.edgeActivatedPath);
       svgFromActivation.plot(mep.fromActivationEdgePath).attr({ fill: mep.fromActivationColor });
       svgToActivation.plot(mep.toActivationEdgePath).attr({ fill: mep.toActivationColor });
       svgWeightLabel.plain(formatNumber(edge.p.weight)).attr(mep.labelPos);
@@ -481,7 +488,6 @@ export default class View extends EventEmitter {
   }
 
   static _buildEdgePaths({ fromPos, fromActivation, toPos, toActivation }) {
-    const shift = (b, v) => new Bezier(b.points.map(p => ({ x: p.x + v.x, y: p.y + v.y })));
     const flip = b => new Bezier([...b.points].reverse());
 
     const bezier = new Bezier(
@@ -491,58 +497,66 @@ export default class View extends EventEmitter {
       toPos
     );
 
-    const bbox = bezier.bbox();
-    const intersection = bezier.intersects({
-      p1: { x: bbox.x.min + bbox.x.size * (1 - 0.33), y: bbox.y.min - 1 },
-      p2: { x: bbox.x.min + bbox.x.size * (1 - 0.33), y: bbox.y.max + 1 },
-    })[0];
+    const bezierActivated = new Bezier(
+      { x: fromPos.x, y: fromPos.y - fromActivation },
+      { x: fromPos.x * 0.5 + toPos.x * 0.5, y: fromPos.y - fromActivation },
+      { x: fromPos.x * 0.5 + toPos.x * 0.5, y: toPos.y - toActivation },
+      { x: toPos.x, y: toPos.y - toActivation },
+    );
 
-    const { left: bezierFrom, right: bezierTo } = bezier.split(intersection);
-    const bezierFromActivated = shift(bezierFrom, { x: 0, y: -fromActivation });
-    const bezierToActivated = shift(bezierTo, { x: 0, y: -toActivation });
+    const { intersectionPos, handlePos, labelPos } = (() => {
+      const bbox = bezier.bbox();
+      const intersection = bezier.intersects({
+        p1: { x: bbox.x.min + bbox.x.size * (1 - 0.33), y: bbox.y.min - 1 },
+        p2: { x: bbox.x.min + bbox.x.size * (1 - 0.33), y: bbox.y.max + 1 },
+      })[0];
 
-    if (bezierFromActivated.order !== 3 || bezierToActivated.order !== 3) {
-      console.log(
-        `Sometimes, NaNs occur in Bezier paths, but it's hardly reproducible.
-        I suspect it's because of non-cubic Bezier curves being created during the split.
-        Please check the following curves for their "order" property.`,
-        { bezierFromActivated, bezierToActivated },
+      const intersectionPos = bezier.get(intersection);
+      const handlePos = { x: intersectionPos.x, y: intersectionPos.y - toActivation };
+      const labelPos = handlePos;
+
+      return { intersectionPos, handlePos, labelPos };
+    })();
+
+    const { bezierFrom, bezierFromActivated, bezierTo, bezierToActivated } = (() => {
+      const bezierSub = new Bezier(
+        { x: 0, y: -fromActivation },
+        { x: 0.5, y: -fromActivation },
+        { x: 0.5, y: -toActivation },
+        { x: 1, y: -toActivation },
       );
-    }
+      const line = { p1: { x: -1, y: 0 }, p2: { x: 2, y: 0 } };
+      // bezierSub and line intersect at the same t as bezier and bezierActivated,
+      // but the intersection is much easier to compute (intersecting two cubic bezier curves was
+      // too slow for realtime processing, but intersecting a cubic bezier curve and a line works
+      // just fine).
+      const t = bezierSub.intersects(line)[0] ?? 1;
+      const { left: bezierFrom, right: bezierTo } = bezier.split(t);
+      const { left: bezierFromActivated, right: bezierToActivated } = bezierActivated.split(t);
+      return { bezierFrom, bezierFromActivated, bezierTo, bezierToActivated };
+    })();
 
-    const edgePath = new SVGPathBuilder().M(bezierFrom.points[0])
-      .C(...bezier.points.slice(1))
-      .build();
-
+    const edgePath = new SVGPathBuilder().MC(...bezier.points).build();
+    const edgeActivatedPath = new SVGPathBuilder().MC(...bezierActivated.points).build();
     const fromActivationEdgePath = new SVGPathBuilder()
-      .M(bezierFrom.points[0])
-      .C(...bezierFrom.points.slice(1))
-      .L(bezierFromActivated.points[3])
-      .C(...flip(bezierFromActivated).points.slice(1))
-      .L(bezierFromActivated.points[0], bezierFrom.points[0])
+      .MC(...bezierFrom.points)
+      .LC(...flip(bezierFromActivated).points)
       .Z()
       .build();
-
     const toActivationEdgePath = new SVGPathBuilder()
-      .M(bezierTo.points[0])
-      .C(...bezierTo.points.slice(1))
-      .L(bezierToActivated.points[3])
-      .C(...flip(bezierToActivated).points.slice(1))
-      .L(bezierToActivated.points[0], bezierTo.points[0])
+      .MC(...bezierTo.points)
+      .LC(...flip(bezierToActivated).points)
       .Z()
       .build();
-
-    const intersectionPos = bezier.get(intersection);
-    const handlePos = { x: intersectionPos.x, y: intersectionPos.y - toActivation };
-    const labelPos = handlePos;
 
     return {
       edgePath,
+      edgeActivatedPath,
       fromActivationEdgePath,
       toActivationEdgePath,
       intersectionPos,
       labelPos,
-      handlePos
+      handlePos,
     };
   }
 }
