@@ -419,7 +419,14 @@ export default class View extends EventEmitter {
 
     const svgEdgeGroup = this._edgeLayer.group()
       .attr({ 'fill-opacity': 0.5, stroke: 'none', });
-    const svgEdge = svgEdgeGroup.path(mep.edgePath).attr({ stroke: 'black', fill: 'none' });
+    const svgEdge = svgEdgeGroup.path(mep.edgePath)
+      .attr({ stroke: 'black', fill: 'none' })
+      .css({
+        'stroke-dasharray': 10,
+        'animation': 'dash linear',
+        'animation-iteration-count': 'infinite'
+      });
+
     /*
     const svgEdgeActivated = svgEdgeGroup.path(mep.edgeActivatedPath).attr({
       stroke: 'black',
@@ -442,6 +449,10 @@ export default class View extends EventEmitter {
 
     const update = () => {
       svgEdge.plot(mep.edgePath);
+      svgEdge.css({
+        'animation-name': edge.p.weight * edge.from.p.activation > 0 ? 'dash-forwards': 'dash-backwards',
+        'animation-duration': `${10 / (Math.abs(edge.p.weight * edge.from.p.activation) / this._flowScale)}s`
+      });
       //svgEdgeActivated.plot(mep.edgeActivatedPath);
       svgFromActivation.plot(mep.fromActivationEdgePath).attr({ fill: mep.fromActivationColor });
       svgToActivation.plot(mep.toActivationEdgePath).attr({ fill: mep.toActivationColor });

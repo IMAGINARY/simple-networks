@@ -120,3 +120,15 @@ p {
 .successful {
   background: rgba(100,255,0,.2) !important;
 }
+
+@keyframes dash-forwards {
+  to {
+    stroke-dashoffset: -300;
+  }
+}
+
+@keyframes dash-backwards {
+  to {
+    stroke-dashoffset: 300;
+  }
+}
