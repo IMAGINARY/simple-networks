@@ -83,7 +83,6 @@ export default class SVGPathBuilder {
     return this;
   }
 
-
   A(r, angle, largeArcFlag, sweepFlag, p) {
     this.path += `A ${r.x} ${r.y} ${angle} ${largeArcFlag} ${sweepFlag} ${p.x} ${p.y}\n`;
     return this;
@@ -102,6 +101,22 @@ export default class SVGPathBuilder {
   z() {
     this.path += 'z\n';
     return this;
+  }
+
+  MC(p1, cp1, cp2, p2) {
+    return this.M(p1).C(cp1,cp2,p2);
+  }
+
+  LC(p1, cp1, cp2, p2) {
+    return this.L(p1).C(cp1,cp2,p2);
+  }
+
+  MQ(p1, cp1, p2) {
+    return this.M(p1).Q(cp1,p2);
+  }
+
+  LQ(p1, cp1, p2) {
+    return this.L(p1).Q(cp1,p2);
   }
 
   build() {
