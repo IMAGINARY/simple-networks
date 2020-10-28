@@ -104,19 +104,19 @@ export default class SVGPathBuilder {
   }
 
   MC(p1, cp1, cp2, p2) {
-    return this.M(p1).C(cp1,cp2,p2);
+    return this.M(p1).C(cp1, cp2, p2);
   }
 
   LC(p1, cp1, cp2, p2) {
-    return this.L(p1).C(cp1,cp2,p2);
+    return this.L(p1).C(cp1, cp2, p2);
   }
 
   MQ(p1, cp1, p2) {
-    return this.M(p1).Q(cp1,p2);
+    return this.M(p1).Q(cp1, p2);
   }
 
   LQ(p1, cp1, p2) {
-    return this.L(p1).Q(cp1,p2);
+    return this.L(p1).Q(cp1, p2);
   }
 
   build() {
