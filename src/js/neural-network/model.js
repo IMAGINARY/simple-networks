@@ -292,3 +292,5 @@ function defaultsForOutputNode(p) {
 function defaultsForEdge(p) {
   return defaultsDeep(p, Model.DEFAULT_EDGE_PROPERTIES);
 }
+
+export { Model };

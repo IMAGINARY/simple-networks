@@ -17,3 +17,5 @@ export default function generateLayout(network) {
   layers.push(currentLayer);
   return layers;
 }
+
+export { generateLayout };

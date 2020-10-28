@@ -1,4 +1,4 @@
-export function deepFreeze(o, levels = Number.POSITIVE_INFINITY) {
+export default function deepFreeze(o, levels = Number.POSITIVE_INFINITY) {
   if (levels === 0)
     return;
 
@@ -16,3 +16,5 @@ export function deepFreeze(o, levels = Number.POSITIVE_INFINITY) {
 
   return o;
 }
+
+export { deepFreeze };

@@ -44,3 +44,5 @@ export default class Controller {
     return this.targetActivationFuncs.map(taf => taf(inputs));
   }
 }
+
+export { Controller };

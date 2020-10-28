@@ -216,4 +216,5 @@ const schema = {
   "additionalProperties": false,
 };
 
+export default schema;
 export { schema };

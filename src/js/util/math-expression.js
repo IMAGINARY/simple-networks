@@ -35,3 +35,5 @@ export default function MathExpression(expr) {
   const mathExpr = new _MathExpression(expr);
   return mathExpr.eval.bind(mathExpr);
 }
+
+export { MathExpression };

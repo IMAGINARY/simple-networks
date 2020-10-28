@@ -5,7 +5,7 @@ import { schema as levelSchema } from './schema';
 const ajv = new Ajv({ allErrors: true });
 const ajvValidate = ajv.compile(levelSchema);
 
-function validate(levelObj) {
+export default function validate(levelObj) {
   const valid = ajvValidate(levelObj);
   return { valid, errors: ajvValidate.errors };
 }

@@ -10,7 +10,7 @@ import FeedForwardNetwork from '../neural-network/network';
 import MathExpression from '../util/math-expression';
 import generateLayout from '../neural-network-mvc/generate-layout';
 
-async function load(url) {
+export default async function load(url) {
   const response = await fetch(url.href);
   const levelSrc = await response.text();
   const levelObj = jsYaml.safeLoad(levelSrc);

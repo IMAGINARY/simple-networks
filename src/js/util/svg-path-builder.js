@@ -123,3 +123,5 @@ export default class SVGPathBuilder {
     return this.path;
   }
 }
+
+export { SVGPathBuilder };

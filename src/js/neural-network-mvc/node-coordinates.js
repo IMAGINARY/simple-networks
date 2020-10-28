@@ -121,3 +121,5 @@ export default class NodeCoordinates {
     return (maxHeight - layerHeight) + layerIndex;
   }
 }
+
+export { NodeCoordinates };

@@ -635,3 +635,5 @@ class VerticalDraggable {
     window.removeEventListener('pointerup', this._upHandler);
   }
 }
+
+export { View };

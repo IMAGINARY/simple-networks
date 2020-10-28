@@ -217,3 +217,5 @@ function topSort(network) {
 function reverseTopSort(network) {
   return _topSort(network, true);
 }
+
+export { FeedForwardNetwork };
