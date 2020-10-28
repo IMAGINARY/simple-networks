@@ -1,0 +1,28 @@
+nodes:
+  - 'celsius'
+  - 'fahrenheit'
+
+edges:
+  - 'celsius -> fahrenheit'
+
+properties:
+  'celsius':
+    input:
+      value: 1
+      range:
+        min: -20
+        max: 50
+  'fahrenheit':
+    bias:
+      range:
+        min: -50
+        max: 50
+  'celsius -> fahrenheit':
+    weight:
+      range:
+        min: -2
+        max: 2
+
+training:
+  outputs:
+    fahrenheit: '(celsius * 1.8) + 32'

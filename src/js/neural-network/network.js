@@ -59,7 +59,7 @@ export default class FeedForwardNetwork {
     return this.edgeMap[Edge.edgeIdFromNodeIds(fromId, toId)];
   }
 
-  static canolicalizeNodeId(id) {
+  static canonicalizeNodeId(id) {
     return Node.canonicalizeId(id);
   }
 
@@ -168,7 +168,7 @@ class Edge {
   static nodeIdsFromEdgeId(edgeId) {
     let separator = ' -> ';
     let parts;
-    while ((parts = edgeId.split()).length > 2) {
+    while ((parts = edgeId.split(separator)).length > 2) {
       separator = ` ${separator} `;
     }
     if (parts.length === 2) {
@@ -178,7 +178,7 @@ class Edge {
       };
     } else {
       // https://en.wikipedia.org/wiki/Extended_Backus%E2%80%93Naur_form
-      const edgeEBNF = 'edgeId = nodeId arrow nodeId ; arrow  = " " arrow " " | "->" ;';
+      const edgeEBNF = 'edgeId = nodeId arrow nodeId ; arrow  = " " arrow " " | " -> " ;';
       throw new Error(`Invalid edge id format: ${edgeId} does not match the EBNF: ${edgeEBNF}`);
     }
   }

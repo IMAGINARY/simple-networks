@@ -1,0 +1,13 @@
+nodes:
+  - 'a'
+  - 'b'
+  - 'sum(a,b)'
+
+edges:
+  - 'a -> sum(a,b)'
+  - 'b -> sum(a,b)'
+
+training:
+  outputs:
+    'sum(a,b)': 'a + b'
+

@@ -1,0 +1,22 @@
+nodes:
+  - 'a'
+  - 'b'
+  - 'h'
+  - 'and(a,b)'
+
+edges:
+  - 'a -> h'
+  - 'b -> h'
+  - 'h -> and(a,b)'
+
+properties:
+  a:
+    input:
+      range: [0, 1]
+  b:
+    input:
+      range: [0, 1]
+
+training:
+  outputs:
+    'and(a,b)': 'a*b'

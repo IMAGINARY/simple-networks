@@ -45,9 +45,11 @@ const paths = {
   },
   dependencies: {
     packages: [
+      'ajv',
       'bezier-js',
       'expression-eval',
       'interval-arithmetic',
+      'js-yaml',
       '@svgdotjs/svg.js',
     ],
     watchSrc: [
@@ -118,6 +120,7 @@ function scripts() {
   })
     .external(paths.dependencies.packages)
     .transform('babelify', {
+      plugins: ['@babel/plugin-proposal-nullish-coalescing-operator'],
       presets: [['@babel/preset-env', { useBuiltIns: 'usage', corejs: 3 }]],
       sourceMaps: true,
     })
