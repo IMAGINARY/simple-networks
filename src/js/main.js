@@ -1,10 +1,23 @@
-import View from './neural-network-mvc/view';
-import Controller from './neural-network-mvc/controller';
+import ready from 'document-ready';
+
+import { View as LevelView } from './neural-network-mvc/view';
+import { Controller as LevelController } from './neural-network-mvc/controller';
+
+import { Controller as SliderController } from './slider/controller';
+
 import { load as loadLevel } from './level/load';
 
-function rand(min, max) {
-  return Math.random() * (max - min) - min;
-}
+const levelNames = [
+  "TimesTwo",
+  "Positive",
+  "Sum",
+  "PositiveOffsetToOne",
+  "Average",
+  "And",
+  "CelsiusToFahrenheit",
+  "Max",
+  "Weather",
+];
 
 async function main() {
   const levelUrl = new URL('assets/levels/Max.yaml', window.location.href);
@@ -28,8 +41,13 @@ async function main() {
   parent.style.left = '100px';
   const oldSvg = document.querySelector('svg');
   oldSvg.parentElement.insertBefore(parent, oldSvg); // TODO: move to pug/CSS
-  const view = new View(model, layout, parent);
-  const controller = new Controller(model, training.targetActivationFuncs, view);
+  const levelView = new LevelView(model, layout, parent);
+  const levelController = new LevelController(model, training.targetActivationFuncs, levelView);
+
+  const sliderController = new SliderController(levelNames);
+  sliderController.on('current-slide-changed',
+    (slideName, slideIndex) => console.log(`Go to slide ${slideIndex}: ${slideName}`)
+  );
 }
 
-main();
+ready(main);
