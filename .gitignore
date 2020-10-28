@@ -1,3 +1,14 @@
 node_modules/
 yarn-debug.log*
 yarn-error.log*
+
+# ignore known build results
+index.html
+assets/js/bundle.js
+assets/js/bundle.min.js
+assets/js/dependencies.js
+assets/js/bundle.min.js.map
+assets/js/dependencies.min.js
+assets/js/dependencies.min.js.map
+assets/css/default.css
+assets/css/default.css.map
