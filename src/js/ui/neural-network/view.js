@@ -1,7 +1,7 @@
 import { EventEmitter } from 'events';
 import { SVG } from '@svgdotjs/svg.js';
 import Bezier from 'bezier-js';
-import SVGPathBuilder from '../util/svg-path-builder';
+import SVGPathBuilder from '../../util/svg-path-builder';
 import NodeCoordinates from './node-coordinates';
 import IOps, { Interval } from 'interval-arithmetic';
 

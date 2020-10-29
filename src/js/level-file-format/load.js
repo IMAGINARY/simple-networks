@@ -8,7 +8,7 @@ import { Interval } from 'interval-arithmetic';
 import * as activationFunctions from '../neural-network/activation-functions';
 import FeedForwardNetwork from '../neural-network/network';
 import MathExpression from '../util/math-expression';
-import generateLayout from '../neural-network-mvc/generate-layout';
+import generateLayout from '../util/generate-layout';
 
 export default async function load(url) {
   const response = await fetch(url.href);

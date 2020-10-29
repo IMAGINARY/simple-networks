@@ -1,11 +1,11 @@
 import ready from 'document-ready';
 
-import { View as LevelView } from './neural-network-mvc/view';
-import { Controller as LevelController } from './neural-network-mvc/controller';
+import { View as LevelView } from './ui/neural-network/view';
+import { Controller as LevelController } from './ui/neural-network/controller';
 
-import { Controller as SliderController } from './slider/controller';
+import { Controller as SliderController } from './ui/slider/controller';
 
-import { load as loadLevel } from './level/load';
+import { load as loadLevel } from './level-file-format/load';
 
 const levelNames = [
   "TimesTwo",
