@@ -47,6 +47,7 @@ const paths = {
     packages: [
       'ajv',
       'bezier-js',
+      'document-ready',
       'expression-eval',
       'interval-arithmetic',
       'js-yaml',
