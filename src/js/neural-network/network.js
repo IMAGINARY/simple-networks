@@ -135,7 +135,7 @@ class Edge {
     this.to = to;
     this.from.out.push(this);
     this.to.in.push(this);
-    this.p = Object.assign({}, properties);
+    this.p = properties;
   }
 
   static edgeIdFromNodeIds(fromId, toId) {
