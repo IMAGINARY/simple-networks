@@ -169,6 +169,19 @@ export default class Model {
     }
     return this;
   }
+
+  predict(x) {
+    const activations = {};
+    this.network.inputNodes.forEach((node, i) => activations[node.id] = x[i]);
+    for (let node of this.network.topSortNoInputs) {
+      const sum = node.in.reduce(
+        (a, inEdge) => a + activations[inEdge.from.id] * inEdge.p.weight,
+        node.p.bias
+      );
+      activations[node.id] = node.p.activationFunc.f(sum);
+    }
+    return this.network.outputNodes.map(node => activations[node.id] ?? 0.0);
+  }
 }
 
 /***
