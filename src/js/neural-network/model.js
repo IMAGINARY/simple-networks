@@ -17,6 +17,7 @@ export default class Model {
   }
 
   feedForward() {
+    this.network.inputNodes.forEach(n => n.p.activation = n.p.input);
     for (let node of this.network.topSortNoInputs) {
       node.p.sum = node.in.reduce(
         (a, inEdge) => a + inEdge.from.p.activation * inEdge.p.weight,
@@ -106,7 +107,7 @@ export default class Model {
       this.network.inputNodes :
       this.network.toNodeArray(mixed).filter(n => n.isInput());
     for (let u of nodes) {
-      u.p.activation = clamp(u.p.activation, u.p.inputProps.range);
+      u.p.input = clamp(u.p.input, u.p.inputProps.range);
     }
   }
 
@@ -126,7 +127,7 @@ export default class Model {
   }
 
   assignInputs(x) {
-    this.network.inputNodes.forEach((n, i) => n.p.activation = x[i]);
+    this.network.inputNodes.forEach((n, i) => n.p.input = x[i]);
     return this;
   }
 

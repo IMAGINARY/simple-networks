@@ -14,7 +14,7 @@ export default class Controller {
   }
 
   handleInputChange(node, input) {
-    node.p.activation = input;
+    node.p.input = input;
     this.model.clampInput(node);
     this.model.assignTargets(this._computeTargetActivations());
     this._feedForwardAndUpdateView();
@@ -39,7 +39,7 @@ export default class Controller {
 
   _computeTargetActivations() {
     const inputs = Object.fromEntries(
-      this.model.network.inputNodes.map(n => [n.id, n.p.activation])
+      this.model.network.inputNodes.map(n => [n.id, n.p.input])
     );
     return this.targetActivationFuncs.map(taf => taf(inputs));
   }
