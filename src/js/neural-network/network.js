@@ -34,13 +34,6 @@ export default class FeedForwardNetwork {
     this.topSortNoInputs = this.topSort.filter(n => n.in.length > 0);
     this.reverseTopSort = reverseTopSort(this);
     this.reverseTopSortNoOutputs = this.reverseTopSort.filter(n => n.out.length > 0);
-
-
-    // Freeze the network to prevent external changes of nodes and edges that would render
-    // the network representation inconsistent.
-    deepFreeze(this, 2);
-    this.nodes.forEach(n => n._freeze());
-    this.edges.forEach(e => e._freeze());
   }
 
   hasNode(id) {
@@ -133,12 +126,6 @@ class Node {
   static canonicalizeId(id) {
     return id.trim();
   }
-
-  _freeze() {
-    Object.freeze(this);
-    Object.freeze(this.in);
-    Object.freeze(this.out);
-  }
 }
 
 class Edge {
@@ -149,10 +136,6 @@ class Edge {
     this.from.out.push(this);
     this.to.in.push(this);
     this.p = Object.assign({}, properties);
-  }
-
-  _freeze() {
-    Object.freeze(this);
   }
 
   static edgeIdFromNodeIds(fromId, toId) {

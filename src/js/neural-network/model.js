@@ -209,76 +209,40 @@ function clamp(value, range) {
   }
 }
 
-Object.defineProperty(
-  Model,
-  'DEFAULT_INNER_NODE_PROPERTIES',
-  {
-    value: {
-      bias: 0,
-      biasProps: { range: new Interval(-1, 1), train: true },
-      sum: 0,
-      sumProps: {},
-      activation: 0,
-      activationProps: {},
-      activationFunc: ActivationFunctions.relu,
-      error: 0,
-      'dC/dBias': 0,
-    },
-    configurable: false,
-    enumerable: true,
-  }
-);
-Object.freeze(Model.DEFAULT_INNER_NODE_PROPERTIES);
+Model.DEFAULT_INNER_NODE_PROPERTIES = {
+  bias: 0,
+  biasProps: { range: new Interval(-1, 1), train: true },
+  sum: 0,
+  sumProps: {},
+  activation: 0,
+  activationProps: {},
+  activationFunc: ActivationFunctions.relu,
+  error: 0,
+  'dC/dBias': 0,
+};
 
-Object.defineProperty(
-  Model,
-  'DEFAULT_INPUT_NODE_PROPERTIES',
+Model.DEFAULT_INPUT_NODE_PROPERTIES = Object.assign(
+  cloneDeep(Model.DEFAULT_INNER_NODE_PROPERTIES),
   {
-    value: Object.assign(
-      cloneDeep(Model.DEFAULT_INNER_NODE_PROPERTIES),
-      {
-        input: 0,
-        inputProps: { range: new Interval(0, 1) },
-        activationFunc: ActivationFunctions.linear,
-      }),
-    configurable: false,
-    enumerable: true,
-  }
-);
-Object.freeze(Model.DEFAULT_INPUT_NODE_PROPERTIES);
+    input: 0,
+    inputProps: { range: new Interval(0, 1) },
+    activationFunc: ActivationFunctions.linear,
+  });
 
-Object.defineProperty(
-  Model,
-  'DEFAULT_OUTPUT_NODE_PROPERTIES',
-  {
-    value: Object.assign(
-      cloneDeep(Model.DEFAULT_INNER_NODE_PROPERTIES),
-      {
-        activationFunc: ActivationFunctions.linear,
-        target: 0,
-        targetProps: {},
-      }),
-    configurable: false,
-    enumerable: true,
-  }
-);
-Object.freeze(Model.DEFAULT_OUTPUT_NODE_PROPERTIES);
+Model.DEFAULT_OUTPUT_NODE_PROPERTIES =
+  Object.assign(
+    cloneDeep(Model.DEFAULT_INNER_NODE_PROPERTIES),
+    {
+      activationFunc: ActivationFunctions.linear,
+      target: 0,
+      targetProps: {},
+    });
 
-
-Object.defineProperty(
-  Model,
-  'DEFAULT_EDGE_PROPERTIES',
-  {
-    value: {
-      weight: 1,
-      weightProps: { range: new Interval(-1, 1), train: true },
-      'dC/dWeight': 0,
-    },
-    configurable: false,
-    enumerable: true,
-  }
-);
-Object.freeze(Model.DEFAULT_EDGE_PROPERTIES);
+Model.DEFAULT_EDGE_PROPERTIES = {
+  weight: 1,
+  weightProps: { range: new Interval(-1, 1), train: true },
+  'dC/dWeight': 0,
+};
 
 function defaultsForInputNode(p) {
   if (typeof p.inputProps?.range !== 'undefined') {
