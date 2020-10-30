@@ -24,6 +24,26 @@ export default class NodeCoordinates {
     this._coordForUnknownId = { x: -1, y: -1 };
   }
 
+  get width() {
+    return this._width;
+  }
+
+  get height() {
+    return this._height;
+  }
+
+  static alignVTop(layerIndex, layerHeight, maxHeight) {
+    return layerIndex;
+  }
+
+  static alignVMiddle(layerIndex, layerHeight, maxHeight) {
+    return (maxHeight - layerHeight) / 2 + layerIndex;
+  }
+
+  static alignVBottom(layerIndex, layerHeight, maxHeight) {
+    return (maxHeight - layerHeight) + layerIndex;
+  }
+
   has(nodeId) {
     return this._absCoords.hasOwnProperty(nodeId);
   }
@@ -51,14 +71,6 @@ export default class NodeCoordinates {
 
   relY(nodeId) {
     return this.rel(nodeId).y;
-  }
-
-  get width() {
-    return this._width;
-  }
-
-  get height() {
-    return this._height;
   }
 
   layout() {
@@ -107,18 +119,6 @@ export default class NodeCoordinates {
     }
     const options = Object.assign({}, this._options, { alignV });
     return new NodeCoordinates(this.layout().map(l => [...l].reverse()), options);
-  }
-
-  static alignVTop(layerIndex, layerHeight, maxHeight) {
-    return layerIndex;
-  }
-
-  static alignVMiddle(layerIndex, layerHeight, maxHeight) {
-    return (maxHeight - layerHeight) / 2 + layerIndex;
-  }
-
-  static alignVBottom(layerIndex, layerHeight, maxHeight) {
-    return (maxHeight - layerHeight) + layerIndex;
   }
 }
 

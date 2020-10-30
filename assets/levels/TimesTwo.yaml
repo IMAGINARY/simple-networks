@@ -1,7 +1,3 @@
-nodes:
-  - 'in'
-  - 'out'
-
 edges:
   - 'in -> out'
 

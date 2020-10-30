@@ -1,12 +1,4 @@
 # This level needs quite some polishing ...
-
-nodes:
-  - 'inside?'
-  - 'cloudiness'
-  - 'h1'
-  - 'h2'
-  - 'temperature'
-
 edges:
   - 'inside? -> h1'
   - 'inside? -> h2'

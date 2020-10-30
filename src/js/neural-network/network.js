@@ -1,28 +1,26 @@
+import { uniq } from 'lodash';
+
 import { deepFreeze } from '../util/deep-freeze.js';
 
 export default class FeedForwardNetwork {
   /***
    *
-   * @param nodes [{linear, properties}]
-   * @param edges [{from, to, properties}]
+   * @param edges [{from, to}]
    */
-  constructor(nodes = [], edges = []) {
-    const nId = n => Node.canonicalizeId(n.id);
+  constructor(edges = []) {
+    const eFromId = e => Node.canonicalizeId(e.from);
+    const eToId = e => Node.canonicalizeId(e.to);
     const eId = e => Edge.edgeIdFromNodeIds(e.from, e.to);
-    const uniqueNodes = Object.fromEntries(nodes.map(n => [nId(n), n]));
-    const uniqueEdges = Object.fromEntries(edges.map(e => [eId(e), e]));
+    const uniqueNodeIds = uniq(edges.map(e => [eFromId(e), eToId(e)]).flat());
+    const uniqueEdgeIds = uniq(edges.map(e => eId(e)));
 
-    this.nodeMap = Object.fromEntries(
-      Object.entries(uniqueNodes).map(([id, n]) => [id, new Node(n.id, n.properties)])
-    );
-    this.edgeMap = Object.fromEntries(
-      Object.entries(uniqueEdges).map(([id, e]) => [id, new Edge(
-        this.nodeMap[e.from],
-        this.nodeMap[e.to],
-        e.properties
-      )])
-    );
+    this.nodeMap = Object.fromEntries(uniqueNodeIds.map(id => [id, new Node(id)]));
+    this.edgeMap = Object.fromEntries(uniqueEdgeIds.map(id => {
+      const { from: fromId, to: toId } = Edge.nodeIdsFromEdgeId(id);
+      return [id, new Edge(this.nodeMap[fromId], this.nodeMap[toId])];
+    }));
 
+    // Precompute often needed arrays
     this.nodes = Object.values(this.nodeMap);
     this.edges = Object.values(this.edgeMap);
 
@@ -34,22 +32,26 @@ export default class FeedForwardNetwork {
     this.topSortNoInputs = this.topSort.filter(n => n.in.length > 0);
     this.reverseTopSort = reverseTopSort(this);
     this.reverseTopSortNoOutputs = this.reverseTopSort.filter(n => n.out.length > 0);
-  }
 
-  hasNode(id) {
-    return typeof this.getNode(id) !== 'undefined';
-  }
+    // Precompute the id version of the the arrays above
+    const toIds = FeedForwardNetwork.toIdArray;
+    this.nodeIds = toIds(this.nodes);
+    this.edgeIds = toIds(this.edges);
+    this.ids = [...this.nodeIds, ...this.edgeIds];
+    this.ids.forEach((id, i) => {
+      if (this.ids.lastIndexOf(id) !== i) {
+        throw new Error(`Id ${id} is used for node and edge simultaneously.`);
+      }
+    });
 
-  getNode(id) {
-    return this.nodes.find(n => n.id === id);
-  }
+    this.inputNodeIds = toIds(this.inputNodes);
+    this.innerNodeIds = toIds(this.innerNodes);
+    this.outputNodeIds = toIds(this.outputNodes);
 
-  hasEdge(fromId, toId) {
-    return typeof this.getEdge(fromId, toId) !== 'undefined';
-  }
-
-  getEdge(fromId, toId) {
-    return this.edgeMap[Edge.edgeIdFromNodeIds(fromId, toId)];
+    this.topSortIds = toIds(this.topSort);
+    this.topSortNoInputsIds = toIds(this.topSortNoInputs);
+    this.reverseTopSortIds = toIds(this.reverseTopSort);
+    this.reverseTopSortNoOutputsIds = toIds(this.reverseTopSortNoOutputs);
   }
 
   static canonicalizeNodeId(id) {
@@ -66,6 +68,46 @@ export default class FeedForwardNetwork {
 
   static nodeIdsFromEdgeId(edgeId) {
     return Edge.nodeIdsFromEdgeId(edgeId);
+  }
+
+  static toIdArray(mixed) {
+    if (typeof mixed === 'undefined') {
+      return [];
+    } else {
+      const array = Array.isArray(mixed) ? mixed.flat(Number.MAX_SAFE_INTEGER) : [mixed];
+      return array.map(nodeOrEdgeOrId => {
+        if (typeof nodeOrEdgeOrId === 'string') {
+          return nodeOrEdgeOrId;
+        } else if (nodeOrEdgeOrId instanceof Node || nodeOrEdgeOrId instanceof Edge) {
+          return nodeOrEdgeOrId.id;
+        } else {
+          throw new Error(`Neither an id nor a node or edge: ${nodeOrEdgeOrId}`);
+        }
+      });
+    }
+  }
+
+  static matchArray(arrayWithNodesAndOrEdges, objWithIdKeys) {
+    return arrayWithNodesAndOrEdges.map(nodeOrEdge => objWithIdKeys[nodeOrEdge.id]);
+  }
+
+  hasNode(id) {
+    return typeof this.getNode(id) !== 'undefined';
+  }
+
+  getNode(id) {
+    return this.nodes.find(n => n.id === id);
+  }
+
+  hasEdge(fromId, toId) {
+    return typeof this.getEdge(fromId, toId) !== 'undefined';
+  }
+
+  getEdge(fromIdOrEdgeId, toId) {
+    const edgeId = typeof toId === 'undefined' ?
+      fromIdOrEdgeId :
+      Edge.edgeIdFromNodeIds(fromIdOrEdgeId, toId);
+    return this.edgeMap[edgeId];
   }
 
   toNodeArray(mixed) {
@@ -111,6 +153,10 @@ class Node {
     this.p = Object.assign({}, properties);
   }
 
+  static canonicalizeId(id) {
+    return id.trim();
+  }
+
   isInput() {
     return this.in.length === 0;
   }
@@ -121,10 +167,6 @@ class Node {
 
   isInner() {
     return !this.isInput() && !this.isOutput();
-  }
-
-  static canonicalizeId(id) {
-    return id.trim();
   }
 }
 

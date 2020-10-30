@@ -1,14 +1,15 @@
-nodes:
-  - 'a'
-  - 'b'
-  - 'c'
-  - 'avg(a,b,c)'
-
 edges:
   - 'a -> avg(a,b,c)'
   - 'b -> avg(a,b,c)'
   - 'c -> avg(a,b,c)'
 
+defaultProperties:
+  input: 2.5
+
 training:
+  inputs:
+    'a': [1.15, 4.57, -2.47, 1.24, 3.9, -0.25]
+    'b': [1.05, 0.57, 2.57, -0.69, 1.63, -2.23]
+    'c': [4.71, -0.89, -4.23, 0.52, -0.86, 4.61]
   outputs:
     'avg(a,b,c)': '(a+b+c)/3'

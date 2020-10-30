@@ -1,14 +1,14 @@
 import jsYaml from 'js-yaml';
-import cloneDeep from 'lodash/cloneDeep';
-import isEmpty from 'lodash/isEmpty';
+import { cloneDeep, isEmpty, uniq } from 'lodash';
+import IOps, { Interval } from 'interval-arithmetic';
 
 import { validate } from './validate';
 import Model from '../neural-network/model';
-import { Interval } from 'interval-arithmetic';
 import * as activationFunctions from '../neural-network/activation-functions';
 import FeedForwardNetwork from '../neural-network/network';
 import MathExpression from '../util/math-expression';
 import generateLayout from '../util/generate-layout';
+import transpose from '../util/transpose';
 
 export default async function load(url) {
   const response = await fetch(url.href);
@@ -16,21 +16,31 @@ export default async function load(url) {
   const levelObj = jsYaml.safeLoad(levelSrc);
   const { valid, errors } = validate(levelObj);
   if (!valid) {
-    console.log(errors);
+    console.error(errors);
     throw new Error(`Unable to validate level file ${url.href}. Please check the developer console for details.`);
   }
 
-  console.log(levelObj.defaultProperties);
   const { nodeDefaults, edgeDefaults } = processDefaultProperties(levelObj.defaultProperties);
 
-  const allProperties = levelObj.properties ?? {};
-  const nodes = processNodes(levelObj.nodes, allProperties, nodeDefaults);
-  const edges = processEdges(levelObj.edges, allProperties, edgeDefaults);
+  levelObj.nodes = uniq(
+    levelObj.edges.map(e => Object.values(FeedForwardNetwork.nodeIdsFromEdgeId(e))).flat()
+  );
 
-  console.log({ nodes, edges });
-  const model = new Model(nodes, edges);
-  const layout = levelObj.layout ?? generateLayout(model.network);
-  const training = processTraining(levelObj.training, model.network);
+  const nodeProperties = processNodes(levelObj.nodes, levelObj.properties ?? {}, nodeDefaults);
+  const edgeProperties = processEdges(levelObj.edges, levelObj.properties ?? {}, edgeDefaults);
+  const allProperties = Object.assign({}, nodeProperties, edgeProperties);
+
+  const edgeObjs = levelObj.edges.map(eId => FeedForwardNetwork.nodeIdsFromEdgeId(eId));
+  const network = new FeedForwardNetwork(edgeObjs);
+  const inputNodeIds = network.inputNodeIds;
+  const inputs = Object.fromEntries(inputNodeIds.map(id => [id, nodeProperties?.[id]?.input ?? 0]));
+  const training = processTraining(levelObj.training, network);
+
+  widenInputRange(network, allProperties, levelObj.training.inputs);
+
+  const model = new Model(network, allProperties);
+
+  const layout = levelObj.layout ?? generateLayout(network);
   const strings = processStrings(
     levelObj.title,
     levelObj.description,
@@ -39,7 +49,8 @@ export default async function load(url) {
     model.network
   );
 
-  return { model, layout, training, strings };
+
+  return { model, inputs, layout, training, strings };
 }
 
 function processDefaultProperties(defaultProperties) {
@@ -73,17 +84,16 @@ function processDefaultProperties(defaultProperties) {
 }
 
 function processNodes(nodeIds, allProperties, defaultProperties) {
-  return nodeIds
-    .map(nodeId => FeedForwardNetwork.canonicalizeNodeId(nodeId))
-    .map(nodeId => {
-      const result = { id: nodeId };
-      const nodeProperties = allProperties[nodeId];
-      const processedProperties = processNodeProperties(nodeProperties, defaultProperties);
-      if (!isEmpty(processedProperties)) {
-        result.properties = processedProperties;
-      }
-      return result;
-    });
+  return Object.assign(
+    {},
+    ...nodeIds
+      .map(nodeId => FeedForwardNetwork.canonicalizeNodeId(nodeId))
+      .map(nodeId => {
+        const nodeProperties = allProperties[nodeId];
+        const processedProperties = processNodeProperties(nodeProperties, defaultProperties);
+        return isEmpty(processedProperties) ? {} : { [nodeId]: processedProperties };
+      })
+  );
 }
 
 function processNodeProperties(propsIn, defaults) {
@@ -107,18 +117,16 @@ function processNodeProperties(propsIn, defaults) {
 }
 
 function processEdges(edgeIds, allProperties, defaults) {
-  return edgeIds
-    .map(edgeId => FeedForwardNetwork.canonicalizeEdgeId(edgeId))
-    .map(edgeId => {
-      const { from, to } = FeedForwardNetwork.nodeIdsFromEdgeId(edgeId);
-      const result = { from, to };
-      const edgeProperties = allProperties[edgeId];
-      const processedProperties = processEdgeProperties(edgeProperties, defaults);
-      if (!isEmpty(processedProperties)) {
-        result.properties = processedProperties;
-      }
-      return result;
-    });
+  return Object.assign(
+    {},
+    ...edgeIds
+      .map(edgeId => FeedForwardNetwork.canonicalizeEdgeId(edgeId))
+      .map(edgeId => {
+        const edgeProperties = allProperties[edgeId];
+        const processedProperties = processEdgeProperties(edgeProperties, defaults);
+        return isEmpty(processedProperties) ? {} : { [edgeId]: processedProperties };
+      })
+  );
 }
 
 function processEdgeProperties(propsIn, defaults) {
@@ -212,20 +220,6 @@ function processTraining({ inputs, outputs }, network) {
   return result;
 }
 
-function transpose(arr2d) {
-  if (arr2d.length === 0) {
-    return [];
-  } else {
-    const result = new Array(arr2d[0].length).fill([]);
-    for (let i = 0; i < arr2d.length; ++i) {
-      for (let j = 0; j < arr2d[i].length; ++j) {
-        result[j][i] = arr2d[i][j];
-      }
-    }
-    return result;
-  }
-}
-
 function canonicalizedNodeIdProperties(obj) {
   return Object.fromEntries(
     Object.entries(obj).map(([id, value]) => [FeedForwardNetwork.canonicalizeNodeId(id), value])
@@ -253,6 +247,39 @@ function processExpression(expression, network) {
   return mathExpr;
 }
 
+function widenInputRange(network, properties, trainingInputs) {
+  const p = properties;
+  const ensureInputProps = id => {
+    p[id] = p[id] ?? {};
+    p[id].inputProps = p[id].inputProps ?? {};
+    return p[id].inputProps;
+  };
+  network.inputNodeIds.forEach(id => {
+    if (typeof trainingInputs?.[id] !== 'undefined') {
+      const inputProps = ensureInputProps(id);
+      const inputsForId = trainingInputs[id];
+      if (Array.isArray(inputProps.range)) {
+        // Add training inputs to list of possible inputs
+        inputProps.range = uniq(inputProps.range.concat(inputsForId));
+      } else {
+        // Use the hull of the current range and the training inputs range
+        const minRange = new Interval(Math.min(...inputsForId), Math.max(...inputsForId));
+        inputProps.range = IOps.hull(inputProps.range ?? minRange, minRange);
+      }
+    }
+    if (typeof p?.[id]?.input !== 'undefined') {
+      const inputProps = ensureInputProps(id);
+      if (Array.isArray(inputProps.range)) {
+        // Add initial inputs to list of possible inputs
+        inputProps.range = uniq([...inputProps.range, p[id].input]);
+      } else {
+        // Use the hull of the current range and the initial inputs
+        inputProps.range = IOps.hull(inputProps.range, new Interval(p[id].input));
+      }
+    }
+  });
+}
+
 function processStrings(title, description, allLabels, defaultLanguage, network) {
   const result = {};
   if (typeof title !== 'undefined') {
@@ -262,7 +289,6 @@ function processStrings(title, description, allLabels, defaultLanguage, network)
     result.description = processStringOrI18N(description, defaultLanguage);
   }
   if (typeof allLabels !== 'undefined') {
-    console.log(allLabels)
     result.labels = Object.fromEntries(
       Object.entries(allLabels).map(
         ([id, labelsForId]) => processLabelsForId(id, labelsForId, defaultLanguage, network)

@@ -1,9 +1,3 @@
-nodes:
-  - 'a'
-  - 'b'
-  - 'h'
-  - 'and(a,b)'
-
 edges:
   - 'a -> h'
   - 'b -> h'

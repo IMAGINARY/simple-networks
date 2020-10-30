@@ -1,31 +1,30 @@
-import FeedForwardNetwork from './network';
+import { EventEmitter } from 'events';
+import { cloneDeep, defaultsDeep } from 'lodash';
+import { Interval } from 'interval-arithmetic';
+
 import * as ActivationFunctions from './activation-functions';
-import cloneDeep from 'lodash/cloneDeep';
-import defaultsDeep from 'lodash/defaultsDeep';
-import IOps, { Interval } from 'interval-arithmetic';
+import clamp from '../util/clamp';
 
-export default class Model {
-  constructor(nodes, edges) {
-    const n = new FeedForwardNetwork(nodes, edges);
+export default class Model extends EventEmitter {
+  constructor(network, properties) {
+    super();
 
-    n.inputNodes.forEach(n => defaultsForInputNode(n.p));
-    n.innerNodes.forEach(n => defaultsForInnerNode(n.p));
-    n.outputNodes.forEach(n => defaultsForOutputNode(n.p));
-    n.edges.forEach(e => defaultsForEdge(e.p));
+    const p = Object.assign(
+      {},
+      ...network.nodeIds.map(id => ({ [id]: properties[id] ?? {} })),
+      ...network.edgeIds.map(id => ({ [id]: properties[id] ?? {} })),
+    );
 
-    this.network = n;
-  }
+    this.network = network;
+    this.properties = p;
 
-  feedForward() {
-    this.network.inputNodes.forEach(n => n.p.activation = n.p.input);
-    for (let node of this.network.topSortNoInputs) {
-      node.p.sum = node.in.reduce(
-        (a, inEdge) => a + inEdge.from.p.activation * inEdge.p.weight,
-        node.p.bias
-      );
-      node.p.activation = node.p.activationFunc.f(node.p.sum);
-    }
-    return this;
+    network.inputNodeIds.forEach(id => p[id] = defaultsForInputNode(p[id]));
+    network.innerNodeIds.forEach(id => p[id] = defaultsForInnerNode(p[id]));
+    network.outputNodeIds.forEach(id => p[id] = defaultsForOutputNode(p[id]));
+    network.edgeIds.forEach(id => p[id] = defaultsForEdge(p[id]));
+
+    // Ensure all properties are within their ranges
+    this._clamp();
   }
 
   static C(a, y) {
@@ -33,134 +32,48 @@ export default class Model {
     return (1.0 / 2.0) * diff * diff;
   }
 
+  static relC(a, y) {
+    const diff = (a - y) / y;
+    return (1.0 / 2.0) * diff * diff;
+  }
+
   static dC(a, y) {
     return a - y;
   }
 
-  backpropagateError() {
-    // Take care of output nodes first
-    for (let u of this.network.outputNodes) {
-      // Compute the error in the output node u using
-      // http://neuralnetworksanddeeplearning.com/chap2.html#eqtnBP1
-      u.p.error = Model.dC(u.p.activation, u.p.target) * u.p.activationFunc.dF(u.p.sum);
-    }
-
-    // Backpropagate through network
-    for (let u of this.network.reverseTopSortNoOutputs) {
-      // Compute the error in the non-output node u using
-      // http://neuralnetworksanddeeplearning.com/chap2.html#eqtnBP2
-      u.p.error = u.out.reduce((delta_tmp, e) => delta_tmp + e.p.weight * e.to.p.error, 0)
-        * u.p.activationFunc.dF(u.p.sum);
-    }
-    return this;
+  setBias(mixed, value) {
+    const id = typeof mixed === 'string' ? mixed : mixed.id;
+    const clampedValue = clamp(value, this.properties[id].biasProps.range);
+    this._setPropIfChangedAndNotify(id, 'bias', clampedValue);
   }
 
-  resetGradients() {
-    for (let u of this.network.nodes) {
-      u.p['dC/dBias'] = 0;
-      for (let e of u.out) {
-        e.p['dC/dWeight'] = 0;
-      }
-    }
-    return this;
-  }
-
-  updateGradients() {
-    for (let u of this.network.nodes) {
-      // Compute the rate of change of the cost with respect to the bias of u using
-      // http://neuralnetworksanddeeplearning.com/chap2.html#eqtnBP3
-      u.p['dC/dBias'] += u.p.error;
-
-      // Compute the rate of change of the cost with respect to the weights of (u,v) for all v using
-      // http://neuralnetworksanddeeplearning.com/chap2.html#eqtnBP4
-      for (let e of u.out) {
-        e.p['dC/dWeight'] += u.p.activation * e.to.p.error;
-      }
-    }
-    return this;
-  }
-
-  gradientDescentStep(learningRate) {
-    for (let u of this.network.nodes) {
-      if (u.p.biasProps.train) {
-        u.p.bias = clamp(u.p.bias - learningRate * u.p['dC/dBias'], u.p.biasProps.range);
-      }
-      for (let e of u.out) {
-        if (e.p.weightProps.train)
-          e.p.weight = clamp(e.p.weight - learningRate * e.p['dC/dWeight'], e.p.weightProps.range);
-      }
-    }
-    return this;
-  }
-
-  clampBias(mixed) {
-    const nodes = typeof mixed === 'undefined' ?
-      this.network.nodes :
-      this.network.toNodeArray(mixed);
-    for (let u of nodes) {
-      u.p.bias = clamp(u.p.bias, u.p.biasProps.range);
-    }
-  }
-
-  clampInput(mixed) {
-    const nodes = typeof mixed === 'undefined' ?
-      this.network.inputNodes :
-      this.network.toNodeArray(mixed).filter(n => n.isInput());
-    for (let u of nodes) {
-      u.p.input = clamp(u.p.input, u.p.inputProps.range);
-    }
-  }
-
-  clampWeight(mixed) {
-    const edges = typeof mixed === 'undefined' ?
-      this.network.edges :
-      this.network.toEdgeArray(mixed);
-    for (let uv of edges) {
-      uv.p.weight = clamp(uv.p.weight, uv.p.weightProps.range);
-    }
-  }
-
-  clamp() {
-    this.clampBias();
-    this.clampInput();
-    this.clampWeight();
-  }
-
-  assignInputs(x) {
-    this.network.inputNodes.forEach((n, i) => n.p.input = x[i]);
-    return this;
-  }
-
-  readOutputs() {
-    return this.network.outputNodes.map(n => n.p.activation);
-  }
-
-  assignTargets(y) {
-    this.network.outputNodes.forEach((n, i) => n.p.target = y[i]);
-    return this;
+  setWeight(mixed, value) {
+    const id = typeof mixed === 'string' ? mixed : mixed.id;
+    const clampedValue = clamp(value, this.properties[id].weightProps.range);
+    this._setPropIfChangedAndNotify(id, 'weight', clampedValue);
   }
 
   train(x, y, learningRate) {
-    this.resetGradients()
-      .assignInputs(x)
-      .feedForward()
-      .assignTargets(y)
-      .backpropagateError()
-      .updateGradients()
-      .gradientDescentStep(learningRate);
+    this._resetGradients()
+      ._assignInputs(x)
+      ._assignTargets(y)
+      ._feedForward()
+      ._backpropagateError()
+      ._updateGradients()
+      ._gradientDescentStep(learningRate);
     return this;
   }
 
   trainBatch(batch, learningRate) {
-    this.resetGradients();
+    this._resetGradients();
     for (let [x, y] of batch) {
-      this.assignInputs(x)
-        .feedForward()
-        .assignTargets(y)
-        .backpropagateError()
-        .updateGradients();
+      this._assignInputs(x)
+        ._feedForward()
+        ._assignTargets(y)
+        ._backpropagateError()
+        ._updateGradients();
     }
-    this.gradientDescentStep(learningRate);
+    this._gradientDescentStep(learningRate);
     return this;
   }
 
@@ -171,42 +84,147 @@ export default class Model {
     return this;
   }
 
-  predict(x) {
-    const activations = {};
-    this.network.inputNodes.forEach((node, i) => activations[node.id] = x[i]);
-    for (let node of this.network.topSortNoInputs) {
-      const sum = node.in.reduce(
-        (a, inEdge) => a + activations[inEdge.from.id] * inEdge.p.weight,
-        node.p.bias
+  predictExt(x, copyOtherProperties = false) {
+    const p = this.properties;
+    const outP = {};
+    this.network.inputNodes.forEach(
+      (n, i) => {
+        const np = p[n.id];
+        const xi = clamp(x[i], np.inputProps.range);
+        outP[n.id] = { input: xi, sum: xi, activation: xi };
+      }
+    );
+    for (let n of this.network.topSortNoInputs) {
+      const np = p[n.id];
+      const sum = n.in.reduce(
+        (a, inEdge) => a + outP[inEdge.from.id].activation * p[inEdge.id].weight,
+        np.bias
       );
-      activations[node.id] = node.p.activationFunc.f(sum);
+      const activation = np.activationFunc.f(sum);
+      outP[n.id] = { sum, activation };
     }
-    return this.network.outputNodes.map(node => activations[node.id] ?? 0.0);
+    return copyOtherProperties ? defaultsDeep(outP, p) : outP;
   }
-}
 
-/***
- *
- * @param value {number}
- * @param range {Interval|Number[]}
- * @returns {number}
- */
-function clamp(value, range) {
-  if (IOps.isInterval(range)) {
-    return Math.min(Math.max(range.lo, value), range.hi);
-  } else if (Array.isArray(range) && range.length > 0) {
-    let closest = range[0];
-    let closestDist = Math.abs(value - range[0]);
-    for (let i = 1; i < range.length; ++i) {
-      const dist = Math.abs(value - range[i]);
-      if (dist < closestDist) {
-        closest = range[i];
-        closestDist = dist;
+  predict(x) {
+    const predictionsExt = this.predictExt(x);
+    return this.network.outputNodeIds.map(id => predictionsExt[id].activation ?? 0.0);
+  }
+
+  _clamp() {
+    const clampProp = (obj, prop) => clamp(obj[prop], obj[`${prop}Props`].range);
+    this.network.nodeIds.forEach(nodeId => clampProp(this.properties[nodeId], 'bias'));
+    this.network.edgeIds.forEach(edgeId => clampProp(this.properties[edgeId], 'weight'));
+  }
+
+  _setPropIfChangedAndNotify(id, propName, value) {
+    const oldValue = this.properties[id];
+    if (oldValue !== value) {
+      this.properties[id][propName] = value;
+      this.emit('network-property-changed', id, propName, value, oldValue, this);
+    }
+  }
+
+  _setInput(mixed, value) {
+    const id = typeof mixed === 'string' ? mixed : mixed.id;
+    this.properties[id].input = clamp(value, this.properties[id].inputProps.range);
+  }
+
+  _assignInputs(x) {
+    const p = this.properties;
+    this.network.inputNodes.forEach((n, i) => this._setInput(n.id, x[i]));
+    return this;
+  }
+
+  _feedForward() {
+    const p = this.properties;
+    this.network.inputNodes.forEach(n => p[n.id].activation = p[n.id].input);
+    for (let node of this.network.topSortNoInputs) {
+      const np = p[node.id];
+      np.sum = node.in.reduce(
+        (a, inEdge) => a + p[inEdge.from.id].activation * p[inEdge.id].weight,
+        np.bias
+      );
+      np.activation = np.activationFunc.f(np.sum);
+    }
+    return this;
+  }
+
+  _backpropagateError() {
+    const p = this.properties;
+
+    // Take care of output nodes first
+    for (let u of this.network.outputNodes) {
+      const up = p[u.id];
+      // Compute the error in the output node u using
+      // http://neuralnetworksanddeeplearning.com/chap2.html#eqtnBP1
+      up.error = Model.dC(up.activation, up.target) * up.activationFunc.dF(up.sum);
+    }
+
+    // Backpropagate through network
+    for (let u of this.network.reverseTopSortNoOutputs) {
+      const up = p[u.id];
+      // Compute the error in the non-output node u using
+      // http://neuralnetworksanddeeplearning.com/chap2.html#eqtnBP2
+      up.error = u.out.reduce((delta_tmp, e) => delta_tmp + p[e.id].weight * p[e.to.id].error, 0)
+        * up.activationFunc.dF(up.sum);
+    }
+    return this;
+  }
+
+  _resetGradients() {
+    const p = this.properties;
+    for (let u of this.network.nodes) {
+      p[u.id]['dC/dBias'] = 0;
+      for (let e of u.out) {
+        p[e.id]['dC/dWeight'] = 0;
       }
     }
-    return closest;
-  } else {
-    throw Error(`Range must be an interval or non-empty array. Got ${range} instead.`);
+    return this;
+  }
+
+  _updateGradients() {
+    const p = this.properties;
+    for (let u of this.network.nodes) {
+      // Compute the rate of change of the cost with respect to the bias of u using
+      // http://neuralnetworksanddeeplearning.com/chap2.html#eqtnBP3
+      p[u.id]['dC/dBias'] += p[u.id].error;
+
+      // Compute the rate of change of the cost with respect to the weights of (u,v) for all v using
+      // http://neuralnetworksanddeeplearning.com/chap2.html#eqtnBP4
+      for (let e of u.out) {
+        p[e.id]['dC/dWeight'] += p[u.id].activation * p[e.to.id].error;
+      }
+    }
+    return this;
+  }
+
+  _gradientDescentStep(learningRate) {
+    const p = this.properties;
+    for (let u of this.network.nodes) {
+      const up = p[u.id];
+      if (up.biasProps.train) {
+        this.setBias(u, up.bias - learningRate * up['dC/dBias']);
+      }
+      for (let e of u.out) {
+        const ep = p[e.id];
+        if (ep.weightProps.train) {
+          this.setWeight(e, ep.weight - learningRate * ep['dC/dWeight']);
+        }
+      }
+    }
+    return this;
+  }
+
+  _readOutputs() {
+    const p = this.properties;
+    return this.network.outputNodes.map(n => p[n.id].activation);
+  }
+
+  _assignTargets(y) {
+    const p = this.properties;
+    this.network.outputNodes.forEach((n, i) => p[n.id].target = y[i]);
+    return this;
   }
 }
 
@@ -253,22 +271,25 @@ function defaultsForInputNode(p) {
     delete p.inputProps.range;
     defaultsDeep(p, Model.DEFAULT_INPUT_NODE_PROPERTIES);
     p.inputProps.range = range;
-    return p;
   } else {
-    return defaultsDeep(p, Model.DEFAULT_INPUT_NODE_PROPERTIES);
+    defaultsDeep(p, Model.DEFAULT_INPUT_NODE_PROPERTIES);
   }
+  return p;
 }
 
 function defaultsForInnerNode(p) {
-  return defaultsDeep(p, Model.DEFAULT_INNER_NODE_PROPERTIES);
+  defaultsDeep(p, Model.DEFAULT_INNER_NODE_PROPERTIES);
+  return p;
 }
 
 function defaultsForOutputNode(p) {
-  return defaultsDeep(p, Model.DEFAULT_OUTPUT_NODE_PROPERTIES);
+  defaultsDeep(p, Model.DEFAULT_OUTPUT_NODE_PROPERTIES);
+  return p;
 }
 
 function defaultsForEdge(p) {
-  return defaultsDeep(p, Model.DEFAULT_EDGE_PROPERTIES);
+  defaultsDeep(p, Model.DEFAULT_EDGE_PROPERTIES);
+  return p;
 }
 
 export { Model };

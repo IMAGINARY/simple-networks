@@ -6,485 +6,25 @@ import NodeCoordinates from './node-coordinates';
 import IOps, { Interval } from 'interval-arithmetic';
 
 export default class View extends EventEmitter {
-  constructor(model, layout, parentElement) {
+  constructor(predictionModel, layout, parentElement) {
     super();
-    this._model = model;
+    this._predictionModel = predictionModel;
+    this._network = predictionModel.getNetwork();
     this._parent = parentElement;
 
     this._coords = new NodeCoordinates(layout);
 
-    this._flowScale = this._computeFlowScale();
+    const predictionExt = predictionModel.computePredictions();
+    this._flowScale = this._computeFlowScale(predictionExt);
 
-    this._nodeProps = Object.fromEntries(model.network.nodes.map(n => [n.id, { i: {}, m: {} }]));
-    this._edgeProps = Object.fromEntries(model.network.edges.map(e => [e.id, { i: {}, m: {} }]));
+    const ids = this._network.ids;
+    const immutableProps = this._computeImmutableProps();
+    this._props = Object.assign({}, ...ids.map(id => ({ [id]: immutableProps[id] ?? {} })));
+    this._updateProps(predictionExt);
 
-    this._addImmutableProps();
-    this._updateMutableProps();
+    this._updateProps(predictionExt);
 
     this._viewUpdaters = this._createSubViews();
-  }
-
-  _computeFlowScale() {
-    const hull = arr => arr.reduce((acc, cur) => IOps.hull(acc, cur), Interval.EMPTY);
-    const arr2i = arr => hull(arr.map(x => new Interval(x)));
-    const ensureInterval = arrOrI => IOps.isInterval(arrOrI) ? arrOrI : arr2i(arrOrI);
-
-    const network = this._model.network;
-    const activationRanges = {};
-
-    /***
-     * The relative flow is higher if there are fewer nodes in a layer. This is to account for the
-     * fact that nodes that have free vertical space in a layer can grow larger than nodes with
-     * less vertical space.
-     */
-    const maxLength = this._coords.height + 1;
-    let maxRelFlow = {
-      value: 0,
-      update: function (range, layer) {
-        const weight = layer.length / maxLength;
-        const relFlow = IOps.width(range) * weight;
-        this.value = Math.max(this.value, relFlow);
-      },
-    };
-
-    // This checks all partial sum and activation hulls and returns the largest one.
-    // Traversing the tree takes 2^(summands.length) time.
-    // I ran out of time thinking of a better way to compute this. :-(
-    const traverseNodeHullTree = (summands, partialSum, partialSumHull, activationRangeFunc) => {
-      if (summands.length === 0) {
-        return IOps.hull(partialSumHull, activationRangeFunc(partialSum));
-      } else {
-        const summand = summands[0];
-        const otherSummands = summands.slice(1);
-
-        const partialSumLo = IOps.add(partialSum, new Interval(summand.lo));
-        const hullLo = traverseNodeHullTree(
-          otherSummands,
-          partialSumLo,
-          IOps.hull(partialSumHull, partialSumLo),
-          activationRangeFunc,
-        );
-
-        const partialSumHi = IOps.add(partialSum, new Interval(summand.hi));
-        const hullHi = traverseNodeHullTree(
-          otherSummands,
-          partialSumHi,
-          IOps.hull(partialSumHull, partialSumHi),
-          activationRangeFunc,
-        );
-
-        return IOps.width(hullLo) > IOps.width(hullHi) ? hullLo : hullHi;
-      }
-    };
-
-    for (let node of network.inputNodes) {
-      const layer = this._coords.layerOf(node.id);
-      const activationRange = ensureInterval(node.p.inputProps.range);
-      activationRanges[node.id] = activationRange;
-      maxRelFlow.update(new Interval(0, Math.max(0, activationRange.hi)), layer);
-      maxRelFlow.update(new Interval(Math.min(activationRange.lo, 0), 0), layer);
-    }
-
-    const edgeToActivation = e => IOps.mul(activationRanges[e.from.id], e.p.weightProps.range);
-    for (let node of network.topSortNoInputs) {
-      const layer = this._coords.layerOf(node.id);
-      const getActivationRange = node.p.activationFunc.range.bind(node.p.activationFunc);
-      const orderedInEdges = getOrderedInEdges(node, this._coords);
-      const summands = [node.p.biasProps.range, ...orderedInEdges.map(edgeToActivation)];
-      const sumRange = summands.reduce((acc, cur) => IOps.add(acc, cur), Interval.ZERO);
-      const activationRange = getActivationRange(sumRange);
-      activationRanges[node.id] = activationRange;
-
-      /***
-       * FIXME: This is quite expensive since it needs 2^(#inEdges+1) steps to compute the maximum
-       *        hull of the node. For simple networks, it shouldn't be an issue, but for everything
-       *        with more than couple of nodes, this can become a bottleneck quite easily.
-       */
-      const nodeHull = traverseNodeHullTree(
-        summands,
-        Interval.ZERO,
-        Interval.ZERO,
-        getActivationRange
-      );
-
-      maxRelFlow.update(nodeHull, layer);
-    }
-
-    return View.NODE_MAX_INNER_HEIGHT / maxRelFlow.value;
-  }
-
-  _addImmutableProps() {
-    this._model.network.nodes.forEach(node => {
-      const props = this._nodeProps[node.id];
-      props.i.orderedInEdges = getOrderedInEdges(node, this._coords);
-      props.i.gridPos = grid(this._coords.abs(node.id));
-    });
-  }
-
-  _updateMutableProps() {
-    this._model.network.nodes.forEach(node => {
-      // Compute props of node
-      const { i: inp, m: mnp } = this._nodeProps[node.id];
-      const partialSumRange = node.isInput() ?
-        Interval.ZERO :
-        getPartialSumRange(inp.orderedInEdges, node.p.bias);
-      const range = IOps.hull(
-        IOps.hull(partialSumRange, Interval.ZERO),
-        new Interval(node.p.activation),
-      );
-      mnp.lowerHeight = range.lo * this._flowScale;
-      mnp.upperHeight = range.hi * this._flowScale;
-      mnp.innerHeight = IOps.width(range) * this._flowScale;
-      mnp.zeroGridOffsetY = mnp.innerHeight / 2 - mnp.upperHeight;
-
-      // Compute to-part of in-edges
-      let lastTo = {
-        pos: {
-          x: inp.gridPos.x - 0.5 * View.NODE_SIZE.x,
-          y: inp.gridPos.y - mnp.zeroGridOffsetY,
-        },
-        activation: node.p.bias * this._flowScale,
-      };
-      inp.orderedInEdges.forEach((edge, i) => {
-        const { m: mep } = this._edgeProps[edge.id];
-
-        mep.toPos = { x: lastTo.pos.x, y: lastTo.pos.y - lastTo.activation };
-        mep.toActivation = edge.from.p.activation * edge.p.weight * this._flowScale;
-        lastTo = { pos: mep.toPos, activation: mep.toActivation };
-
-        mep.fromActivationColor = activationColor(edge.from.p.activation);
-        mep.toActivationColor = activationColor(edge.from.p.activation * edge.p.weight);
-      });
-
-      // Compute from-part of out-edges
-      node.out.forEach((edge, i) => {
-        const { m: mep } = this._edgeProps[edge.id];
-        mep.fromPos = {
-          x: gridX(this._coords.absX(edge.from.id)) + 0.5 * View.NODE_SIZE.x,
-          y: gridY(this._coords.absY(edge.from.id)) - mnp.zeroGridOffsetY,
-        };
-        mep.fromActivation = edge.from.p.activation * this._flowScale;
-      });
-    });
-
-    // Compute edge geometries
-    this._model.network.edges.forEach(edge => {
-      const { m: mep } = this._edgeProps[edge.id];
-      Object.assign(mep, View._buildEdgePaths(mep));
-    });
-  }
-
-  _createSubViews() {
-    const container = document.createElement('div');
-    container.style.position = 'relative';
-
-    const offset = {
-      x: 0.5 * View.NODE_SIZE.x,
-      y: 0.5 * (View.NODE_SIZE.y + View.NODE_MAX_INNER_HEIGHT),
-    };
-
-    this._overlay = document.createElement('div');
-    this._overlay.style.position = 'absolute';
-    this._overlay.style.top = `${offset.x}px`;
-    this._overlay.style.left = `${offset.y}px`;
-
-    this._parent.appendChild(this._overlay);
-
-    this._svg = SVG().size(1000, 1000).addTo(this._parent);
-    this._svg.css({
-      'overflow': 'visible',
-      'stroke-width': 2,
-      'stroke-color': 'black',
-    });
-
-    this._svgOffsetContainer = this._svg.group()
-      .translate(offset.x, offset.y);
-
-    this._coordAnchor = this._svgOffsetContainer.group();
-    this._nodeLayer = this._svgOffsetContainer.group();
-    this._edgeLayer = this._svgOffsetContainer.group();
-    this._labelLayer = this._svgOffsetContainer.group()
-      .css({ 'font-size': `${View.LABEL_FONT_SIZE}px` });
-    this._handleLayer = this._svgOffsetContainer.group()
-      .attr({ stroke: 'black', fill: 'transparent' })
-      .css({ cursor: 'hand' });
-
-    return [].concat(
-      this._model.network.nodes.map(n => this._createNodeView(n)),
-      this._model.network.edges.map(e => this._createEdgeView(e)),
-    );
-  }
-
-  _createNodeView(node) {
-    const nodeProps = this._nodeProps[node.id];
-    const { i: inp, m: mnp } = nodeProps;
-
-    // set up DOM elements and certain static/default properties
-    const svgNodeGroup = this._nodeLayer.group();
-    const svgNodeRect = svgNodeGroup.rect(View.NODE_SIZE.x, View.NODE_SIZE.y)
-      .move(inp.gridPos.x - 0.5 * View.NODE_SIZE.x, inp.gridPos.y - 0.5 * View.NODE_SIZE.y)
-      .attr({
-        rx: View.NODE_RADIUS,
-        ry: View.NODE_RADIUS,
-        fill: fillColor(node),
-        stroke: 'black',
-      });
-
-    const svgBiasHandle = this._handleLayer.circle(View.HANDLE_RADIUS)
-      .cx(inp.gridPos.x - 0.5 * View.NODE_SIZE.x)
-      .css({ 'visibility': node.isInput() ? 'hidden' : 'visible' });
-
-    const biasDraggable = new VerticalDraggable(
-      svgBiasHandle,
-      this._coordAnchor,
-      ({ y }) => this._biasChanged(node, this._biasFromY(y, nodeProps))
-    );
-
-    const svgSumHandle = this._handleLayer.circle(View.HANDLE_RADIUS)
-      .cx(inp.gridPos.x)
-      .css({ 'visibility': node.isInput() ? 'hidden' : 'visible' });
-
-    const svgActivationHandle = this._handleLayer.circle(View.HANDLE_RADIUS)
-      .cx(inp.gridPos.x + 0.5 * View.NODE_SIZE.x);
-
-    if (node.isInput()) {
-      const inputDraggable = new VerticalDraggable(
-        svgActivationHandle,
-        this._coordAnchor,
-        ({ y }) => this._inputChanged(node, this._inputFromY(y, nodeProps))
-      );
-    }
-
-    const debug = false;
-    // can be enabled for UI debugging purposes
-    const middleLinePathBuilder = () => new SVGPathBuilder()
-      .M(inp.gridPos)
-      .m({ x: -0.5 * View.NODE_SIZE.x, y: 0 })
-      .l({ x: View.NODE_SIZE.x, y: 0 })
-      .build();
-    const svgNodeMiddleLine = !debug ? svgNodeGroup.group() : svgNodeGroup
-      .path(middleLinePathBuilder())
-      .attr({ stroke: 'gray', 'stroke-width': 1 });
-
-    const zeroLinePathBuilder = () => new SVGPathBuilder()
-      .M(inp.gridPos)
-      .m({ x: -0.5 * View.NODE_SIZE.x, y: -mnp.zeroGridOffsetY })
-      .l({ x: View.NODE_SIZE.x, y: 0 })
-      .build();
-    const svgNodeZeroLine = !debug ? svgNodeGroup.group() : svgNodeGroup.path(zeroLinePathBuilder())
-      .attr({ stroke: 'orange' });
-
-    const svgIdLabel = this._labelLayer.plain(node.id)
-      .attr(inp.gridPos)
-      .attr({
-        'text-anchor': 'middle',
-      });
-    const svgBiasLabel = this._labelLayer.plain()
-      .attr(inp.gridPos)
-      .dmove(-View.NODE_SIZE.x / 2, mnp.lowerHeight)
-      .dy(View.LABEL_FONT_SIZE)
-      .dmove(-3, -3) // TODO: don't hardcode
-      .attr({
-        'text-anchor': 'end',
-      })
-      .css({ visibility: node.isInput() ? 'hidden' : 'visible' });
-    const svgActivationLabel = this._labelLayer.plain()
-      .x(inp.gridPos.x + View.NODE_SIZE.x / 2)
-      .dx(3) // TODO: don't hardcode
-      .attr({
-        'text-anchor': 'start',
-      });
-    const svgTargetLabel = this._labelLayer.plain()
-      .x(inp.gridPos.x + View.NODE_SIZE.x)
-      .dx(3) // TODO: don't hardcode
-      .attr({
-        'text-anchor': 'start',
-      })
-      .css({ visibility: node.isOutput() ? 'visible' : 'hidden' });
-
-    const biasLinePathBuilder = () => new SVGPathBuilder()
-      .M(inp.gridPos)
-      .m({ x: -View.NODE_SIZE.x / 2, y: -mnp.zeroGridOffsetY })
-      .l({ x: 0, y: -node.p.bias * this._flowScale })
-      .build();
-    const svgBiasLine = node.isInput() ? this._edgeLayer.group() : this._edgeLayer
-      .path(biasLinePathBuilder())
-      .fill('none')
-      .stroke('black');
-
-    const sumAreaPathBuilder = () => new SVGPathBuilder()
-      .M(inp.gridPos)
-      .m({ x: 0, y: -mnp.zeroGridOffsetY })
-      .h(-View.NODE_SIZE.x / 2)
-      .v(-node.p.sum * this._flowScale)
-      .h(View.NODE_SIZE.x / 2)
-      .z()
-      .build();
-    const svgSumArea = node.isInput() ? this._edgeLayer.group() : this._edgeLayer
-      .path(sumAreaPathBuilder())
-      .stroke({ color: 'none' });
-
-    const activationAreaPathBuilder = () => new SVGPathBuilder()
-      .M(inp.gridPos)
-      .m({ x: 0, y: -mnp.zeroGridOffsetY })
-      .h(View.NODE_SIZE.x / 2)
-      .v(-node.p.activation * this._flowScale)
-      .h(-View.NODE_SIZE.x / 2)
-      .z()
-      .build();
-    const svgActivationArea = node.isInput() ? this._edgeLayer.group() : this._edgeLayer
-      .path(sumAreaPathBuilder())
-      .stroke({ color: 'none' });
-
-    const inOutConnectorPolyLinePathBuilder = () => new SVGPathBuilder()
-      .M(inp.gridPos)
-      .m({
-        x: -View.NODE_SIZE.x / 2,
-        y: -mnp.zeroGridOffsetY - Math.min(0, node.p.sum) * this._flowScale
-      })
-      .h(View.NODE_SIZE.x / 2)
-      .V(inp.gridPos.y - mnp.zeroGridOffsetY)
-      .h(View.NODE_SIZE.x / 2)
-      .build();
-    const svgInOutConnectorPolyLine = node.isInput() ? this._edgeLayer.group() : this._edgeLayer
-      .path(inOutConnectorPolyLinePathBuilder())
-      .stroke({ color: 'black' })
-      .fill('none');
-
-    const targetLineBuilder = () => new SVGPathBuilder()
-      .M(inp.gridPos)
-      .m({ x: View.NODE_SIZE.x / 2, y: -mnp.zeroGridOffsetY - node.p.target * this._flowScale })
-      .h(View.NODE_SIZE.x / 2)
-      .build();
-    const svgTargetLine = !node.isOutput() ? this._edgeLayer.group() : this._edgeLayer
-      .path(targetLineBuilder())
-      .stroke({ color: 'cyan' })
-      .fill('none');
-
-    // set up update function
-    const update = () => {
-      svgNodeRect
-        .attr({
-          width: View.NODE_SIZE.x,
-          height: View.NODE_SIZE.y + mnp.innerHeight
-        })
-        .transform({ translateY: -0.5 * mnp.innerHeight });
-      svgIdLabel
-        .attr(inp.gridPos)
-        .dy(-mnp.innerHeight / 2 - View.NODE_SIZE.y / 8)
-        .attr({
-          'text-anchor': 'middle',
-        });
-      svgBiasHandle.cy(inp.gridPos.y - mnp.zeroGridOffsetY - node.p.bias * this._flowScale);
-      svgBiasLabel.plain(formatNumber(node.p.bias));
-      svgSumHandle.cy(inp.gridPos.y - mnp.zeroGridOffsetY - node.p.sum * this._flowScale);
-      svgActivationHandle.cy(inp.gridPos.y - mnp.zeroGridOffsetY - node.p.activation
-        * this._flowScale);
-      svgActivationLabel
-        .plain(formatNumber(node.p.activation))
-        .y(inp.gridPos.y - mnp.zeroGridOffsetY)
-        .dy(-node.p.activation * this._flowScale)
-        .dy(-3); // TODO: don't hardcode
-      if (debug) {
-        svgNodeMiddleLine.plot(middleLinePathBuilder());
-        svgNodeZeroLine.plot(zeroLinePathBuilder());
-      }
-      if (!node.isInput()) {
-        svgBiasLine.plot(biasLinePathBuilder());
-        svgSumArea.plot(sumAreaPathBuilder()).fill({
-          color: activationColor(node.p.sum),
-          opacity: 0.5
-        });
-        svgActivationArea.plot(activationAreaPathBuilder())
-          .fill({ color: activationColor(node.p.activation), opacity: 0.5 });
-        svgInOutConnectorPolyLine.plot(inOutConnectorPolyLinePathBuilder());
-      }
-      if (node.isOutput()) {
-        svgTargetLine.plot(targetLineBuilder());
-        svgTargetLabel.plain(formatNumber(node.p.target))
-          .y(inp.gridPos.y - mnp.zeroGridOffsetY)
-          .dy(-node.p.target * this._flowScale)
-          .dy(-3); // TODO: don't hardcode
-      }
-    };
-
-    update();
-
-    return update;
-  }
-
-  _createEdgeView(edge) {
-    const edgeProps = this._edgeProps[edge.id];
-    const { i: iep, m: mep } = edgeProps;
-
-    const svgEdgeGroup = this._edgeLayer.group()
-      .attr({ 'fill-opacity': 0.5, stroke: 'none', });
-    const svgEdge = svgEdgeGroup.path(mep.edgePath).attr({ stroke: 'black', fill: 'none' });
-    /*
-    const svgEdgeActivated = svgEdgeGroup.path(mep.edgeActivatedPath).attr({
-      stroke: 'black',
-      fill: 'none'
-    });
-     */
-    const svgFromActivation = svgEdgeGroup.path(mep.fromActivationEdgePath);
-    const svgToActivation = svgEdgeGroup.path(mep.toActivationEdgePath);
-    const svgWeightLabel = this._labelLayer.plain('')
-      .translate(0, -3)
-      .attr({ 'text-anchor': 'middle' });
-
-    const svgWeightHandle = this._handleLayer.circle(View.HANDLE_RADIUS);
-
-    const weightDraggable = new VerticalDraggable(
-      svgWeightHandle,
-      this._coordAnchor,
-      ({ y }) => this._weightChanged(edge, this._weightFromY(y, edgeProps))
-    );
-
-    const update = () => {
-      svgEdge.plot(mep.edgePath);
-      //svgEdgeActivated.plot(mep.edgeActivatedPath);
-      svgFromActivation.plot(mep.fromActivationEdgePath).attr({ fill: mep.fromActivationColor });
-      svgToActivation.plot(mep.toActivationEdgePath).attr({ fill: mep.toActivationColor });
-      svgWeightLabel.plain(formatNumber(edge.p.weight)).attr(mep.labelPos);
-      svgWeightHandle.center(mep.handlePos.x, mep.handlePos.y);
-    };
-    update();
-
-    return update;
-  }
-
-  _inputFromY(y, { i: inp, m: mnp }) {
-    return -(y - inp.gridPos.y + mnp.zeroGridOffsetY) / this._flowScale;
-  }
-
-  _inputChanged(node, newInput) {
-    this.emit('input-changed', node, newInput);
-  }
-
-  _weightFromY(y, { i: iep, m: mep }) {
-    return -(y - mep.intersectionPos.y) / mep.fromActivation;
-  }
-
-  _weightChanged(edge, newWeight) {
-    this.emit('weight-changed', edge, newWeight);
-  }
-
-  _biasFromY(y, { i: inp, m: mnp }) {
-    return -(y - inp.gridPos.y + mnp.zeroGridOffsetY) / this._flowScale;
-  }
-
-  _biasChanged(node, newBias) {
-    this.emit('bias-changed', node, newBias);
-  }
-
-  /***
-   * Update DOM based on model
-   */
-  update() {
-    this._updateMutableProps();
-    for (let updater of this._viewUpdaters) {
-      updater();
-    }
   }
 
   static _buildEdgePaths({ fromPos, fromActivation, toPos, toActivation }) {
@@ -559,6 +99,475 @@ export default class View extends EventEmitter {
       handlePos,
     };
   }
+
+  _computeFlowScale(p) {
+    const hull = arr => arr.reduce((acc, cur) => IOps.hull(acc, cur), Interval.EMPTY);
+    const arr2i = arr => hull(arr.map(x => new Interval(x)));
+    const ensureInterval = arrOrI => IOps.isInterval(arrOrI) ? arrOrI : arr2i(arrOrI);
+
+    const network = this._network;
+    const activationRanges = {};
+
+    /***
+     * The relative flow is higher if there are fewer nodes in a layer. This is to account for the
+     * fact that nodes that have free vertical space in a layer can grow larger than nodes with
+     * less vertical space.
+     */
+    const maxLength = this._coords.height + 1;
+    let maxRelFlow = {
+      value: 0,
+      update: function (range, layer) {
+        const weight = layer.length / maxLength;
+        const relFlow = IOps.width(range) * weight;
+        this.value = Math.max(this.value, relFlow);
+      },
+    };
+
+    // This checks all partial sum and activation hulls and returns the largest one.
+    // Traversing the tree takes 2^(summands.length) time.
+    // I ran out of time thinking of a better way to compute this. :-(
+    const traverseNodeHullTree = (summands, partialSum, partialSumHull, activationRangeFunc) => {
+      if (summands.length === 0) {
+        return IOps.hull(partialSumHull, activationRangeFunc(partialSum));
+      } else {
+        const summand = summands[0];
+        const otherSummands = summands.slice(1);
+
+        const partialSumLo = IOps.add(partialSum, new Interval(summand.lo));
+        const hullLo = traverseNodeHullTree(
+          otherSummands,
+          partialSumLo,
+          IOps.hull(partialSumHull, partialSumLo),
+          activationRangeFunc,
+        );
+
+        const partialSumHi = IOps.add(partialSum, new Interval(summand.hi));
+        const hullHi = traverseNodeHullTree(
+          otherSummands,
+          partialSumHi,
+          IOps.hull(partialSumHull, partialSumHi),
+          activationRangeFunc,
+        );
+
+        return IOps.width(hullLo) > IOps.width(hullHi) ? hullLo : hullHi;
+      }
+    };
+
+    for (let nodeId of network.inputNodeIds) {
+      const layer = this._coords.layerOf(nodeId);
+      const activationRange = ensureInterval(p[nodeId].inputProps.range);
+      activationRanges[nodeId] = activationRange;
+      maxRelFlow.update(new Interval(0, Math.max(0, activationRange.hi)), layer);
+      maxRelFlow.update(new Interval(Math.min(activationRange.lo, 0), 0), layer);
+    }
+
+    const edgeToActivation = e => IOps.mul(activationRanges[e.from.id], p[e.id].weightProps.range);
+    for (let node of network.topSortNoInputs) {
+      const np = p[node.id];
+      const layer = this._coords.layerOf(node.id);
+      const getActivationRange = np.activationFunc.range.bind(np.activationFunc);
+      const orderedInEdges = getOrderedInEdges(node, this._coords);
+      const summands = [np.biasProps.range, ...orderedInEdges.map(edgeToActivation)];
+      const sumRange = summands.reduce((acc, cur) => IOps.add(acc, cur), Interval.ZERO);
+      const activationRange = getActivationRange(sumRange);
+      activationRanges[node.id] = activationRange;
+
+      /***
+       * FIXME: This is quite expensive since it needs 2^(#inEdges+1) steps to compute the maximum
+       *        hull of the node. For simple networks, it shouldn't be an issue, but for everything
+       *        with more than couple of nodes, this can become a bottleneck quite easily.
+       */
+      const nodeHull = traverseNodeHullTree(
+        summands,
+        Interval.ZERO,
+        Interval.ZERO,
+        getActivationRange
+      );
+
+      maxRelFlow.update(nodeHull, layer);
+    }
+
+    return View.NODE_MAX_INNER_HEIGHT / maxRelFlow.value;
+  }
+
+  _computeImmutableProps() {
+    const computeNodeProp = node => ({
+      [node.id]: {
+        orderedInEdges: getOrderedInEdges(node, this._coords),
+        gridPos: grid(this._coords.abs(node.id)),
+      }
+    });
+    return Object.assign({}, ...this._network.nodes.map(computeNodeProp));
+  }
+
+  _updateProps(predictionExt) {
+    const p = this._props;
+    // First copy current node and edge properties to view's mutable properties
+    this._network.ids.forEach(id => Object.assign(p[id], predictionExt[id]));
+
+    // Compute relevant properties for visualization
+    this._network.nodes.forEach(node => {
+      // Compute props of node
+      const np = p[node.id];
+      const partialSumRange = node.isInput() ?
+        Interval.ZERO :
+        getPartialSumRange(np.orderedInEdges, p, np.bias);
+      const range = IOps.hull(
+        IOps.hull(partialSumRange, Interval.ZERO),
+        new Interval(np.activation),
+      );
+      np.lowerHeight = range.lo * this._flowScale;
+      np.upperHeight = range.hi * this._flowScale;
+      np.innerHeight = IOps.width(range) * this._flowScale;
+      np.zeroGridOffsetY = np.innerHeight / 2 - np.upperHeight;
+
+      // Compute to-part of in-edges
+      let lastTo = {
+        pos: {
+          x: np.gridPos.x - 0.5 * View.NODE_SIZE.x,
+          y: np.gridPos.y - np.zeroGridOffsetY,
+        },
+        activation: np.bias * this._flowScale,
+      };
+      np.orderedInEdges.forEach((edge, i) => {
+        const ep = p[edge.id];
+
+        ep.toPos = { x: lastTo.pos.x, y: lastTo.pos.y - lastTo.activation };
+        ep.toActivation = p[edge.from.id].activation * p[edge.id].weight * this._flowScale;
+        lastTo = { pos: ep.toPos, activation: ep.toActivation };
+
+        ep.fromActivationColor = activationColor(p[edge.from.id].activation);
+        ep.toActivationColor = activationColor(p[edge.from.id].activation * p[edge.id].weight);
+      });
+
+      // Compute from-part of out-edges
+      node.out.forEach((edge, i) => {
+        const ep = p[edge.id];
+        ep.fromPos = {
+          x: gridX(this._coords.absX(edge.from.id)) + 0.5 * View.NODE_SIZE.x,
+          y: gridY(this._coords.absY(edge.from.id)) - np.zeroGridOffsetY,
+        };
+        ep.fromActivation = p[edge.from.id].activation * this._flowScale;
+      });
+    });
+
+    // Compute edge geometries
+    this._network.edges.forEach(edge => {
+      const ep = p[edge.id];
+      Object.assign(ep, View._buildEdgePaths(ep));
+    });
+  }
+
+  _createSubViews() {
+    const container = document.createElement('div');
+    container.style.position = 'relative';
+
+    const offset = {
+      x: 0.5 * View.NODE_SIZE.x,
+      y: 0.5 * (View.NODE_SIZE.y + View.NODE_MAX_INNER_HEIGHT),
+    };
+
+    this._overlay = document.createElement('div');
+    this._overlay.style.position = 'absolute';
+    this._overlay.style.top = `${offset.x}px`;
+    this._overlay.style.left = `${offset.y}px`;
+
+    this._parent.appendChild(this._overlay);
+
+    this._svg = SVG().size(1000, 1000).addTo(this._parent);
+    this._svg.css({
+      'overflow': 'visible',
+      'stroke-width': 2,
+      'stroke-color': 'black',
+    });
+
+    this._svgOffsetContainer = this._svg.group()
+      .translate(offset.x, offset.y);
+
+    this._coordAnchor = this._svgOffsetContainer.group();
+    this._nodeLayer = this._svgOffsetContainer.group();
+    this._edgeLayer = this._svgOffsetContainer.group();
+    this._labelLayer = this._svgOffsetContainer.group()
+      .css({ 'font-size': `${View.LABEL_FONT_SIZE}px` });
+    this._handleLayer = this._svgOffsetContainer.group()
+      .attr({ stroke: 'black', fill: 'transparent' })
+      .css({ cursor: 'hand' });
+
+    return [].concat(
+      this._network.nodes.map(n => this._createNodeView(n)),
+      this._network.edges.map(e => this._createEdgeView(e)),
+    );
+  }
+
+  _createNodeView(node) {
+    const np = this._props[node.id];
+
+    // set up DOM elements and certain static/default properties
+    const svgNodeGroup = this._nodeLayer.group();
+    const svgNodeRect = svgNodeGroup.rect(View.NODE_SIZE.x, View.NODE_SIZE.y)
+      .move(np.gridPos.x - 0.5 * View.NODE_SIZE.x, np.gridPos.y - 0.5 * View.NODE_SIZE.y)
+      .attr({
+        rx: View.NODE_RADIUS,
+        ry: View.NODE_RADIUS,
+        fill: fillColor(node),
+        stroke: 'black',
+      });
+
+    const svgBiasHandle = this._handleLayer.circle(View.HANDLE_RADIUS)
+      .cx(np.gridPos.x - 0.5 * View.NODE_SIZE.x)
+      .css({ 'visibility': node.isInput() ? 'hidden' : 'visible' });
+
+    const biasDraggable = new VerticalDraggable(
+      svgBiasHandle,
+      this._coordAnchor,
+      ({ y }) => this._biasChanged(node, this._biasFromY(y, np))
+    );
+
+    const svgSumHandle = this._handleLayer.circle(View.HANDLE_RADIUS)
+      .cx(np.gridPos.x)
+      .css({ 'visibility': node.isInput() ? 'hidden' : 'visible' });
+
+    const svgActivationHandle = this._handleLayer.circle(View.HANDLE_RADIUS)
+      .cx(np.gridPos.x + 0.5 * View.NODE_SIZE.x);
+
+    if (node.isInput()) {
+      const inputDraggable = new VerticalDraggable(
+        svgActivationHandle,
+        this._coordAnchor,
+        ({ y }) => this._inputChanged(node, this._inputFromY(y, np))
+      );
+    }
+
+    const debug = false;
+    // can be enabled for UI debugging purposes
+    const middleLinePathBuilder = () => new SVGPathBuilder()
+      .M(np.gridPos)
+      .m({ x: -0.5 * View.NODE_SIZE.x, y: 0 })
+      .l({ x: View.NODE_SIZE.x, y: 0 })
+      .build();
+    const svgNodeMiddleLine = !debug ? svgNodeGroup.group() : svgNodeGroup
+      .path(middleLinePathBuilder())
+      .attr({ stroke: 'gray', 'stroke-width': 1 });
+
+    const zeroLinePathBuilder = () => new SVGPathBuilder()
+      .M(np.gridPos)
+      .m({ x: -0.5 * View.NODE_SIZE.x, y: -np.zeroGridOffsetY })
+      .l({ x: View.NODE_SIZE.x, y: 0 })
+      .build();
+    const svgNodeZeroLine = !debug ? svgNodeGroup.group() : svgNodeGroup.path(zeroLinePathBuilder())
+      .attr({ stroke: 'orange' });
+
+    const svgIdLabel = this._labelLayer.plain(node.id)
+      .attr(np.gridPos)
+      .attr({
+        'text-anchor': 'middle',
+      });
+    const svgBiasLabel = this._labelLayer.plain()
+      .attr(np.gridPos)
+      .dmove(-View.NODE_SIZE.x / 2, np.lowerHeight)
+      .dy(View.LABEL_FONT_SIZE)
+      .dmove(-3, -3) // TODO: don't hardcode
+      .attr({
+        'text-anchor': 'end',
+      })
+      .css({ visibility: node.isInput() ? 'hidden' : 'visible' });
+    const svgActivationLabel = this._labelLayer.plain()
+      .x(np.gridPos.x + View.NODE_SIZE.x / 2)
+      .dx(3) // TODO: don't hardcode
+      .attr({
+        'text-anchor': 'start',
+      });
+    const svgTargetLabel = this._labelLayer.plain()
+      .x(np.gridPos.x + View.NODE_SIZE.x)
+      .dx(3) // TODO: don't hardcode
+      .attr({
+        'text-anchor': 'start',
+      })
+      .css({ visibility: node.isOutput() ? 'visible' : 'hidden' });
+
+    const biasLinePathBuilder = () => new SVGPathBuilder()
+      .M(np.gridPos)
+      .m({ x: -View.NODE_SIZE.x / 2, y: -np.zeroGridOffsetY })
+      .l({ x: 0, y: -np.bias * this._flowScale })
+      .build();
+    const svgBiasLine = node.isInput() ? this._edgeLayer.group() : this._edgeLayer
+      .path(biasLinePathBuilder())
+      .fill('none')
+      .stroke('black');
+
+    const sumAreaPathBuilder = () => new SVGPathBuilder()
+      .M(np.gridPos)
+      .m({ x: 0, y: -np.zeroGridOffsetY })
+      .h(-View.NODE_SIZE.x / 2)
+      .v(-np.sum * this._flowScale)
+      .h(View.NODE_SIZE.x / 2)
+      .z()
+      .build();
+    const svgSumArea = node.isInput() ? this._edgeLayer.group() : this._edgeLayer
+      .path(sumAreaPathBuilder())
+      .stroke({ color: 'none' });
+
+    const activationAreaPathBuilder = () => new SVGPathBuilder()
+      .M(np.gridPos)
+      .m({ x: 0, y: -np.zeroGridOffsetY })
+      .h(View.NODE_SIZE.x / 2)
+      .v(-np.activation * this._flowScale)
+      .h(-View.NODE_SIZE.x / 2)
+      .z()
+      .build();
+    const svgActivationArea = node.isInput() ? this._edgeLayer.group() : this._edgeLayer
+      .path(sumAreaPathBuilder())
+      .stroke({ color: 'none' });
+
+    const inOutConnectorPolyLinePathBuilder = () => new SVGPathBuilder()
+      .M(np.gridPos)
+      .m({
+        x: -View.NODE_SIZE.x / 2,
+        y: -np.zeroGridOffsetY - Math.min(0, np.sum) * this._flowScale
+      })
+      .h(View.NODE_SIZE.x / 2)
+      .V(np.gridPos.y - np.zeroGridOffsetY)
+      .h(View.NODE_SIZE.x / 2)
+      .build();
+    const svgInOutConnectorPolyLine = node.isInput() ? this._edgeLayer.group() : this._edgeLayer
+      .path(inOutConnectorPolyLinePathBuilder())
+      .stroke({ color: 'black' })
+      .fill('none');
+
+    const targetLineBuilder = () => new SVGPathBuilder()
+      .M(np.gridPos)
+      .m({ x: View.NODE_SIZE.x / 2, y: -np.zeroGridOffsetY - np.target * this._flowScale })
+      .h(View.NODE_SIZE.x / 2)
+      .build();
+    const svgTargetLine = !node.isOutput() ? this._edgeLayer.group() : this._edgeLayer
+      .path(targetLineBuilder())
+      .stroke({ color: 'cyan' })
+      .fill('none');
+
+    // set up update function
+    const update = () => {
+      svgNodeRect
+        .attr({
+          width: View.NODE_SIZE.x,
+          height: View.NODE_SIZE.y + np.innerHeight
+        })
+        .transform({ translateY: -0.5 * np.innerHeight });
+      svgIdLabel
+        .attr(np.gridPos)
+        .dy(-np.innerHeight / 2 - View.NODE_SIZE.y / 8)
+        .attr({
+          'text-anchor': 'middle',
+        });
+      svgBiasHandle.cy(np.gridPos.y - np.zeroGridOffsetY - np.bias * this._flowScale);
+      svgBiasLabel.plain(formatNumber(np.bias));
+      svgSumHandle.cy(np.gridPos.y - np.zeroGridOffsetY - np.sum * this._flowScale);
+      svgActivationHandle.cy(np.gridPos.y - np.zeroGridOffsetY - np.activation
+        * this._flowScale);
+      svgActivationLabel
+        .plain(formatNumber(np.activation))
+        .y(np.gridPos.y - np.zeroGridOffsetY)
+        .dy(-np.activation * this._flowScale)
+        .dy(-3); // TODO: don't hardcode
+      if (debug) {
+        svgNodeMiddleLine.plot(middleLinePathBuilder());
+        svgNodeZeroLine.plot(zeroLinePathBuilder());
+      }
+      if (!node.isInput()) {
+        svgBiasLine.plot(biasLinePathBuilder());
+        svgSumArea.plot(sumAreaPathBuilder()).fill({
+          color: activationColor(np.sum),
+          opacity: 0.5
+        });
+        svgActivationArea.plot(activationAreaPathBuilder())
+          .fill({ color: activationColor(np.activation), opacity: 0.5 });
+        svgInOutConnectorPolyLine.plot(inOutConnectorPolyLinePathBuilder());
+      }
+      if (node.isOutput()) {
+        svgTargetLine.plot(targetLineBuilder());
+        svgTargetLabel.plain(formatNumber(np.target))
+          .y(np.gridPos.y - np.zeroGridOffsetY)
+          .dy(-np.target * this._flowScale)
+          .dy(-3); // TODO: don't hardcode
+      }
+    };
+
+    update();
+
+    return update;
+  }
+
+  _createEdgeView(edge) {
+    const ep = this._props[edge.id];
+
+    const svgEdgeGroup = this._edgeLayer.group()
+      .attr({ 'fill-opacity': 0.5, stroke: 'none', });
+    const svgEdge = svgEdgeGroup.path(ep.edgePath).attr({ stroke: 'black', fill: 'none' });
+    /*
+    const svgEdgeActivated = svgEdgeGroup.path(mep.edgeActivatedPath).attr({
+      stroke: 'black',
+      fill: 'none'
+    });
+     */
+    const svgFromActivation = svgEdgeGroup.path(ep.fromActivationEdgePath);
+    const svgToActivation = svgEdgeGroup.path(ep.toActivationEdgePath);
+    const svgWeightLabel = this._labelLayer.plain('')
+      .translate(0, -3)
+      .attr({ 'text-anchor': 'middle' });
+
+    const svgWeightHandle = this._handleLayer.circle(View.HANDLE_RADIUS);
+
+    const weightDraggable = new VerticalDraggable(
+      svgWeightHandle,
+      this._coordAnchor,
+      ({ y }) => this._weightChanged(edge, this._weightFromY(y, ep))
+    );
+
+    const update = () => {
+      svgEdge.plot(ep.edgePath);
+      //svgEdgeActivated.plot(mep.edgeActivatedPath);
+      svgFromActivation.plot(ep.fromActivationEdgePath).attr({ fill: ep.fromActivationColor });
+      svgToActivation.plot(ep.toActivationEdgePath).attr({ fill: ep.toActivationColor });
+      svgWeightLabel.plain(formatNumber(ep.weight)).attr(ep.labelPos);
+      svgWeightHandle.center(ep.handlePos.x, ep.handlePos.y);
+    };
+    update();
+
+    return update;
+  }
+
+  _inputFromY(y, np) {
+    return -(y - np.gridPos.y + np.zeroGridOffsetY) / this._flowScale;
+  }
+
+  _inputChanged(node, newInput) {
+    this.emit('input-changed', node, newInput);
+  }
+
+  _weightFromY(y, ep) {
+    return -(y - ep.intersectionPos.y) / ep.fromActivation;
+  }
+
+  _weightChanged(edge, newWeight) {
+    this.emit('weight-changed', edge, newWeight);
+  }
+
+  _biasFromY(y, np) {
+    return -(y - np.gridPos.y + np.zeroGridOffsetY) / this._flowScale;
+  }
+
+  _biasChanged(node, newBias) {
+    this.emit('bias-changed', node, newBias);
+  }
+
+  /***
+   * Update DOM based on model
+   */
+  update(predictionExt) {
+    this._updateProps(predictionExt);
+    for (let updater of this._viewUpdaters) {
+      updater();
+    }
+  }
 }
 
 View.GRID_SCALE = { x: 300, y: 300 };
@@ -577,10 +586,11 @@ function getOrderedInEdges(node, coords) {
   return [...node.in].sort(compare);
 }
 
-function getPartialSumRange(edges, bias) {
+function getPartialSumRange(edges, properties, bias) {
+  const p = properties;
   const partials = edges.reduce(
     (acc, cur) => {
-      acc.push(acc[acc.length - 1] + cur.from.p.activation * cur.p.weight);
+      acc.push(acc[acc.length - 1] + p[cur.from.id].activation * p[cur.id].weight);
       return acc;
     },
     [bias]
@@ -623,6 +633,7 @@ class VerticalDraggable {
   _down(event) {
     window.addEventListener('pointermove', this._moveHandler);
     window.addEventListener('pointerup', this._upHandler);
+    // TODO: register animation frame callback to trigger dragHandler in every frame when pressed to account for external changes to svgElem
   }
 
   _move(event) {
@@ -637,3 +648,10 @@ class VerticalDraggable {
 }
 
 export { View };
+
+/***
+ const showGradientCheckbox = document.querySelector('#showgradient');
+ showGradientCheckbox.addEventListener('change',
+ () => this.emit('show-gradient', showGradientCheckbox.checked)
+ );
+ */
