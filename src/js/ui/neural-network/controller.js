@@ -38,6 +38,10 @@ export default class Controller {
   _updateView() {
     this.view.update(this.predictionModel.computePredictions());
   }
+
+  dispose() {
+    this.view.dispose();
+  }
 }
 
 export { Controller };

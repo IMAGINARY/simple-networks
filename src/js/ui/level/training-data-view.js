@@ -141,6 +141,10 @@ export default class TrainingDataView extends EventEmitter {
 
     this._table.querySelector('.totalLoss').innerText = formatNumber(totalError);
   }
+
+  dispose() {
+    // Nothing to do yet since not event listeners are connected to the DOM
+  }
 }
 
 const formatNumber = n => (n >= 0 ? " " : "") + Number(n).toFixed(2);

@@ -1,9 +1,11 @@
 import { EventEmitter } from 'events';
 import { SVG } from '@svgdotjs/svg.js';
 import Bezier from 'bezier-js';
+import IOps, { Interval } from 'interval-arithmetic';
+
+import { DOMEventManager } from '../../util/dom-event-manager';
 import SVGPathBuilder from '../../util/svg-path-builder';
 import NodeCoordinates from './node-coordinates';
-import IOps, { Interval } from 'interval-arithmetic';
 
 export default class View extends EventEmitter {
   constructor(predictionModel, layout, parentElement) {
@@ -11,6 +13,8 @@ export default class View extends EventEmitter {
     this._predictionModel = predictionModel;
     this._network = predictionModel.getNetwork();
     this._parent = parentElement;
+
+    this._domEventManager = new DOMEventManager();
 
     this._coords = new NodeCoordinates(layout);
 
@@ -32,40 +36,92 @@ export default class View extends EventEmitter {
 
     const bezier = new Bezier(
       fromPos,
-      { x: fromPos.x * 0.5 + toPos.x * 0.5, y: fromPos.y },
-      { x: fromPos.x * 0.5 + toPos.x * 0.5, y: toPos.y },
+      {
+        x: fromPos.x * 0.5 + toPos.x * 0.5,
+        y: fromPos.y
+      },
+      {
+        x: fromPos.x * 0.5 + toPos.x * 0.5,
+        y: toPos.y
+      },
       toPos
     );
 
     const bezierActivated = new Bezier(
-      { x: fromPos.x, y: fromPos.y - fromActivation },
-      { x: fromPos.x * 0.5 + toPos.x * 0.5, y: fromPos.y - fromActivation },
-      { x: fromPos.x * 0.5 + toPos.x * 0.5, y: toPos.y - toActivation },
-      { x: toPos.x, y: toPos.y - toActivation },
+      {
+        x: fromPos.x,
+        y: fromPos.y - fromActivation
+      },
+      {
+        x: fromPos.x * 0.5 + toPos.x * 0.5,
+        y: fromPos.y - fromActivation
+      },
+      {
+        x: fromPos.x * 0.5 + toPos.x * 0.5,
+        y: toPos.y - toActivation
+      },
+      {
+        x: toPos.x,
+        y: toPos.y - toActivation
+      },
     );
 
     const { intersectionPos, handlePos, labelPos } = (() => {
       const bbox = bezier.bbox();
       const intersection = bezier.intersects({
-        p1: { x: bbox.x.min + bbox.x.size * (1 - 0.33), y: bbox.y.min - 1 },
-        p2: { x: bbox.x.min + bbox.x.size * (1 - 0.33), y: bbox.y.max + 1 },
+        p1: {
+          x: bbox.x.min + bbox.x.size * (1 - 0.33),
+          y: bbox.y.min - 1
+        },
+        p2: {
+          x: bbox.x.min + bbox.x.size * (1 - 0.33),
+          y: bbox.y.max + 1
+        },
       })[0];
 
       const intersectionPos = bezier.get(intersection);
-      const handlePos = { x: intersectionPos.x, y: intersectionPos.y - toActivation };
+      const handlePos = {
+        x: intersectionPos.x,
+        y: intersectionPos.y - toActivation
+      };
       const labelPos = handlePos;
 
-      return { intersectionPos, handlePos, labelPos };
+      return {
+        intersectionPos,
+        handlePos,
+        labelPos
+      };
     })();
 
     const { bezierFrom, bezierFromActivated, bezierTo, bezierToActivated } = (() => {
       const bezierSub = new Bezier(
-        { x: 0, y: -fromActivation },
-        { x: 0.5, y: -fromActivation },
-        { x: 0.5, y: -toActivation },
-        { x: 1, y: -toActivation },
+        {
+          x: 0,
+          y: -fromActivation
+        },
+        {
+          x: 0.5,
+          y: -fromActivation
+        },
+        {
+          x: 0.5,
+          y: -toActivation
+        },
+        {
+          x: 1,
+          y: -toActivation
+        },
       );
-      const line = { p1: { x: -1, y: 0 }, p2: { x: 2, y: 0 } };
+      const line = {
+        p1: {
+          x: -1,
+          y: 0
+        },
+        p2: {
+          x: 2,
+          y: 0
+        }
+      };
       // bezierSub and line intersect at the same t as bezier and bezierActivated,
       // but the intersection is much easier to compute (intersecting two cubic bezier curves was
       // too slow for realtime processing, but intersecting a cubic bezier curve and a line works
@@ -73,11 +129,18 @@ export default class View extends EventEmitter {
       const t = bezierSub.intersects(line)[0] ?? 1;
       const { left: bezierFrom, right: bezierTo } = bezier.split(t);
       const { left: bezierFromActivated, right: bezierToActivated } = bezierActivated.split(t);
-      return { bezierFrom, bezierFromActivated, bezierTo, bezierToActivated };
+      return {
+        bezierFrom,
+        bezierFromActivated,
+        bezierTo,
+        bezierToActivated
+      };
     })();
 
-    const edgePath = new SVGPathBuilder().MC(...bezier.points).build();
-    const edgeActivatedPath = new SVGPathBuilder().MC(...bezierActivated.points).build();
+    const edgePath = new SVGPathBuilder().MC(...bezier.points)
+      .build();
+    const edgeActivatedPath = new SVGPathBuilder().MC(...bezierActivated.points)
+      .build();
     const fromActivationEdgePath = new SVGPathBuilder()
       .MC(...bezierFrom.points)
       .LC(...flip(bezierFromActivated).points)
@@ -232,9 +295,15 @@ export default class View extends EventEmitter {
       np.orderedInEdges.forEach((edge, i) => {
         const ep = p[edge.id];
 
-        ep.toPos = { x: lastTo.pos.x, y: lastTo.pos.y - lastTo.activation };
+        ep.toPos = {
+          x: lastTo.pos.x,
+          y: lastTo.pos.y - lastTo.activation
+        };
         ep.toActivation = p[edge.from.id].activation * p[edge.id].weight * this._flowScale;
-        lastTo = { pos: ep.toPos, activation: ep.toActivation };
+        lastTo = {
+          pos: ep.toPos,
+          activation: ep.toActivation
+        };
 
         ep.fromActivationColor = activationColor(p[edge.from.id].activation);
         ep.toActivationColor = activationColor(p[edge.from.id].activation * p[edge.id].weight);
@@ -259,6 +328,10 @@ export default class View extends EventEmitter {
   }
 
   _createSubViews() {
+    while (this._parent.lastChild) {
+      this._parent.lastChild.remove();
+    }
+
     const container = document.createElement('div');
     container.style.position = 'relative';
 
@@ -274,7 +347,9 @@ export default class View extends EventEmitter {
 
     this._parent.appendChild(this._overlay);
 
-    this._svg = SVG().size(1000, 1000).addTo(this._parent);
+    this._svg = SVG()
+      .size(1000, 1000)
+      .addTo(this._parent);
     this._svg.css({
       'overflow': 'visible',
       'stroke-width': 2,
@@ -290,7 +365,10 @@ export default class View extends EventEmitter {
     this._labelLayer = this._svgOffsetContainer.group()
       .css({ 'font-size': `${View.LABEL_FONT_SIZE}px` });
     this._handleLayer = this._svgOffsetContainer.group()
-      .attr({ stroke: 'black', fill: 'transparent' })
+      .attr({
+        stroke: 'black',
+        fill: 'transparent'
+      })
       .css({ cursor: 'hand' });
 
     return [].concat(
@@ -320,7 +398,8 @@ export default class View extends EventEmitter {
     const biasDraggable = new VerticalDraggable(
       svgBiasHandle,
       this._coordAnchor,
-      ({ y }) => this._biasChanged(node, this._biasFromY(y, np))
+      ({ y }) => this._biasChanged(node, this._biasFromY(y, np)),
+      this._domEventManager,
     );
 
     const svgSumHandle = this._handleLayer.circle(View.HANDLE_RADIUS)
@@ -334,7 +413,8 @@ export default class View extends EventEmitter {
       const inputDraggable = new VerticalDraggable(
         svgActivationHandle,
         this._coordAnchor,
-        ({ y }) => this._inputChanged(node, this._inputFromY(y, np))
+        ({ y }) => this._inputChanged(node, this._inputFromY(y, np)),
+        this._domEventManager,
       );
     }
 
@@ -342,17 +422,32 @@ export default class View extends EventEmitter {
     // can be enabled for UI debugging purposes
     const middleLinePathBuilder = () => new SVGPathBuilder()
       .M(np.gridPos)
-      .m({ x: -0.5 * View.NODE_SIZE.x, y: 0 })
-      .l({ x: View.NODE_SIZE.x, y: 0 })
+      .m({
+        x: -0.5 * View.NODE_SIZE.x,
+        y: 0
+      })
+      .l({
+        x: View.NODE_SIZE.x,
+        y: 0
+      })
       .build();
     const svgNodeMiddleLine = !debug ? svgNodeGroup.group() : svgNodeGroup
       .path(middleLinePathBuilder())
-      .attr({ stroke: 'gray', 'stroke-width': 1 });
+      .attr({
+        stroke: 'gray',
+        'stroke-width': 1
+      });
 
     const zeroLinePathBuilder = () => new SVGPathBuilder()
       .M(np.gridPos)
-      .m({ x: -0.5 * View.NODE_SIZE.x, y: -np.zeroGridOffsetY })
-      .l({ x: View.NODE_SIZE.x, y: 0 })
+      .m({
+        x: -0.5 * View.NODE_SIZE.x,
+        y: -np.zeroGridOffsetY
+      })
+      .l({
+        x: View.NODE_SIZE.x,
+        y: 0
+      })
       .build();
     const svgNodeZeroLine = !debug ? svgNodeGroup.group() : svgNodeGroup.path(zeroLinePathBuilder())
       .attr({ stroke: 'orange' });
@@ -387,8 +482,14 @@ export default class View extends EventEmitter {
 
     const biasLinePathBuilder = () => new SVGPathBuilder()
       .M(np.gridPos)
-      .m({ x: -View.NODE_SIZE.x / 2, y: -np.zeroGridOffsetY })
-      .l({ x: 0, y: -np.bias * this._flowScale })
+      .m({
+        x: -View.NODE_SIZE.x / 2,
+        y: -np.zeroGridOffsetY
+      })
+      .l({
+        x: 0,
+        y: -np.bias * this._flowScale
+      })
       .build();
     const svgBiasLine = node.isInput() ? this._edgeLayer.group() : this._edgeLayer
       .path(biasLinePathBuilder())
@@ -397,7 +498,10 @@ export default class View extends EventEmitter {
 
     const sumAreaPathBuilder = () => new SVGPathBuilder()
       .M(np.gridPos)
-      .m({ x: 0, y: -np.zeroGridOffsetY })
+      .m({
+        x: 0,
+        y: -np.zeroGridOffsetY
+      })
       .h(-View.NODE_SIZE.x / 2)
       .v(-np.sum * this._flowScale)
       .h(View.NODE_SIZE.x / 2)
@@ -409,7 +513,10 @@ export default class View extends EventEmitter {
 
     const activationAreaPathBuilder = () => new SVGPathBuilder()
       .M(np.gridPos)
-      .m({ x: 0, y: -np.zeroGridOffsetY })
+      .m({
+        x: 0,
+        y: -np.zeroGridOffsetY
+      })
       .h(View.NODE_SIZE.x / 2)
       .v(-np.activation * this._flowScale)
       .h(-View.NODE_SIZE.x / 2)
@@ -436,7 +543,10 @@ export default class View extends EventEmitter {
 
     const targetLineBuilder = () => new SVGPathBuilder()
       .M(np.gridPos)
-      .m({ x: View.NODE_SIZE.x / 2, y: -np.zeroGridOffsetY - np.target * this._flowScale })
+      .m({
+        x: View.NODE_SIZE.x / 2,
+        y: -np.zeroGridOffsetY - np.target * this._flowScale
+      })
       .h(View.NODE_SIZE.x / 2)
       .build();
     const svgTargetLine = !node.isOutput() ? this._edgeLayer.group() : this._edgeLayer
@@ -474,12 +584,16 @@ export default class View extends EventEmitter {
       }
       if (!node.isInput()) {
         svgBiasLine.plot(biasLinePathBuilder());
-        svgSumArea.plot(sumAreaPathBuilder()).fill({
-          color: activationColor(np.sum),
-          opacity: 0.5
-        });
+        svgSumArea.plot(sumAreaPathBuilder())
+          .fill({
+            color: activationColor(np.sum),
+            opacity: 0.5
+          });
         svgActivationArea.plot(activationAreaPathBuilder())
-          .fill({ color: activationColor(np.activation), opacity: 0.5 });
+          .fill({
+            color: activationColor(np.activation),
+            opacity: 0.5
+          });
         svgInOutConnectorPolyLine.plot(inOutConnectorPolyLinePathBuilder());
       }
       if (node.isOutput()) {
@@ -500,8 +614,15 @@ export default class View extends EventEmitter {
     const ep = this._props[edge.id];
 
     const svgEdgeGroup = this._edgeLayer.group()
-      .attr({ 'fill-opacity': 0.5, stroke: 'none', });
-    const svgEdge = svgEdgeGroup.path(ep.edgePath).attr({ stroke: 'black', fill: 'none' });
+      .attr({
+        'fill-opacity': 0.5,
+        stroke: 'none',
+      });
+    const svgEdge = svgEdgeGroup.path(ep.edgePath)
+      .attr({
+        stroke: 'black',
+        fill: 'none'
+      });
     /*
     const svgEdgeActivated = svgEdgeGroup.path(mep.edgeActivatedPath).attr({
       stroke: 'black',
@@ -519,15 +640,19 @@ export default class View extends EventEmitter {
     const weightDraggable = new VerticalDraggable(
       svgWeightHandle,
       this._coordAnchor,
-      ({ y }) => this._weightChanged(edge, this._weightFromY(y, ep))
+      ({ y }) => this._weightChanged(edge, this._weightFromY(y, ep)),
+      this._domEventManager,
     );
 
     const update = () => {
       svgEdge.plot(ep.edgePath);
       //svgEdgeActivated.plot(mep.edgeActivatedPath);
-      svgFromActivation.plot(ep.fromActivationEdgePath).attr({ fill: ep.fromActivationColor });
-      svgToActivation.plot(ep.toActivationEdgePath).attr({ fill: ep.toActivationColor });
-      svgWeightLabel.plain(formatNumber(ep.weight)).attr(ep.labelPos);
+      svgFromActivation.plot(ep.fromActivationEdgePath)
+        .attr({ fill: ep.fromActivationColor });
+      svgToActivation.plot(ep.toActivationEdgePath)
+        .attr({ fill: ep.toActivationColor });
+      svgWeightLabel.plain(formatNumber(ep.weight))
+        .attr(ep.labelPos);
       svgWeightHandle.center(ep.handlePos.x, ep.handlePos.y);
     };
     update();
@@ -567,10 +692,19 @@ export default class View extends EventEmitter {
     for (let updater of this._viewUpdaters) {
       updater();
     }
+    return this;
+  }
+
+  dispose() {
+    this._domEventManager.dispose();
+    return this;
   }
 }
 
-View.GRID_SCALE = { x: 300, y: 300 };
+View.GRID_SCALE = {
+  x: 300,
+  y: 300
+};
 View.NODE_SIZE = {
   x: Math.min(View.GRID_SCALE.x, View.GRID_SCALE.y) / 4,
   y: Math.min(View.GRID_SCALE.x, View.GRID_SCALE.y) / 4,
@@ -613,27 +747,36 @@ const fillColor = node => {
 };
 
 const activationColor = activation => activation >= 0 ? 'blue' : 'red';
-const formatNumber = n => (n >= 0 ? " " : "") + Number(n).toFixed(2);
+const formatNumber = n => (n >= 0 ? ' ' : '') + Number(n)
+  .toFixed(2);
 
 const gridX = x => View.GRID_SCALE.x * x;
 const gridY = y => View.GRID_SCALE.y * y;
-const grid = ({ x, y }) => ({ x: gridX(x), y: gridY(y) });
+const grid = ({ x, y }) => ({
+  x: gridX(x),
+  y: gridY(y)
+});
 
 class VerticalDraggable {
-  constructor(svgElem, anchorElem, dragHandler) {
+  constructor(svgElem, anchorElem, dragHandler, domEventManager) {
     this._svgElem = svgElem;
     this._anchorElem = anchorElem;
     this._dragHandler = dragHandler;
+    this._domEventManager = domEventManager;
     this._moveHandler = ev => this._move(ev);
     this._upHandler = ev => this._up(ev);
 
-    svgElem.on('pointerdown', ev => this._down(ev));
+    const ael = this._domEventManager.ael;
+    const rel = this._domEventManager.rel;
+    ael(svgElem.node, 'pointerdown', ev => this._down(ev));
+    this._emMoveHandler = rel(window, 'pointermove', this._moveHandler.bind(this));
+    this._emUpHandler = rel(window, 'pointerup', this._upHandler.bind(this));
   }
 
   _down(event) {
-    window.addEventListener('pointermove', this._moveHandler);
-    window.addEventListener('pointerup', this._upHandler);
     // TODO: register animation frame callback to trigger dragHandler in every frame when pressed to account for external changes to svgElem
+    this._emMoveHandler.attach();
+    this._emUpHandler.attach();
   }
 
   _move(event) {
@@ -642,8 +785,8 @@ class VerticalDraggable {
   }
 
   _up(event) {
-    window.removeEventListener('pointermove', this._moveHandler);
-    window.removeEventListener('pointerup', this._upHandler);
+    this._emMoveHandler.detach();
+    this._emUpHandler.detach();
   }
 }
 

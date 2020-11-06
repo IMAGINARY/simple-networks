@@ -64,6 +64,12 @@ export default class Controller extends EventEmitter {
     forEach(this._initialWeights, (weight, id) => this._networkModel.setWeight(id, weight));
     forEach(this._initialBiases, (bias, id) => this._networkModel.setBias(id, bias));
   }
+
+  dispose() {
+    this._handlePauseTraining();
+    this._missionControlsView.dispose();
+    this._trainingDataView.dispose();
+  }
 }
 
 export { Controller };

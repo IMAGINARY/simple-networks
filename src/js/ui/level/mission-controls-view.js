@@ -1,9 +1,11 @@
 import { EventEmitter } from 'events';
+import { DOMEventManager } from '../../util/dom-event-manager';
 
 export default class MissionControlsView extends EventEmitter {
   constructor() {
     super();
 
+    this._dem = new DOMEventManager();
     this._setupDOM();
   }
 
@@ -12,22 +14,27 @@ export default class MissionControlsView extends EventEmitter {
   }
 
   _setupMissionAndTrainingTabs() {
+    const ael = this._dem.ael;
+
     this._missionContent = document.querySelector('.content .mission');
     this._missionButton = document.querySelector('#missionbutton');
-    this._missionButton.addEventListener('click', this.showMissionTab.bind(this));
+    ael(this._missionButton, 'click', this.showMissionTab.bind(this));
 
     this._helpContent = document.querySelector('.content .helper');
     this._helpButton = document.querySelector('#helpmebutton');
-    this._helpButton.addEventListener('click', this.showHelpTab.bind(this));
+    ael(this._helpButton, 'click', this.showHelpTab.bind(this));
 
     this._setupTrainingTab();
   }
 
   _setupTrainingTab() {
+    const ael = this._dem.ael;
+
     const resetButton = document.querySelector('.controls .reset');
-    resetButton.addEventListener('click', () => this.emit('reset-training'));
+    ael(resetButton, 'click', () => this.emit('reset-training'));
 
     const pauseResumeButton = document.querySelector('.controls .pause-resume');
+    const isPlaying = () => pauseResumeButton.classList.contains('pause');
     const resume = () => {
       pauseResumeButton.classList.add('pause');
       pauseResumeButton.classList.remove('resume');
@@ -39,12 +46,10 @@ export default class MissionControlsView extends EventEmitter {
       this.emit('pause-training');
     };
     pause();
-    pauseResumeButton.addEventListener('click', () => {
-      return pauseResumeButton.classList.contains('resume') ? resume() : pause();
-    });
+    ael(pauseResumeButton, 'click', () => isPlaying() ? pause() : resume());
 
     const stepButton = document.querySelector('.controls .single-step');
-    stepButton.addEventListener('click', () => this.emit('step-training'));
+    ael(stepButton, 'click', () => this.emit('step-training'));
   }
 
   showHelpTab() {
@@ -59,5 +64,10 @@ export default class MissionControlsView extends EventEmitter {
     this._helpContent.classList.remove('visible');
     this._missionButton.classList.add('selected');
     this._missionContent.classList.add('visible');
+  }
+
+  dispose() {
+    this._dem.dispose();
+    return this;
   }
 }

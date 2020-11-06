@@ -1,11 +1,15 @@
 import { EventEmitter } from 'events';
 
+import DOMEventManager from '../../util/dom-event-manager';
+
 export default class Model extends EventEmitter {
-  constructor(slideNames, currentSlideIndexOrName = 0) {
+  constructor(slideNames, currentSlideIndexOrName) {
     super();
     this._slideNames = [...slideNames];
     this._currentSlideIndex = 0;
-    this.setSlide(currentSlideIndexOrName);
+    this._domEventManager = new DOMEventManager();
+    this.setSlide(currentSlideIndexOrName ?? this._getSlideNameFromURL());
+    this._domEventManager.ael(window, 'hashchange', this._updateFromHash.bind(this));
   }
 
   getSlideNames() {
@@ -26,14 +30,22 @@ export default class Model extends EventEmitter {
 
   setSlide(nameOrIndex) {
     if (typeof nameOrIndex === 'string') {
-      const slideIndex = this._slideNames.indexOf(nameOrIndex);
-      return this.setSlide(slideIndex);
+      const name = nameOrIndex;
+      const index = this._slideNames.indexOf(name);
+      if (index >= 0 && index < this.numSlides()) {
+        return this.setSlide(index);
+      } else {
+        const encodedSlideNames = this._slideNames.map(encodeURIComponent);
+        console.warn(`Unknown slide name: ${name}. Use one of ${JSON.stringify(encodedSlideNames)}`);
+        return false;
+      }
     } else if (typeof nameOrIndex === 'number') {
       const index = nameOrIndex;
       if (index !== this._currentSlideIndex && index >= 0 && index < this.numSlides()) {
         const prevSlideIndex = this.getCurrentSlideIndex();
         const prevSlideName = this.getCurrentSlideName();
         this._currentSlideIndex = index;
+        window.location.hash = `#${encodeURIComponent(this.getCurrentSlideName())}`;
         this.emit(
           'current-slide-changed',
           this.getCurrentSlideName(),
@@ -62,6 +74,19 @@ export default class Model extends EventEmitter {
 
   numSlides() {
     return this._slideNames.length;
+  }
+
+  dispose() {
+    this._domEventManager.dispose();
+  }
+
+  _getSlideNameFromURL() {
+    const hash = window.location.hash;
+    return decodeURIComponent(hash.substring(1));
+  }
+
+  _updateFromHash() {
+    this.setSlide(this._getSlideNameFromURL());
   }
 }
 
