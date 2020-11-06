@@ -9,10 +9,15 @@ import FeedForwardNetwork from '../neural-network/network';
 import MathExpression from '../util/math-expression';
 import generateLayout from '../util/generate-layout';
 import transpose from '../util/transpose';
+import fetchWithCache from '../util/fetch-with-cache';
 
-export default async function load(url) {
-  const response = await fetch(url.href);
+export default async function loadFromUrl(url, cache = true) {
+  const response = await (cache ? fetchWithCache(url.href) : fetch(url.href));
   const levelSrc = await response.text();
+  return await loadFromSource(levelSrc);
+}
+
+async function loadFromSource(levelSrc) {
   const levelObj = jsYaml.safeLoad(levelSrc);
   const { valid, errors } = validate(levelObj);
   if (!valid) {
@@ -354,4 +359,4 @@ function processStringOrI18N(text, defaultLanguage) {
   }
 }
 
-export { load };
+export { loadFromUrl, loadFromSource };

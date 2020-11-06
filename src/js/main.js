@@ -3,7 +3,7 @@ import { Controller as NetworkController } from './ui/neural-network/controller'
 import { Controller as SliderController } from './ui/slider/controller';
 import { Controller as LevelController } from './ui/level/controller';
 
-import { load as loadLevel } from './level-file-format/load';
+import { loadFromUrl as loadLevel } from './level-file-format/load';
 import { AsyncFunctionQueue } from './util/async-function-queue';
 
 const levelNames = [
