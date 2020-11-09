@@ -3,23 +3,14 @@ import { Controller as NetworkController } from './ui/neural-network/controller'
 import { Controller as SliderController } from './ui/slider/controller';
 import { Controller as LevelController } from './ui/level/controller';
 
-import { loadFromUrl as loadLevel } from './level-file-format/load';
+import { YAMLLoader } from './util/yaml-loader';
+import { load as loadLevel } from './file-formats/load-level';
+import { load as loadConfig } from './file-formats/load-config';
 import { AsyncFunctionQueue } from './util/async-function-queue';
 
-const levelNames = [
-  'TimesTwo',
-  'Positive',
-  'Sum',
-  'PositiveOffsetToOne',
-  'Average',
-  'And',
-  'CelsiusToFahrenheit',
-  'Max',
-  'Weather',
-];
-
 class SequentialLevelLoader {
-  constructor() {
+  constructor(levels) {
+    this._levels = levels;
     this._dummyDisposeLevel = () => true;
     this._disposeLevel = this._dummyDisposeLevel;
     this._asyncFunctionQueue = new AsyncFunctionQueue();
@@ -38,7 +29,8 @@ class SequentialLevelLoader {
     // FIXME: guard against custom URL injections
     const levelUrl = new URL(`assets/levels/${levelName}.yaml`, window.location.href);
 
-    const { model, inputs, training, layout, strings } = await loadLevel(levelUrl);
+    const levelObj = await YAMLLoader.fromUrl(levelUrl);
+    const { model, inputs, training, layout, strings } = loadLevel(levelObj, levelUrl);
 
     const networkParentElem = document.querySelector('#network-container');
     const networkController = new NetworkController(
@@ -79,8 +71,12 @@ async function main() {
   const oldSvg = document.querySelector('svg');
   oldSvg.parentElement.insertBefore(parent, oldSvg); // TODO: move to pug/CSS
 
-  const levelLoader = new SequentialLevelLoader();
-  const sliderController = new SliderController(levelNames);
+  const configUrl = new URL('/assets/config/default.yaml', window.location.href);
+  const configObj = await YAMLLoader.fromUrl(configUrl);
+  const { levels, defaultLanguage } = loadConfig(configObj, configUrl);
+  console.log(configUrl, configObj, levels);
+  const levelLoader = new SequentialLevelLoader(levels);
+  const sliderController = new SliderController(levels.map(({ name, url }) => name));
   sliderController.on('current-slide-changed', (slideName) => levelLoader.load(slideName));
   await levelLoader.load(sliderController.getModel().getCurrentSlideName());
 }
