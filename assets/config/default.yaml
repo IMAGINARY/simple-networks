@@ -1,0 +1,11 @@
+levels:
+  - TimesTwo
+  - Positive
+  - Sum
+  - PositiveOffsetToOne
+  - Average
+  - And
+  - CelsiusToFahrenheit
+  - Max
+  - Weather
+

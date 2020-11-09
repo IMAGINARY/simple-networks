@@ -5,22 +5,12 @@ import { Controller as LevelController } from './ui/level/controller';
 
 import { YAMLLoader } from './util/yaml-loader';
 import { load as loadLevel } from './file-formats/load-level';
+import { load as loadConfig } from './file-formats/load-config';
 import { AsyncFunctionQueue } from './util/async-function-queue';
 
-const levelNames = [
-  'TimesTwo',
-  'Positive',
-  'Sum',
-  'PositiveOffsetToOne',
-  'Average',
-  'And',
-  'CelsiusToFahrenheit',
-  'Max',
-  'Weather',
-];
-
 class SequentialLevelLoader {
-  constructor() {
+  constructor(levels) {
+    this._levels = levels;
     this._dummyDisposeLevel = () => true;
     this._disposeLevel = this._dummyDisposeLevel;
     this._asyncFunctionQueue = new AsyncFunctionQueue();
@@ -81,8 +71,12 @@ async function main() {
   const oldSvg = document.querySelector('svg');
   oldSvg.parentElement.insertBefore(parent, oldSvg); // TODO: move to pug/CSS
 
-  const levelLoader = new SequentialLevelLoader();
-  const sliderController = new SliderController(levelNames);
+  const configUrl = new URL('/assets/config/default.yaml', window.location.href);
+  const configObj = await YAMLLoader.fromUrl(configUrl);
+  const { levels, defaultLanguage } = loadConfig(configObj, configUrl);
+  console.log(configUrl, configObj, levels);
+  const levelLoader = new SequentialLevelLoader(levels);
+  const sliderController = new SliderController(levels.map(({ name, url }) => name));
   sliderController.on('current-slide-changed', (slideName) => levelLoader.load(slideName));
   await levelLoader.load(sliderController.getModel().getCurrentSlideName());
 }
