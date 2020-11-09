@@ -2,6 +2,9 @@ node_modules/
 yarn-debug.log*
 yarn-error.log*
 
+# ignore local config files
+assets/config/*.local.yaml
+
 # ignore known build results
 index.html
 assets/js/bundle.js
