@@ -1,53 +1,88 @@
 import ready from 'document-ready';
-
-import { View as LevelView } from './ui/neural-network/view';
-import { Controller as LevelController } from './ui/neural-network/controller';
-
+import { Controller as NetworkController } from './ui/neural-network/controller';
 import { Controller as SliderController } from './ui/slider/controller';
+import { Controller as LevelController } from './ui/level/controller';
 
-import { load as loadLevel } from './level-file-format/load';
+import { loadFromUrl as loadLevel } from './level-file-format/load';
+import { AsyncFunctionQueue } from './util/async-function-queue';
 
 const levelNames = [
-  "TimesTwo",
-  "Positive",
-  "Sum",
-  "PositiveOffsetToOne",
-  "Average",
-  "And",
-  "CelsiusToFahrenheit",
-  "Max",
-  "Weather",
+  'TimesTwo',
+  'Positive',
+  'Sum',
+  'PositiveOffsetToOne',
+  'Average',
+  'And',
+  'CelsiusToFahrenheit',
+  'Max',
+  'Weather',
 ];
 
-async function main() {
-  const levelUrl = new URL('assets/levels/Max.yaml', window.location.href);
-  const { model, layout, training, strings } = await loadLevel(levelUrl);
-  const network = model.network;
-
-  for (let i = 0; i < training.inputs.length; ++i) {
-    const inputs = training.inputs[i];
-    const inputsMap = Object.fromEntries(network.inputNodes.map(({ id }, i) => [id, inputs[i]]));
-    const targets = training.targetActivationFuncs.map(f => f(inputsMap));
-    model.train(inputs, targets, 0.1);
+class SequentialLevelLoader {
+  constructor() {
+    this._dummyDisposeLevel = () => true;
+    this._disposeLevel = this._dummyDisposeLevel;
+    this._asyncFunctionQueue = new AsyncFunctionQueue();
   }
 
-  model.assignInputs(network.inputNodes.map(n => n.p.input));
-  model.clamp();
-  model.feedForward();
+  async load(levelName) {
+    // this serves as a barrier such that on one level is loading at a time
+    return await this._asyncFunctionQueue.enqueue(async () => await this._load(levelName));
+  }
 
+  async _load(levelName) {
+    // dispose the old level
+    this._disposeLevel();
+    this._disposeLevel = () => true;
+
+    // FIXME: guard against custom URL injections
+    const levelUrl = new URL(`assets/levels/${levelName}.yaml`, window.location.href);
+
+    const { model, inputs, training, layout, strings } = await loadLevel(levelUrl);
+
+    const networkParentElem = document.querySelector('#network-container');
+    const networkController = new NetworkController(
+      model,
+      inputs,
+      training.targetActivationFuncs,
+      layout,
+      networkParentElem,
+    );
+
+    const inputNodeIds = model.network.inputNodeIds;
+    const mapInputs = inputs => Object.fromEntries(inputNodeIds.map((id, i) => [id, inputs[i]]));
+    const computeTargets = inputs => {
+      const inputsMap = mapInputs(inputs);
+      const targets = training.targetActivationFuncs.map(f => f(inputsMap));
+      return targets;
+    };
+    const trainingTargets = training.inputs.map(computeTargets);
+
+    const levelController = new LevelController(model, training.inputs, trainingTargets);
+
+    // set new level disposer for when the next level is loaded
+    this._disposeLevel = () => {
+      networkController.dispose();
+      levelController.dispose();
+    };
+
+    return true;
+  }
+}
+
+async function main() {
   const parent = document.createElement('div');
+  parent.id = 'network-container';
   parent.style.position = 'absolute';
   parent.style.top = '150px';
   parent.style.left = '100px';
   const oldSvg = document.querySelector('svg');
   oldSvg.parentElement.insertBefore(parent, oldSvg); // TODO: move to pug/CSS
-  const levelView = new LevelView(model, layout, parent);
-  const levelController = new LevelController(model, training.targetActivationFuncs, levelView);
 
+  const levelLoader = new SequentialLevelLoader();
   const sliderController = new SliderController(levelNames);
-  sliderController.on('current-slide-changed',
-    (slideName, slideIndex) => console.log(`Go to slide ${slideIndex}: ${slideName}`)
-  );
+  sliderController.on('current-slide-changed', (slideName) => levelLoader.load(slideName));
+  await levelLoader.load(sliderController.getModel().getCurrentSlideName());
 }
 
 ready(main);

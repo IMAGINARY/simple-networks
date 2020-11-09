@@ -96,10 +96,6 @@ const schema = {
     }
   },
   "properties": {
-    "nodes": {
-      "type": "array",
-      "items": { "$ref": "#/definitions/nodeId" },
-    },
     "edges": {
       "type": "array",
       "items": { "$ref": "#/definitions/edgeId" },
@@ -212,7 +208,7 @@ const schema = {
       },
     },
   },
-  "required": ["nodes", "edges", "training"],
+  "required": ["edges", "training"],
   "additionalProperties": false,
 };
 

@@ -1,47 +1,46 @@
+import View from './view';
+import PredictionModel from './prediction-model';
+
 export default class Controller {
-  constructor(model, targetActivationFuncs, view) {
-    this.model = model;
-    this.view = view;
-    this.targetActivationFuncs = targetActivationFuncs;
+  constructor(networkModel, inputs, targetActivationFuncs, layout, parentElem) {
+    this.networkModel = networkModel;
+    this.predictionModel = new PredictionModel(networkModel, inputs, targetActivationFuncs);
+    this.view = new View(this.predictionModel, layout, parentElem);
 
     this.view.on('input-changed', this.handleInputChange.bind(this));
     this.view.on('bias-changed', this.handleBiasChange.bind(this));
     this.view.on('weight-changed', this.handleWeightChange.bind(this));
 
-    this.model.clamp();
-    this.model.assignTargets(this._computeTargetActivations());
-    this._feedForwardAndUpdateView();
+    this.networkModel.on('network-property-changed', this._scheduleUpdateView.bind(this));
+    this.predictionModel.on('input-changed', this._scheduleUpdateView.bind(this));
+
+    this._animationFrameRequestId = 0;
+    this._updateView();
   }
 
   handleInputChange(node, input) {
-    node.p.input = input;
-    this.model.clampInput(node);
-    this.model.assignTargets(this._computeTargetActivations());
-    this._feedForwardAndUpdateView();
+    this.predictionModel.setInput(node, input);
   }
 
   handleBiasChange(node, bias) {
-    node.p.bias = bias;
-    this.model.clampBias(node);
-    this._feedForwardAndUpdateView();
+    this.networkModel.setBias(node, bias);
   }
 
   handleWeightChange(edge, weight) {
-    edge.p.weight = weight;
-    this.model.clampWeight(edge);
-    this._feedForwardAndUpdateView();
+    this.networkModel.setWeight(edge, weight);
   }
 
-  _feedForwardAndUpdateView() {
-    this.model.feedForward();
-    this.view.update();
+  _scheduleUpdateView() {
+    cancelAnimationFrame(this._animationFrameRequestId);
+    requestAnimationFrame(() => this._updateView());
   }
 
-  _computeTargetActivations() {
-    const inputs = Object.fromEntries(
-      this.model.network.inputNodes.map(n => [n.id, n.p.input])
-    );
-    return this.targetActivationFuncs.map(taf => taf(inputs));
+  _updateView() {
+    this.view.update(this.predictionModel.computePredictions());
+  }
+
+  dispose() {
+    this.view.dispose();
   }
 }
 

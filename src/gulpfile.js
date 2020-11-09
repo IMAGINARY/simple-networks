@@ -44,15 +44,21 @@ const paths = {
     dest: `${OUTPUT_DIR}/assets/js`,
   },
   dependencies: {
+    // list of dependency packages can be computed by running the following command in /src
+    // grep -R "import .* from .[^.]" js | grep -v deprecated | sed 's/^.* from .//g' | sed 's/.;$//g' | sort -u | sed "s/^/'/g" | sed "s/$/',/g"
     packages: [
+      '@svgdotjs/svg.js',
       'ajv',
       'bezier-js',
       'document-ready',
+      'events',
       'expression-eval',
       'interval-arithmetic',
       'js-yaml',
-      '@svgdotjs/svg.js',
-    ],
+      'lodash',
+    ].concat([
+      // Other packages that are not included via 'import'
+    ]),
     watchSrc: [
       './package-lock.json',
     ],
@@ -65,7 +71,7 @@ const paths = {
 };
 
 function html() {
-  const loadJson = function(filename) {
+  const loadJson = function (filename) {
     return JSON.parse(fs.readFileSync(filename));
   };
   const pugData = Object.fromEntries(Object.entries(paths.html.data)
@@ -84,8 +90,8 @@ function html() {
 
 function styles() {
   return gulp.src(paths.styles.src, {
-    sourcemaps: true,
-  })
+      sourcemaps: true,
+    })
     .pipe(sourcemaps.init())
     .pipe(sass().on('error', sass.logError))
     .pipe(sourcemaps.write('.'))

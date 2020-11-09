@@ -1,7 +1,3 @@
-nodes:
-  - 'celsius'
-  - 'fahrenheit'
-
 edges:
   - 'celsius -> fahrenheit'
 

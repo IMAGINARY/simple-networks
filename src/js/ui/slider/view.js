@@ -1,5 +1,7 @@
 import { EventEmitter } from 'events';
 
+import DOMEventManager from '../../util/dom-event-manager';
+
 export default class View extends EventEmitter {
   constructor(model) {
     super();
@@ -7,22 +9,22 @@ export default class View extends EventEmitter {
     this._previousSlideButton = document.querySelector("#backbutton");
     this._nextSlideButton = document.querySelector("#nextbutton");
     this._items = this._addItems();
-    this._addEventListeners();
+    this._domEventManager = this._addEventListeners();
     this.update();
   }
 
   update() {
-    this._updateHashFromModel();
     this._updateFooter();
   }
 
   _addEventListeners() {
-    window.addEventListener('hashchange', this._handleHashChange.bind(this));
+    const domEventManager = new DOMEventManager();
+    const ael = domEventManager.ael;
 
-    this._previousSlideButton.addEventListener('click', () => this.emit('go-to-previous-slide'));
-    this._nextSlideButton.addEventListener('click', () => this.emit('go-to-next-slide'));
+    ael(this._previousSlideButton, 'click', () => this.emit('go-to-previous-slide'));
+    ael(this._nextSlideButton, 'click', () => this.emit('go-to-next-slide'));
 
-    window.addEventListener('keydown', event => {
+    ael(window, 'keydown', event => {
       switch (event.key) {
         case "ArrowLeft":
           this.emit('previous');
@@ -32,6 +34,8 @@ export default class View extends EventEmitter {
           break;
       }
     });
+
+    return domEventManager;
   }
 
   _addItems() {
@@ -49,16 +53,6 @@ export default class View extends EventEmitter {
     return item;
   }
 
-  _handleHashChange(hashChangeEvent) {
-    const hash = new URL(hashChangeEvent.newURL).hash;
-    const decodedHash = decodeURIComponent(hash.substring(1));
-    this.emit('go-to-slide-with-name', decodedHash);
-  }
-
-  _updateHashFromModel() {
-    window.location.hash = `#${encodeURIComponent(this._model.getCurrentSlideName())}`;
-  }
-
   _updateFooter() {
     this._items.forEach((item, i) => {
       if (i === this._model.getCurrentSlideIndex()) {
@@ -72,6 +66,10 @@ export default class View extends EventEmitter {
     const isLastSlide = this._model.getCurrentSlideIndex() === this._model.numSlides() - 1;
     this._previousSlideButton.style.visibility = isFirstSlide ? "hidden" : "visible";
     this._nextSlideButton.style.visibility = isLastSlide ? "hidden" : "visible";
+  }
+
+  dispose() {
+    this._domEventManager.dispose();
   }
 }
 

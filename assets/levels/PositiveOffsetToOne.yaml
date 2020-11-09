@@ -1,7 +1,3 @@
-nodes:
-  - 'x'
-  - 'offset of x to one'
-
 edges:
   - 'x -> offset of x to one'
 
