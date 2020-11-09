@@ -1,4 +1,4 @@
-const schema = {
+const levelSchema = {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Simple Network Level",
   "description": "A level of the Simple-Network exhibit",
@@ -212,5 +212,5 @@ const schema = {
   "additionalProperties": false,
 };
 
-export default schema;
-export { schema };
+export default levelSchema;
+export { levelSchema };

@@ -1,28 +1,24 @@
-import jsYaml from 'js-yaml';
 import { cloneDeep, isEmpty, uniq } from 'lodash';
 import IOps, { Interval } from 'interval-arithmetic';
 
-import { validate } from './validate';
+import { Validator } from './validator';
 import Model from '../neural-network/model';
 import * as activationFunctions from '../neural-network/activation-functions';
 import FeedForwardNetwork from '../neural-network/network';
 import MathExpression from '../util/math-expression';
 import generateLayout from '../util/generate-layout';
 import transpose from '../util/transpose';
-import fetchWithCache from '../util/fetch-with-cache';
 
-export default async function loadFromUrl(url, cache = true) {
-  const response = await (cache ? fetchWithCache(url.href) : fetch(url.href));
-  const levelSrc = await response.text();
-  return await loadFromSource(levelSrc);
-}
+import { levelSchema } from './level-schema';
+import { normalizeAndStripBCP47Tag } from '../util/language-utils';
 
-async function loadFromSource(levelSrc) {
-  const levelObj = jsYaml.safeLoad(levelSrc);
+const validate = Validator.createValidateFunction(levelSchema);
+
+export default function load(levelObj, levelUrl) {
   const { valid, errors } = validate(levelObj);
   if (!valid) {
     console.error(errors);
-    throw new Error(`Unable to validate level file ${url.href}. Please check the developer console for details.`);
+    throw new Error(`Unable to validate level file ${levelUrl.href}. Please check the developer console for details.`);
   }
 
   const { nodeDefaults, edgeDefaults } = processDefaultProperties(levelObj.defaultProperties);
@@ -53,8 +49,7 @@ async function loadFromSource(levelSrc) {
     "en",
     model.network
   );
-
-
+  
   return { model, inputs, layout, training, strings };
 }
 
@@ -359,4 +354,4 @@ function processStringOrI18N(text, defaultLanguage) {
   }
 }
 
-export { loadFromUrl, loadFromSource };
+export { load };

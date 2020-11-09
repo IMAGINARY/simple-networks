@@ -3,7 +3,8 @@ import { Controller as NetworkController } from './ui/neural-network/controller'
 import { Controller as SliderController } from './ui/slider/controller';
 import { Controller as LevelController } from './ui/level/controller';
 
-import { loadFromUrl as loadLevel } from './level-file-format/load';
+import { YAMLLoader } from './util/yaml-loader';
+import { load as loadLevel } from './file-formats/load-level';
 import { AsyncFunctionQueue } from './util/async-function-queue';
 
 const levelNames = [
@@ -38,7 +39,8 @@ class SequentialLevelLoader {
     // FIXME: guard against custom URL injections
     const levelUrl = new URL(`assets/levels/${levelName}.yaml`, window.location.href);
 
-    const { model, inputs, training, layout, strings } = await loadLevel(levelUrl);
+    const levelObj = await YAMLLoader.fromUrl(levelUrl);
+    const { model, inputs, training, layout, strings } = loadLevel(levelObj, levelUrl);
 
     const networkParentElem = document.querySelector('#network-container');
     const networkController = new NetworkController(
