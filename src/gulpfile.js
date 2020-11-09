@@ -49,12 +49,14 @@ const paths = {
     packages: [
       '@svgdotjs/svg.js',
       'ajv',
+      'bcp-47',
       'bezier-js',
       'document-ready',
       'events',
       'expression-eval',
       'interval-arithmetic',
       'js-yaml',
+      'langmap',
       'lodash',
     ].concat([
       // Other packages that are not included via 'import'

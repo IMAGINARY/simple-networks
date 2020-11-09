@@ -350,7 +350,10 @@ function processStringOrI18N(text, defaultLanguage) {
     result[defaultLanguage] = text;
     return result;
   } else {
-    return text;
+    const i18nObj = text;
+    return Object.fromEntries(
+      Object.entries(i18nObj).map(([tag, text]) => [normalizeAndStripBCP47Tag(tag), text])
+    );
   }
 }
 
