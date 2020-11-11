@@ -146,11 +146,10 @@ export default class FeedForwardNetwork {
 }
 
 class Node {
-  constructor(id, properties) {
+  constructor(id) {
     this.in = [];
     this.out = [];
     this.id = Node.canonicalizeId(id);
-    this.p = Object.assign({}, properties);
   }
 
   static canonicalizeId(id) {
@@ -171,13 +170,12 @@ class Node {
 }
 
 class Edge {
-  constructor(from, to, properties) {
+  constructor(from, to) {
     this.id = Edge.edgeIdFromNodeIds(from.id, to.id);
     this.from = from;
     this.to = to;
     this.from.out.push(this);
     this.to.in.push(this);
-    this.p = properties;
   }
 
   static edgeIdFromNodeIds(fromId, toId) {
