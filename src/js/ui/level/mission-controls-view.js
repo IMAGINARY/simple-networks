@@ -1,11 +1,11 @@
 import { EventEmitter } from 'events';
-import { DOMEventManager } from '../../util/dom-event-manager';
+import EventManager from '../../util/event-manager';
 
 export default class MissionControlsView extends EventEmitter {
   constructor() {
     super();
 
-    this._dem = new DOMEventManager();
+    this._dem = new EventManager();
     this._setupDOM();
   }
 

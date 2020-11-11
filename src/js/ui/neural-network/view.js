@@ -3,7 +3,7 @@ import { SVG } from '@svgdotjs/svg.js';
 import Bezier from 'bezier-js';
 import IOps, { Interval } from 'interval-arithmetic';
 
-import { DOMEventManager } from '../../util/dom-event-manager';
+import EventManager from '../../util/event-manager';
 import SVGPathBuilder from '../../util/svg-path-builder';
 import NodeCoordinates from './node-coordinates';
 
@@ -14,7 +14,7 @@ export default class View extends EventEmitter {
     this._network = predictionModel.getNetwork();
     this._parent = parentElement;
 
-    this._domEventManager = new DOMEventManager();
+    this._domEventManager = new EventManager();
 
     this._coords = new NodeCoordinates(layout);
 
