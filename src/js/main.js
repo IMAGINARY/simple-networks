@@ -94,7 +94,7 @@ async function main() {
 
   const configUrl = new URL('/assets/config/default.yaml', window.location.href);
   const configObj = await YAMLLoader.fromUrl(configUrl);
-  const { levels, defaultLanguage } = loadConfig(configObj, configUrl);
+  const { levels, languages } = loadConfig(configObj, configUrl);
 
   console.log(configUrl, configObj, levels);
   SequentialLevelLoader.preload(...levels).then(processPreloadResults);

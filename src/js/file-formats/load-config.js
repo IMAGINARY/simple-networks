@@ -1,3 +1,5 @@
+import { uniq } from 'lodash';
+
 import { Validator } from './validator';
 import { normalizeAndStripBCP47Tag } from '../util/language-utils';
 
@@ -12,11 +14,10 @@ export default function load(configObj, configUrl) {
     throw new Error(`Unable to validate config file ${configUrl.href}. Please check the developer console for details.`);
   }
 
-  const result = ({ levels: processLevels(configObj.levels) });
-
-  if (typeof configObj.defaultLanguage !== 'undefined') {
-    result.defaultLanguage = processLanguageTag(configObj.defaultLanguage);
-  }
+  const result = {
+    levels: processLevels(configObj.levels),
+    languages: processLanguageTags(configObj.languages),
+  };
 
   return result;
 }
@@ -32,8 +33,8 @@ function convertLevelNameToUrl(name) {
   return new URL(`${name}.${extension}`, levelBase);
 }
 
-function processLanguageTag(tag) {
-  return normalizeAndStripBCP47Tag(tag);
+function processLanguageTags(tags) {
+  return uniq(tags.map(normalizeAndStripBCP47Tag));
 }
 
 export { load };
