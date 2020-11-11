@@ -4,12 +4,14 @@ import { Controller as SliderController } from './ui/slider/controller';
 import { Controller as LevelController } from './ui/level/controller';
 
 import { YAMLLoader } from './util/yaml-loader';
+import createI18N from './util/i18n';
 import { load as loadLevel } from './file-formats/load-level';
 import { load as loadConfig } from './file-formats/load-config';
 import { AsyncFunctionQueue } from './util/async-function-queue';
 
 class SequentialLevelLoader {
-  constructor() {
+  constructor(i18n) {
+    this._i18n = i18n;
     this._dummyDisposeLevel = () => true;
     this._disposeLevel = this._dummyDisposeLevel;
     this._asyncFunctionQueue = new AsyncFunctionQueue();
@@ -28,10 +30,11 @@ class SequentialLevelLoader {
 
   static async _loadNonUI({ name, url }) {
     const levelObj = await YAMLLoader.fromUrl(url);
-    return loadLevel({ object: levelObj, name, url });
+    return { name, url, ...loadLevel({ object: levelObj, name, url }) };
   }
 
-  static _loadUI({ model, inputs, training, layout, strings }) {
+  _loadUI({ name, model, inputs, training, layout, strings }) {
+    this._i18n.addLevelStrings(name, strings);
     const networkParentElem = document.querySelector('#network-container');
     const networkController = new NetworkController(
       model,
@@ -60,7 +63,7 @@ class SequentialLevelLoader {
     this._disposeLevel();
     this._disposeLevel = () => true;
 
-    const { networkController, levelController } = SequentialLevelLoader._loadUI(
+    const { networkController, levelController } = this._loadUI(
       await SequentialLevelLoader._loadNonUI({ name, url })
     );
 
@@ -96,10 +99,9 @@ async function main() {
   const configObj = await YAMLLoader.fromUrl(configUrl);
   const { levels, languages } = loadConfig(configObj, configUrl);
 
-  console.log(configUrl, configObj, levels);
+  const i18n = await createI18N(languages, true);
   SequentialLevelLoader.preload(...levels).then(processPreloadResults);
-
-  const levelLoader = new SequentialLevelLoader();
+  const levelLoader = new SequentialLevelLoader(i18n);
   const sliderController = new SliderController(levels.map(({ name, url }) => name));
   sliderController.on('current-slide-changed', (_, i) => levelLoader.load(levels[i]));
   await levelLoader.load(levels[sliderController.getModel().getCurrentSlideIndex()]);
