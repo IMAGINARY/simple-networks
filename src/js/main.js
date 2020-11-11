@@ -1,4 +1,6 @@
 import ready from 'document-ready';
+import * as langmap from 'langmap';
+
 import { Controller as NetworkController } from './ui/neural-network/controller';
 import { Controller as SliderController } from './ui/slider/controller';
 import { Controller as LevelController } from './ui/level/controller';
@@ -8,6 +10,8 @@ import createI18N from './util/i18n';
 import { load as loadLevel } from './file-formats/load-level';
 import { load as loadConfig } from './file-formats/load-config';
 import { AsyncFunctionQueue } from './util/async-function-queue';
+
+import locI18next from "loc-i18next";
 
 class SequentialLevelLoader {
   constructor(i18n) {
@@ -86,6 +90,45 @@ function processPreloadResults(levelPreloadResults) {
     .forEach(warn);
 }
 
+function setupLanguageSelector(i18n, supportedLanguages) {
+  const i18next = i18n.getI18NextInstance();
+  const currentLng = i18next.language;
+  const localize = locI18next.init(i18next);
+
+  const languageSelector = document.querySelector('#language-selector');
+  supportedLanguages.forEach(lng => {
+    const name = langmap[lng].nativeName;
+    const option = document.createElement('option');
+    option.value = lng;
+    option.innerText = name;
+    languageSelector.appendChild(option);
+  });
+  languageSelector.value = currentLng;
+
+  const handleLanguageChange = async (lng) => {
+    await i18next.changeLanguage(lng);
+    localize('body');
+  };
+
+  languageSelector.addEventListener('change',
+    async (event) => await handleLanguageChange(event.target.value)
+  );
+
+  i18next.on('languageChanged', (lng) => {
+    if (lng !== currentLng) {
+      const url = new URL(window.location.href);
+      const urlSearchParams = new URLSearchParams(url.search);
+      if (urlSearchParams.has('lang')) {
+        urlSearchParams.set('lang', lng);
+        url.search = urlSearchParams.toString();
+        window.history.pushState({ path: url.href }, '', url.href);
+      }
+    }
+  });
+
+  localize('body');
+}
+
 async function main() {
   const parent = document.createElement('div');
   parent.id = 'network-container';
@@ -100,6 +143,8 @@ async function main() {
   const { levels, languages } = loadConfig(configObj, configUrl);
 
   const i18n = await createI18N(languages, true);
+  setupLanguageSelector(i18n, languages);
+
   SequentialLevelLoader.preload(...levels).then(processPreloadResults);
   const levelLoader = new SequentialLevelLoader(i18n);
   const sliderController = new SliderController(levels.map(({ name, url }) => name));

@@ -1,4 +1,3 @@
-  
 .box.tabbed
   .tabs
     #missionbutton.tab.selected
@@ -8,19 +7,19 @@
       #description
     .helper.absolute
       div(style="flex:1;")
-        p Show gradient
+        p(data-i18n="main:mission-control.show-gradient")
           label.switch
             input(type="checkbox")#showgradient
             span.slider.round
       div(style="flex:1; width: 100%;")
-        p Train with gradient descent:
+        p(data-i18n="main:mission-control.train")
           .controls
-            div(title="reset training").reset
-            div(title="pause/resume training (continious gradient descent steps)").pause-resume.pause
-            div(title="train a single step (Adjust parameters with gradient descent)").single-step
+            div(data-i18n="[title]main:mission-control.reset-button").reset
+            div(data-i18n="[title]main:mission-control.pause-resume-button").pause-resume.pause
+            div(data-i18n="[title]main:mission-control.single-step-button").single-step
 .box.trainingdata.visible
   div
-    p(style="font-weight:600;") Training Data
+    p(style="font-weight:600;", data-i18n="main:training-data.title")
   div
     table#trainingtable
   //.v-seperator
@@ -29,5 +28,5 @@
     .center-formula
       p#totalerror
       p.formula
-        span  = 
+        span
         span#totalerrorterm

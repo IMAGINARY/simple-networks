@@ -60,6 +60,7 @@ const paths = {
       'interval-arithmetic',
       'js-yaml',
       'langmap',
+      'loc-i18next',
       'lodash',
     ].concat([
       // Other packages that are not included via 'import'

@@ -1,9 +1,11 @@
 .footer
+  form
+    select#language-selector
   //.navigation
   //  a#backbutton.navbutton Previous Level
   //  a#nextbutton.navbutton Next Level
   .footerbox
-    #backbutton.button Previous Level
+    #backbutton.button(data-i18n="main:slider.previous")
   .footerbox
     #navcircles.circles
       a.circ(href="index.html#1").selected
@@ -11,7 +13,7 @@
       a.circ(href="index.html#3")
       a.circ(href="index.html#4")
   .footerbox
-    #nextbutton.button Next Level
+    #nextbutton.button(data-i18n="main:slider.next")
   //.footerbox(style="flex:0")
     //#creditsbutton.icon
     //#internationalbutton.icon

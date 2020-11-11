@@ -1,0 +1,12 @@
+title: Passe das Neuronale Netzwerk an die Trainingsdaten an
+slider:
+  previous: Voriges Level
+  next: Nächstes Level
+mission-control:
+  show-gradient: Gradient anzeigen
+  train: 'Netzwerkparameter mit Gradientenverfahren trainieren:'
+  reset-button: Netzwerkparameter zurücksetzen
+  pause-resume-button: Kontinuierliches Training anhalten/fortsetzen
+  single-step-button: Einzelschritt des Gradientenverfahrens
+training-data:
+  title: Trainingsdaten
