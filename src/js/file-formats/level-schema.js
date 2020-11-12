@@ -182,7 +182,7 @@ const levelSchema = {
             {
               "type": "object",
               "properties": {
-                "node": { "$ref": "#/definitions/label" },
+                "name": { "$ref": "#/definitions/label" },
                 "input": { "$ref": "#/definitions/label" },
               },
               "additionalProperties": false,
@@ -190,7 +190,7 @@ const levelSchema = {
             {
               "type": "object",
               "properties": {
-                "node": { "$ref": "#/definitions/label" },
+                "name": { "$ref": "#/definitions/label" },
                 "bias": { "$ref": "#/definitions/label" },
                 "activationFunc": { "$ref": "#/definitions/label" },
               },
