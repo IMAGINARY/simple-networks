@@ -462,7 +462,7 @@ export default class View extends EventEmitter {
     const svgNodeZeroLine = !debug ? svgNodeGroup.group() : svgNodeGroup.path(zeroLinePathBuilder())
       .attr({ stroke: 'orange' });
 
-    const svgIdLabel = this._labelLayer.plain(node.id)
+    const svgIdLabel = this._labelLayer.plain(node.isInput() || node.isOutput() ? node.id : '')
       .attr(np.gridPos)
       .attr({
         'text-anchor': 'middle',
