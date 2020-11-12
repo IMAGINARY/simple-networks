@@ -26,8 +26,6 @@ export default class View extends EventEmitter {
     this._props = Object.assign({}, ...ids.map(id => ({ [id]: immutableProps[id] ?? {} })));
     this._updateProps(predictionExt);
 
-    this._updateProps(predictionExt);
-
     this._viewUpdaters = this._createSubViews();
   }
 
