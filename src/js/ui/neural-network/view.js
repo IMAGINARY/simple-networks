@@ -466,6 +466,7 @@ export default class View extends EventEmitter {
       .attr(np.gridPos)
       .attr({
         'text-anchor': 'middle',
+        'data-i18n': this._levelI18NKey('labels', node.id, 'name'),
       });
     const svgBiasLabel = this._labelLayer.plain()
       .attr(np.gridPos)
