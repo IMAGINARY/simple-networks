@@ -1,4 +1,6 @@
-title: Passe das Neuronale Netzwerk an die Trainingsdaten an
+levelDefaults:
+  title: Einfache Neuronale Netze
+  description: Passe die Bias und Gewichte des Neuronalen Netzwerkes an bis es für die angegebenen Trainingsdaten einen möglichst geringen Fehler macht.
 slider:
   previous: Voriges Level
   next: Nächstes Level

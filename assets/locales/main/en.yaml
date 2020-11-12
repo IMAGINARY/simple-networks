@@ -1,4 +1,6 @@
-title: Adjust the neural network to fit the training data
+levelDefaults:
+  title: Simple neural networks
+  description: Adjust the neural network's bias and weights until the error is minimized for the given training data.
 slider:
   previous: Previous Level
   next: Next Level

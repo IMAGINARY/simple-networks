@@ -2,10 +2,10 @@ import View from './view';
 import PredictionModel from './prediction-model';
 
 export default class Controller {
-  constructor(networkModel, inputs, targetActivationFuncs, layout, parentElem) {
+  constructor(levelName, networkModel, inputs, targetActivationFuncs, layout, parentElem) {
     this.networkModel = networkModel;
     this.predictionModel = new PredictionModel(networkModel, inputs, targetActivationFuncs);
-    this.view = new View(this.predictionModel, layout, parentElem);
+    this.view = new View(levelName, this.predictionModel, layout, parentElem);
 
     this.view.on('input-changed', this.handleInputChange.bind(this));
     this.view.on('bias-changed', this.handleBiasChange.bind(this));

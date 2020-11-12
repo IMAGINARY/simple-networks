@@ -6,10 +6,12 @@ import IOps, { Interval } from 'interval-arithmetic';
 import EventManager from '../../util/event-manager';
 import SVGPathBuilder from '../../util/svg-path-builder';
 import NodeCoordinates from './node-coordinates';
+import * as I18N from '../../util/i18n';
 
 export default class View extends EventEmitter {
-  constructor(predictionModel, layout, parentElement) {
+  constructor(levelName, predictionModel, layout, parentElement) {
     super();
+    this._levelName = levelName;
     this._predictionModel = predictionModel;
     this._network = predictionModel.getNetwork();
     this._parent = parentElement;
@@ -329,6 +331,16 @@ export default class View extends EventEmitter {
     while (this._parent.lastChild) {
       this._parent.lastChild.remove();
     }
+
+    const levelTitleEl = document.querySelector('#leveltitle');
+    const titleKey = this._levelI18NKey('title');
+    const titleFallbackKey = I18N.key('main', 'levelDefaults', 'title');
+    levelTitleEl.setAttribute('data-i18n', `${titleFallbackKey};${titleKey}`);
+
+    const levelDescription = document.querySelector('.mission #description');
+    const descKey = this._levelI18NKey('description');
+    const descFallbackKey = I18N.key('main', 'levelDefaults', 'description');
+    levelDescription.setAttribute('data-i18n', `${descFallbackKey};${descKey}`);
 
     const container = document.createElement('div');
     container.style.position = 'relative';
@@ -696,6 +708,10 @@ export default class View extends EventEmitter {
   dispose() {
     this._domEventManager.dispose();
     return this;
+  }
+
+  _levelI18NKey(...keyParts) {
+    return I18N.levelKey(this._levelName, ...keyParts);
   }
 }
 

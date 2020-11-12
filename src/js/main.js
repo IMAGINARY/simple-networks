@@ -11,8 +11,6 @@ import { load as loadLevel } from './file-formats/load-level';
 import { load as loadConfig } from './file-formats/load-config';
 import { AsyncFunctionQueue } from './util/async-function-queue';
 
-import locI18next from "loc-i18next";
-
 class SequentialLevelLoader {
   constructor(i18n) {
     this._i18n = i18n;
@@ -41,6 +39,7 @@ class SequentialLevelLoader {
     this._i18n.addLevelStrings(name, strings);
     const networkParentElem = document.querySelector('#network-container');
     const networkController = new NetworkController(
+      levelName,
       model,
       inputs,
       training.targetActivationFuncs,
@@ -77,6 +76,8 @@ class SequentialLevelLoader {
       levelController.dispose();
     };
 
+    this._i18n.localize('body');
+
     return true;
   }
 }
@@ -93,7 +94,6 @@ function processPreloadResults(levelPreloadResults) {
 function setupLanguageSelector(i18n, supportedLanguages) {
   const i18next = i18n.getI18NextInstance();
   const currentLng = i18next.language;
-  const localize = locI18next.init(i18next);
 
   const languageSelector = document.querySelector('#language-selector');
   supportedLanguages.forEach(lng => {
@@ -107,7 +107,7 @@ function setupLanguageSelector(i18n, supportedLanguages) {
 
   const handleLanguageChange = async (lng) => {
     await i18next.changeLanguage(lng);
-    localize('body');
+    i18n.localize('body');
   };
 
   languageSelector.addEventListener('change',
@@ -126,7 +126,7 @@ function setupLanguageSelector(i18n, supportedLanguages) {
     }
   });
 
-  localize('body');
+  i18n.localize('body');
 }
 
 async function main() {

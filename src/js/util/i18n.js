@@ -1,4 +1,5 @@
 import i18next from 'i18next';
+import locI18next from "loc-i18next";
 import LanguageDetector from 'i18next-browser-languagedetector';
 import { default as HttpBackend } from 'i18next-http-backend';
 import { uniq } from 'lodash';
@@ -11,6 +12,7 @@ const mapping = Object.fromEntries([...escapeChars].map(cp => [cp, `#${cp.codePo
 class I18N {
   constructor(i18NextInstance) {
     this._instance = i18NextInstance;
+    this.localize = locI18next.init(i18NextInstance);
   }
 
   getI18NextInstance() {
@@ -20,26 +22,22 @@ class I18N {
   addLevelStrings(levelName, levelStrings) {
     const bundles = transformToI18NResourceBundles(levelStrings);
     for (let [lng, bundle] of Object.entries(bundles)) {
-      const ns = I18N.levelNamespace(levelName);
+      const ns = levelNamespace(levelName);
       this._instance.addResourceBundle(lng, ns, bundle, true, true);
     }
   }
 
-  static levelNamespace(levelName) {
-    return `level_${levelName}`;
-  }
-
-  static escape(keyComponent) {
-    return [...keyComponent].map(codepoint => mapping[codepoint] ?? codepoint).join('');
-  }
-
   getFixedLevelT(levelName) {
-    return this._instance.getFixedT(null, I18N.levelNamespace(levelName));
+    return this._instance.getFixedT(null, levelNamespace(levelName));
   }
 
   getFixedLevelLabelT(levelName) {
     const tLevel = this.getFixedLevelT(levelName);
     return (id, labelFor, ...args) => tLevel(`labels.${escape(id)}.${labelFor}`, ...args);
+  }
+
+  localize(...args) {
+    // Dummy. Replaced in constructor.
   }
 }
 
@@ -68,6 +66,8 @@ export default async function createI18N(languages, preloadLanguages = false) {
     .use(LanguageDetector)
     .use(HttpBackend)
     .init(i18nextOptions);
+
+  languages.forEach(lng => newInstance.addResource(lng, 'internal', 'empty', ''));
 
   return new I18N(newInstance);
 }
@@ -105,7 +105,8 @@ function filterLanguage(strings, lang) {
       result.labels[escapedId] = {};
       Object.entries(labels).forEach(([propertyName, propertyObj]) => {
         if (typeof propertyObj?.text?.[lang] !== 'undefined') {
-          result.labels[escapedId][propertyName] = propertyObj?.text?.[lang];
+          const escapedPropertyName = escape(propertyName);
+          result.labels[escapedId][escapedPropertyName] = propertyObj?.text?.[lang];
         }
       });
     });
@@ -113,4 +114,24 @@ function filterLanguage(strings, lang) {
   return result;
 }
 
-export { createI18N };
+function levelNamespace(levelName) {
+  return `level_${escape(levelName)}`;
+}
+
+function escape(keyComponent) {
+  return [...keyComponent].map(codepoint => mapping[codepoint] ?? codepoint).join('');
+}
+
+function _key(ns, ...keyParts) {
+  return `${ns}:${keyParts.join('.')}`;
+}
+
+function key(ns, ...keyParts) {
+  return _key(ns, ...keyParts.map(escape));
+}
+
+function levelKey(levelName, ...keyParts) {
+  return _key(levelNamespace(levelName), ...keyParts);
+}
+
+export { createI18N, escape, levelNamespace, key, levelKey };
