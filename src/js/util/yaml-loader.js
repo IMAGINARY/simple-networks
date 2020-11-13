@@ -5,7 +5,12 @@ export default class YAMLLoader {
   static async fromUrl(url, cache = true) {
     const response = await (cache ? fetchWithCache(url.href) : fetch(url.href));
     const levelSrc = await response.text();
-    return YAMLLoader.fromString(levelSrc);
+    if (!response.ok) {
+      const msg = `Unable to fetch ${url.href}. Error ${response.status}: ${response.statusText}`;
+      throw new Error(msg);
+    } else {
+      return YAMLLoader.fromString(levelSrc);
+    }
   }
 
   static fromString(s) {
