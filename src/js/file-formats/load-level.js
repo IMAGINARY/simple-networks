@@ -14,11 +14,11 @@ import { normalizeAndStripBCP47Tag } from '../util/language-utils';
 
 const validate = Validator.createValidateFunction(levelSchema);
 
-export default function load(levelObj, levelUrl) {
+export default function load({ object: levelObj, url, name }) {
   const { valid, errors } = validate(levelObj);
   if (!valid) {
     console.error(errors);
-    throw new Error(`Unable to validate level file ${levelUrl.href}. Please check the developer console for details.`);
+    throw new Error(`Unable to validate level ${name} from file ${url.href}. Please check the developer console for details.`);
   }
 
   const { nodeDefaults, edgeDefaults } = processDefaultProperties(levelObj.defaultProperties);
@@ -49,7 +49,7 @@ export default function load(levelObj, levelUrl) {
     "en",
     model.network
   );
-  
+
   return { model, inputs, layout, training, strings };
 }
 
