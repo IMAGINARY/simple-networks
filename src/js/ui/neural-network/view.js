@@ -20,7 +20,7 @@ export default class View extends EventEmitter {
     this._i18n = i18n;
     this._formatNumber = i18n.getNumberFormatter();
 
-    this._domEventManager = new EventManager();
+    this._eventManager = new EventManager();
 
     this._coords = new NodeCoordinates(layout);
 
@@ -37,9 +37,13 @@ export default class View extends EventEmitter {
 
     this._viewUpdaters = this._createSubViews();
     this.localize();
-    this._i18n.getI18NextInstance().on('languageChanged', this.localize.bind(this));
+    this._eventManager.addEventListener(
+      this._i18n.getI18NextInstance(),
+      'languageChanged',
+      this.localize.bind(this),
+    );
 
-    if(!new URLSearchParams(location.search).has('tooltip')) {
+    if (!new URLSearchParams(location.search).has('tooltip')) {
       this._tippies.forEach(t => t.hide());
     }
   }
@@ -426,7 +430,7 @@ export default class View extends EventEmitter {
       svgBiasHandle,
       this._coordAnchor,
       ({ y }) => this._biasChanged(node, this._biasFromY(y, np)),
-      this._domEventManager,
+      this._eventManager,
     );
 
     const svgSumHandle = this._handleLayer.circle(View.HANDLE_RADIUS)
@@ -442,7 +446,7 @@ export default class View extends EventEmitter {
         svgActivationHandle,
         this._coordAnchor,
         ({ y }) => this._inputChanged(node, this._inputFromY(y, np)),
-        this._domEventManager,
+        this._eventManager,
       );
 
       const inputDescriptionElem = document.createElement('div');
@@ -749,7 +753,7 @@ export default class View extends EventEmitter {
       svgWeightHandle,
       this._coordAnchor,
       ({ y }) => this._weightChanged(edge, this._weightFromY(y, ep)),
-      this._domEventManager,
+      this._eventManager,
     );
 
     const weightDescriptionElem = document.createElement('div');
@@ -828,7 +832,7 @@ export default class View extends EventEmitter {
   }
 
   dispose() {
-    this._domEventManager.dispose();
+    this._eventManager.dispose();
     this._tippies.forEach(t => t.destroy());
     this.removeAllListeners();
     return this;
@@ -913,12 +917,12 @@ class VerticalDraggable {
     this._svgElem = svgElem;
     this._anchorElem = anchorElem;
     this._dragHandler = dragHandler;
-    this._domEventManager = domEventManager;
+    this._eventManager = domEventManager;
     this._moveHandler = ev => this._move(ev);
     this._upHandler = ev => this._up(ev);
 
-    const ael = this._domEventManager.ael;
-    const rel = this._domEventManager.rel;
+    const ael = this._eventManager.ael;
+    const rel = this._eventManager.rel;
     ael(svgElem.node, 'pointerdown', ev => this._down(ev));
     this._emMoveHandler = rel(window, 'pointermove', this._moveHandler.bind(this));
     this._emUpHandler = rel(window, 'pointerup', this._upHandler.bind(this));

@@ -1,6 +1,8 @@
 import { EventEmitter } from 'events';
 import { zip } from 'lodash';
 
+import EventManager from '../../util/event-manager';
+
 export default class TrainingDataView extends EventEmitter {
   constructor({ model, i18n }) {
     super();
@@ -13,7 +15,13 @@ export default class TrainingDataView extends EventEmitter {
     this._setupDOM();
 
     this.localize();
-    this._i18n.getI18NextInstance().on('languageChanged', this.localize.bind(this));
+
+    this.eventManager = new EventManager();
+    this.eventManager.addEventListener(
+      this._i18n.getI18NextInstance(),
+      'languageChanged',
+      this.localize.bind(this)
+    );
   }
 
   _setupDOM() {
@@ -148,7 +156,7 @@ export default class TrainingDataView extends EventEmitter {
   }
 
   dispose() {
-    // Nothing to do yet since not event listeners are connected to the DOM
+    this.eventManager.dispose();
   }
 
   localize() {
