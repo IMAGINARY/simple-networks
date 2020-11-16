@@ -1,6 +1,15 @@
 levelDefaults:
   title: Einfache Neuronale Netze
-  description: Passe die Bias und Gewichte des Neuronalen Netzwerkes an bis es für die angegebenen Trainingsdaten einen möglichst geringen Fehler macht.
+  description: Passe die Bias und Gewichtungen des Neuronalen Netzwerkes an bis es für die angegebenen Trainingsdaten einen möglichst geringen Fehler macht.
+  labels:
+    node:
+      name: ''
+      bias: Bias
+      input: Eingabe
+      sum: Summe
+      activation: Aktivierung
+    edge:
+      weight: Gewichtung
 slider:
   previous: Voriges Level
   next: Nächstes Level

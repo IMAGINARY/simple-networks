@@ -88,7 +88,7 @@ const levelSchema = {
           "type": "object",
           "properties": {
             "text": { "$ref": "#/definitions/stringOrI18N" },
-            "permanent": { "type": "boolean" },
+            "alwaysOn": { "type": "boolean" },
             "highlight": { "type": "boolean" },
           },
         }

@@ -62,6 +62,7 @@ const paths = {
       'langmap',
       'loc-i18next',
       'lodash',
+      'tippy.js',
     ].concat([
       // Other packages that are not included via 'import'
     ]),
@@ -69,6 +70,16 @@ const paths = {
       './package-lock.json',
     ],
     dest: `${OUTPUT_DIR}/assets/js`,
+  },
+  styleDependencies: {
+    src: [
+      './sass/dependencies.scss',
+    ],
+    watchSrc: [
+      './sass/dependencies.scss',
+      './package-lock.json',
+    ],
+    dest: `${OUTPUT_DIR}/assets/css`,
   },
   fonts: {
     src: './node_modules/typeface-roboto/**/*',
@@ -94,14 +105,22 @@ function html() {
     .pipe(touch());
 }
 
-function styles() {
-  return gulp.src(paths.styles.src, {
+function _styles({ src, dest }) {
+  return gulp.src(src, {
       sourcemaps: true,
     })
     .pipe(sourcemaps.init())
     .pipe(sass().on('error', sass.logError))
     .pipe(sourcemaps.write('.'))
-    .pipe(gulp.dest(paths.styles.dest));
+    .pipe(gulp.dest(dest));
+}
+
+function styles() {
+  return _styles(paths.styles);
+}
+
+function styleDependencies() {
+  return _styles(paths.styleDependencies);
 }
 
 function dependencies() {
@@ -158,6 +177,7 @@ function fonts() {
 }
 
 function watch() {
+  gulp.watch(paths.styleDependencies.watchSrc || paths.styleDependencies.src, styleDependencies);
   gulp.watch(paths.styles.watchSrc || paths.styles.src, styles);
   gulp.watch(paths.dependencies.watchSrc || paths.dependencies.src, dependencies);
   gulp.watch(paths.scripts.watchSrc || paths.scripts.src, scripts);
@@ -165,9 +185,10 @@ function watch() {
   gulp.watch(paths.fonts.watchSrc || paths.fonts.src, fonts);
 }
 
-const build = gulp.parallel(html, styles, dependencies, scripts, fonts);
+const build = gulp.parallel(html, styleDependencies, styles, dependencies, scripts, fonts);
 
 exports.dependencies = dependencies;
+exports.styleDependencies = styleDependencies;
 exports.html = html;
 exports.styles = styles;
 exports.scripts = scripts;

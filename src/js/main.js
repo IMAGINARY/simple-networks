@@ -38,13 +38,16 @@ class SequentialLevelLoader {
   _loadUI({ name, model, inputs, training, layout, strings }) {
     this._i18n.addLevelStrings(name, strings);
     const networkParentElem = document.querySelector('#network-container');
-    const networkController = new NetworkController(
-      levelName,
-      model,
-      inputs,
-      training.targetActivationFuncs,
-      layout,
-      networkParentElem,
+    const networkController = new NetworkController({
+        levelName: name,
+        networkModel: model,
+        inputs,
+        targetActivationFuncs: training.targetActivationFuncs,
+        layout,
+        parentElem: networkParentElem,
+        strings,
+        i18n: this._i18n,
+      }
     );
 
     const inputNodeIds = model.network.inputNodeIds;
@@ -56,7 +59,12 @@ class SequentialLevelLoader {
     };
     const trainingTargets = training.inputs.map(computeTargets);
 
-    const levelController = new LevelController(model, training.inputs, trainingTargets);
+    const levelController = new LevelController({
+      networkModel: model,
+      trainingInputs: training.inputs,
+      trainingTargets,
+      i18n: this._i18n,
+    });
 
     return { networkController, levelController };
   }
@@ -75,8 +83,6 @@ class SequentialLevelLoader {
       networkController.dispose();
       levelController.dispose();
     };
-
-    this._i18n.localize('body');
 
     return true;
   }
@@ -105,9 +111,11 @@ function setupLanguageSelector(i18n, supportedLanguages) {
   });
   languageSelector.value = currentLng;
 
+  const localizeMain = () => i18n.localize('.footer, .train .trainingdata, .train .helper');
+
   const handleLanguageChange = async (lng) => {
     await i18next.changeLanguage(lng);
-    i18n.localize('body');
+    localizeMain();
   };
 
   languageSelector.addEventListener('change',
@@ -126,7 +134,7 @@ function setupLanguageSelector(i18n, supportedLanguages) {
     }
   });
 
-  i18n.localize('body');
+  localizeMain();
 }
 
 async function main() {

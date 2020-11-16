@@ -6,7 +6,7 @@ import { EventEmitter } from 'events';
 import MissionControlsView from './mission-controls-view';
 
 export default class Controller extends EventEmitter {
-  constructor(networkModel, trainingInputs, trainingTargets) {
+  constructor({ networkModel, trainingInputs, trainingTargets, i18n }) {
     super();
 
     this._networkModel = networkModel;
@@ -24,7 +24,7 @@ export default class Controller extends EventEmitter {
       trainingTargets,
       networkModel,
     );
-    this._trainingDataView = new TrainingDataView(this._trainingModel);
+    this._trainingDataView = new TrainingDataView({ model: this._trainingModel, i18n });
 
     this._missionControlsView = new MissionControlsView();
     this._missionControlsView.showHelpTab();
