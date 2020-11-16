@@ -1,0 +1,23 @@
+levelDefaults:
+  title: Einfache Neuronale Netze
+  description: Passe die Bias und Gewichtungen des Neuronalen Netzwerkes an bis es für die angegebenen Trainingsdaten einen möglichst geringen Fehler macht.
+  labels:
+    node:
+      name: ''
+      bias: Bias
+      input: Eingabe
+      sum: Summe
+      activation: Aktivierung
+    edge:
+      weight: Gewichtung
+slider:
+  previous: Voriges Level
+  next: Nächstes Level
+mission-control:
+  show-gradient: Gradient anzeigen
+  train: 'Netzwerkparameter mit Gradientenverfahren trainieren:'
+  reset-button: Netzwerkparameter zurücksetzen
+  pause-resume-button: Kontinuierliches Training anhalten/fortsetzen
+  single-step-button: Einzelschritt des Gradientenverfahrens
+training-data:
+  title: Trainingsdaten

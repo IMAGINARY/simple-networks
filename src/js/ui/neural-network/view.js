@@ -2,19 +2,25 @@ import { EventEmitter } from 'events';
 import { SVG } from '@svgdotjs/svg.js';
 import Bezier from 'bezier-js';
 import IOps, { Interval } from 'interval-arithmetic';
+import tippy from 'tippy.js';
 
-import { DOMEventManager } from '../../util/dom-event-manager';
+import EventManager from '../../util/event-manager';
 import SVGPathBuilder from '../../util/svg-path-builder';
 import NodeCoordinates from './node-coordinates';
+import * as I18N from '../../util/i18n';
 
 export default class View extends EventEmitter {
-  constructor(predictionModel, layout, parentElement) {
+  constructor({ levelName, predictionModel, layout, parentElement, strings, i18n }) {
     super();
+    this._levelName = levelName;
     this._predictionModel = predictionModel;
     this._network = predictionModel.getNetwork();
     this._parent = parentElement;
+    this._strings = strings;
+    this._i18n = i18n;
+    this._formatNumber = i18n.getNumberFormatter();
 
-    this._domEventManager = new DOMEventManager();
+    this._eventManager = new EventManager();
 
     this._coords = new NodeCoordinates(layout);
 
@@ -26,7 +32,20 @@ export default class View extends EventEmitter {
     this._props = Object.assign({}, ...ids.map(id => ({ [id]: immutableProps[id] ?? {} })));
     this._updateProps(predictionExt);
 
+    this._localizables = [];
+    this._tippies = [];
+
     this._viewUpdaters = this._createSubViews();
+    this.localize();
+    this._eventManager.addEventListener(
+      this._i18n.getI18NextInstance(),
+      'languageChanged',
+      this.localize.bind(this),
+    );
+
+    if (!new URLSearchParams(location.search).has('tooltip')) {
+      this._tippies.forEach(t => t.hide());
+    }
   }
 
   static _buildEdgePaths({ fromPos, fromActivation, toPos, toActivation }) {
@@ -330,6 +349,18 @@ export default class View extends EventEmitter {
       this._parent.lastChild.remove();
     }
 
+    const levelTitleEl = document.querySelector('#leveltitle');
+    const titleKey = this._levelI18NKey('title');
+    const titleFallbackKey = I18N.key('main', 'levelDefaults', 'title');
+    levelTitleEl.setAttribute('data-i18n', `${titleFallbackKey};${titleKey}`);
+    this._localizables.push(levelTitleEl);
+
+    const levelDescription = document.querySelector('.mission #description');
+    const descKey = this._levelI18NKey('description');
+    const descFallbackKey = I18N.key('main', 'levelDefaults', 'description');
+    levelDescription.setAttribute('data-i18n', `${descFallbackKey};${descKey}`);
+    this._localizables.push(levelDescription);
+
     const container = document.createElement('div');
     container.style.position = 'relative';
 
@@ -378,6 +409,8 @@ export default class View extends EventEmitter {
   _createNodeView(node) {
     const np = this._props[node.id];
 
+    const tippies = [];
+
     // set up DOM elements and certain static/default properties
     const svgNodeGroup = this._nodeLayer.group();
     const svgNodeRect = svgNodeGroup.rect(View.NODE_SIZE.x, View.NODE_SIZE.y)
@@ -397,23 +430,96 @@ export default class View extends EventEmitter {
       svgBiasHandle,
       this._coordAnchor,
       ({ y }) => this._biasChanged(node, this._biasFromY(y, np)),
-      this._domEventManager,
+      this._eventManager,
     );
 
     const svgSumHandle = this._handleLayer.circle(View.HANDLE_RADIUS)
       .cx(np.gridPos.x)
-      .css({ 'visibility': node.isInput() ? 'hidden' : 'visible' });
+      .css({ 'visibility': 'hidden' });
 
     const svgActivationHandle = this._handleLayer.circle(View.HANDLE_RADIUS)
-      .cx(np.gridPos.x + 0.5 * View.NODE_SIZE.x);
+      .cx(np.gridPos.x + 0.5 * View.NODE_SIZE.x)
+      .css({ 'visibility': node.isInput() ? 'visible' : 'hidden' });
 
     if (node.isInput()) {
       const inputDraggable = new VerticalDraggable(
         svgActivationHandle,
         this._coordAnchor,
         ({ y }) => this._inputChanged(node, this._inputFromY(y, np)),
-        this._domEventManager,
+        this._eventManager,
       );
+
+      const inputDescriptionElem = document.createElement('div');
+      const inputDescriptionKey = this._levelI18NKey('labels', node.id, 'input');
+      const inputDescriptionFallbackKey = I18N.key('main',
+        'levelDefaults',
+        'labels',
+        'node',
+        'input');
+      inputDescriptionElem.setAttribute('data-i18n',
+        `${inputDescriptionFallbackKey};${inputDescriptionKey}`);
+      const inputDescriptionTippy = tippy(svgActivationHandle.node, {
+        content: inputDescriptionElem,
+        showOnCreate: true,
+        trigger: 'manual',
+        hideOnClick: false,
+        placement: 'right',
+      });
+      this._localizables.push(inputDescriptionElem);
+      tippies.push(inputDescriptionTippy);
+    } else {
+      const biasDescriptionElem = document.createElement('div');
+      const biasDescriptionKey = this._levelI18NKey('labels', node.id, 'bias');
+      const biasDescriptionFallbackKey = I18N.key('main',
+        'levelDefaults',
+        'labels',
+        'node',
+        'bias');
+      biasDescriptionElem.setAttribute('data-i18n',
+        `${biasDescriptionFallbackKey};${biasDescriptionKey}`);
+      const biasDescriptionTippy = tippy(svgBiasHandle.node, {
+        content: biasDescriptionElem,
+        showOnCreate: true,
+        trigger: 'manual',
+        hideOnClick: false,
+        placement: 'left',
+      });
+      this._localizables.push(biasDescriptionElem);
+      tippies.push(biasDescriptionTippy);
+
+      const sumDescriptionElem = document.createElement('div');
+      const sumDescriptionKey = this._levelI18NKey('labels', node.id, 'sum');
+      const sumDescriptionFallbackKey = I18N.key('main', 'levelDefaults', 'labels', 'node', 'sum');
+      sumDescriptionElem.setAttribute('data-i18n',
+        `${sumDescriptionFallbackKey};${sumDescriptionKey}`);
+      const sumDescriptionTippy = tippy(svgSumHandle.node, {
+        content: sumDescriptionElem,
+        showOnCreate: true,
+        trigger: 'manual',
+        hideOnClick: false,
+        placement: 'bottom',
+      });
+      this._localizables.push(sumDescriptionElem);
+      tippies.push(sumDescriptionTippy);
+
+      const activationDescriptionElem = document.createElement('div');
+      const activationDescriptionKey = this._levelI18NKey('labels', node.id, 'activation');
+      const activationDescriptionFallbackKey = I18N.key('main',
+        'levelDefaults',
+        'labels',
+        'node',
+        'activation');
+      activationDescriptionElem.setAttribute('data-i18n',
+        `${activationDescriptionFallbackKey};${activationDescriptionKey}`);
+      const activationDescriptionTippy = tippy(svgActivationHandle.node, {
+        content: activationDescriptionElem,
+        showOnCreate: true,
+        trigger: 'manual',
+        hideOnClick: false,
+        placement: 'right',
+      });
+      this._localizables.push(activationDescriptionElem);
+      tippies.push(activationDescriptionTippy);
     }
 
     const debug = false;
@@ -450,10 +556,11 @@ export default class View extends EventEmitter {
     const svgNodeZeroLine = !debug ? svgNodeGroup.group() : svgNodeGroup.path(zeroLinePathBuilder())
       .attr({ stroke: 'orange' });
 
-    const svgIdLabel = this._labelLayer.plain(node.id)
+    const svgIdLabel = this._labelLayer.plain(node.isInput() || node.isOutput() ? node.id : '')
       .attr(np.gridPos)
       .attr({
         'text-anchor': 'middle',
+        'data-i18n': this._levelI18NKey('labels', node.id, 'name'),
       });
     const svgBiasLabel = this._labelLayer.plain()
       .attr(np.gridPos)
@@ -560,6 +667,7 @@ export default class View extends EventEmitter {
           height: View.NODE_SIZE.y + np.innerHeight
         })
         .transform({ translateY: -0.5 * np.innerHeight });
+
       svgIdLabel
         .attr(np.gridPos)
         .dy(-np.innerHeight / 2 - View.NODE_SIZE.y / 8)
@@ -567,12 +675,12 @@ export default class View extends EventEmitter {
           'text-anchor': 'middle',
         });
       svgBiasHandle.cy(np.gridPos.y - np.zeroGridOffsetY - np.bias * this._flowScale);
-      svgBiasLabel.plain(formatNumber(np.bias));
+      svgBiasLabel.plain(this._formatNumber(np.bias));
       svgSumHandle.cy(np.gridPos.y - np.zeroGridOffsetY - np.sum * this._flowScale);
       svgActivationHandle.cy(np.gridPos.y - np.zeroGridOffsetY - np.activation
         * this._flowScale);
       svgActivationLabel
-        .plain(formatNumber(np.activation))
+        .plain(this._formatNumber(np.activation))
         .y(np.gridPos.y - np.zeroGridOffsetY)
         .dy(-np.activation * this._flowScale)
         .dy(-3); // TODO: don't hardcode
@@ -596,20 +704,26 @@ export default class View extends EventEmitter {
       }
       if (node.isOutput()) {
         svgTargetLine.plot(targetLineBuilder());
-        svgTargetLabel.plain(formatNumber(np.target))
+        svgTargetLabel.plain(this._formatNumber(np.target))
           .y(np.gridPos.y - np.zeroGridOffsetY)
           .dy(-np.target * this._flowScale)
           .dy(-3); // TODO: don't hardcode
       }
+
+      tippies.forEach(t => t.popperInstance !== null ? t.popperInstance.update() : true);
     };
 
     update();
+
+    this._tippies.push(...tippies);
 
     return update;
   }
 
   _createEdgeView(edge) {
     const ep = this._props[edge.id];
+
+    const tippies = [];
 
     const svgEdgeGroup = this._edgeLayer.group()
       .attr({
@@ -639,8 +753,26 @@ export default class View extends EventEmitter {
       svgWeightHandle,
       this._coordAnchor,
       ({ y }) => this._weightChanged(edge, this._weightFromY(y, ep)),
-      this._domEventManager,
+      this._eventManager,
     );
+
+    const weightDescriptionElem = document.createElement('div');
+    const weightDescriptionKey = this._levelI18NKey('labels', edge.id, 'weight');
+    const weightDescriptionFallbackKey = I18N.key('main',
+      'levelDefaults',
+      'labels',
+      'edge',
+      'weight');
+    weightDescriptionElem.setAttribute('data-i18n',
+      `${weightDescriptionFallbackKey};${weightDescriptionKey}`);
+    this._localizables.push(weightDescriptionElem);
+
+    const weightDescriptionTippy = tippy(svgWeightHandle.node, {
+      content: weightDescriptionElem,
+      placement: 'top',
+      ...this._tippyOptionsForLabel(this._strings?.labels?.[edge.id]?.weight),
+    });
+    tippies.push(weightDescriptionTippy);
 
     const update = () => {
       svgEdge.plot(ep.edgePath);
@@ -649,11 +781,15 @@ export default class View extends EventEmitter {
         .attr({ fill: ep.fromActivationColor });
       svgToActivation.plot(ep.toActivationEdgePath)
         .attr({ fill: ep.toActivationColor });
-      svgWeightLabel.plain(formatNumber(ep.weight))
+      svgWeightLabel.plain(this._formatNumber(ep.weight))
         .attr(ep.labelPos);
       svgWeightHandle.center(ep.handlePos.x, ep.handlePos.y);
+
+      tippies.forEach(t => t.popperInstance !== null ? t.popperInstance.update() : true);
     };
     update();
+
+    this._tippies.push(...tippies);
 
     return update;
   }
@@ -686,7 +822,9 @@ export default class View extends EventEmitter {
    * Update DOM based on model
    */
   update(predictionExt) {
-    this._updateProps(predictionExt);
+    if (typeof predictionExt !== 'undefined') {
+      this._updateProps(predictionExt);
+    }
     for (let updater of this._viewUpdaters) {
       updater();
     }
@@ -694,8 +832,29 @@ export default class View extends EventEmitter {
   }
 
   dispose() {
-    this._domEventManager.dispose();
+    this._eventManager.dispose();
+    this._tippies.forEach(t => t.destroy());
+    this.removeAllListeners();
     return this;
+  }
+
+  _levelI18NKey(...keyParts) {
+    return I18N.levelKey(this._levelName, ...keyParts);
+  }
+
+  _tippyOptionsForLabel({ alwaysOn = false } = {}) {
+    return {
+      showOnCreate: alwaysOn,
+      trigger: alwaysOn ? 'manual' : 'mouseenter touchstart',
+      hideOnClick: false,
+    };
+  }
+
+  localize() {
+    this._formatNumber = this._i18n.getNumberFormatter();
+    this.update();
+    this._i18n.localize(this._localizables);
+    this._tippies.forEach(t => (t?.popperInstance?.update ?? (() => true))());
   }
 }
 
@@ -708,7 +867,7 @@ View.NODE_SIZE = {
   y: Math.min(View.GRID_SCALE.x, View.GRID_SCALE.y) / 4,
 };
 View.NODE_MAX_INNER_HEIGHT = (View.GRID_SCALE.y - View.NODE_SIZE.y) * 0.9;
-View.NODE_RADIUS = View.NODE_SIZE.y * 0.5 * 0.7;
+View.NODE_RADIUS = View.NODE_SIZE.y * 0.5;
 View.LABEL_FONT_SIZE = 16; // TODO: Move to CSS if possible // px
 View.HANDLE_RADIUS = 10;
 
@@ -745,8 +904,6 @@ const fillColor = node => {
 };
 
 const activationColor = activation => activation >= 0 ? 'blue' : 'red';
-const formatNumber = n => (n >= 0 ? ' ' : '') + Number(n)
-  .toFixed(2);
 
 const gridX = x => View.GRID_SCALE.x * x;
 const gridY = y => View.GRID_SCALE.y * y;
@@ -760,12 +917,12 @@ class VerticalDraggable {
     this._svgElem = svgElem;
     this._anchorElem = anchorElem;
     this._dragHandler = dragHandler;
-    this._domEventManager = domEventManager;
+    this._eventManager = domEventManager;
     this._moveHandler = ev => this._move(ev);
     this._upHandler = ev => this._up(ev);
 
-    const ael = this._domEventManager.ael;
-    const rel = this._domEventManager.rel;
+    const ael = this._eventManager.ael;
+    const rel = this._eventManager.rel;
     ael(svgElem.node, 'pointerdown', ev => this._down(ev));
     this._emMoveHandler = rel(window, 'pointermove', this._moveHandler.bind(this));
     this._emUpHandler = rel(window, 'pointerup', this._upHandler.bind(this));

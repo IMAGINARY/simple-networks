@@ -13,11 +13,16 @@ const configSchema = {
       "minItems": 1,
       "uniqueItems": true,
     },
-    "defaultLanguage": {
-      "type": "string",
-    }
+    "languages": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "uniqueItems": true,
+    },
   },
-  "required": ["levels"],
+  "required": ["levels", "languages"],
   "additionalProperties": false,
 };
 

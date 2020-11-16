@@ -1,14 +1,27 @@
 import { EventEmitter } from 'events';
 import { zip } from 'lodash';
 
+import EventManager from '../../util/event-manager';
+
 export default class TrainingDataView extends EventEmitter {
-  constructor(model) {
+  constructor({ model, i18n }) {
     super();
     this._model = model;
+    this._i18n = i18n;
+    this._formatNumber = this._i18n.getNumberFormatter();
     this._table = document.querySelector('#trainingtable');
     this._table.setAttribute('border', 1);
 
     this._setupDOM();
+
+    this.localize();
+
+    this.eventManager = new EventManager();
+    this.eventManager.addEventListener(
+      this._i18n.getI18NextInstance(),
+      'languageChanged',
+      this.localize.bind(this)
+    );
   }
 
   _setupDOM() {
@@ -48,21 +61,21 @@ export default class TrainingDataView extends EventEmitter {
       for (let input of inputs) {
         const td = document.createElement('td');
         td.classList.add('input');
-        td.innerText = formatNumber(input);
+        td.innerText = this._formatNumber(input);
         tr.appendChild(td);
       }
       for (let j = 0; j < targets.length; ++j) {
         const targetTd = document.createElement('td');
         targetTd.classList.add('target');
-        targetTd.innerText = formatNumber(targets[j]);
+        targetTd.innerText = this._formatNumber(targets[j]);
         tr.appendChild(targetTd);
         const predictionTd = document.createElement('td');
         predictionTd.classList.add('prediction');
-        predictionTd.innerText = formatNumber(predictions[j]);
+        predictionTd.innerText = this._formatNumber(predictions[j]);
         tr.appendChild(predictionTd);
         const errorTd = document.createElement('td');
         errorTd.classList.add('error');
-        errorTd.innerText = formatNumber(errors[j]);
+        errorTd.innerText = this._formatNumber(errors[j]);
         tr.appendChild(errorTd);
       }
       this._table.appendChild(tr);
@@ -130,21 +143,40 @@ export default class TrainingDataView extends EventEmitter {
       const [predictions, errors] = [predictionss[i], errorss[i]];
       const predictionTds = row.querySelectorAll('.prediction');
       const errorTds = row.querySelectorAll('.error');
-      zip(predictionTds, predictions).forEach(([td, p]) => td.innerText = formatNumber(p));
-      zip(errorTds, errors).forEach(([td, e]) => td.innerText = formatNumber(2 * e));
+      zip(predictionTds, predictions).forEach(([td, p]) => td.innerText = this._formatNumber(p));
+      zip(errorTds, errors).forEach(([td, e]) => td.innerText = this._formatNumber(2 * e));
     }
 
     const lossTds = this._table.querySelectorAll('.loss');
     for (let j = 0; j < this._model.getOutputIds().length; ++j) {
-      lossTds[j].innerText = formatNumber(errorSums[j]);
+      lossTds[j].innerText = this._formatNumber(errorSums[j]);
     }
 
-    this._table.querySelector('.totalLoss').innerText = formatNumber(totalError);
+    this._table.querySelector('.totalLoss').innerText = this._formatNumber(totalError);
   }
 
   dispose() {
-    // Nothing to do yet since not event listeners are connected to the DOM
+    this.eventManager.dispose();
+  }
+
+  localize() {
+    this._formatNumber = this._i18n.getNumberFormatter();
+
+    const [inputss, targetss] = [
+      this._model.getInputss(),
+      this._model.getTargetss(),
+    ];
+
+    const rows = this._table.children;
+    for (let i = 0; i < this._model.getCorpusSize(); ++i) {
+      const row = rows[i + 1]; // +1 because of the <th>
+      const [inputs, targets] = [inputss[i], targetss[i]];
+      const inputTds = row.querySelectorAll('.input');
+      const targetTds = row.querySelectorAll('.target');
+      zip(inputTds, inputs).forEach(([td, i]) => td.innerText = this._formatNumber(i));
+      zip(targetTds, targets).forEach(([td, t]) => td.innerText = this._formatNumber(t));
+    }
+
+    this.update();
   }
 }
-
-const formatNumber = n => (n >= 0 ? " " : "") + Number(n).toFixed(2);

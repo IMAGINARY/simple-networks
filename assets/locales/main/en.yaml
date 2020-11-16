@@ -1,0 +1,23 @@
+levelDefaults:
+  title: Simple neural networks
+  description: Adjust the neural network's bias and weights until the error is minimized for the given training data.
+  labels:
+    node:
+      name: ''
+      bias: Bias
+      input: Input
+      sum: Sum
+      activation: Activation
+    edge:
+      weight: Weight
+slider:
+  previous: Previous Level
+  next: Next Level
+mission-control:
+  show-gradient: Show gradient
+  train: 'Train network parameters with gradient descent:'
+  reset-button: Reset network parameters
+  pause-resume-button: Pause/resume continous training
+  single-step-button: Single step of gradient descent
+training-data:
+  title: Training data

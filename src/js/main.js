@@ -1,15 +1,19 @@
 import ready from 'document-ready';
+import * as langmap from 'langmap';
+
 import { Controller as NetworkController } from './ui/neural-network/controller';
 import { Controller as SliderController } from './ui/slider/controller';
 import { Controller as LevelController } from './ui/level/controller';
 
 import { YAMLLoader } from './util/yaml-loader';
+import createI18N from './util/i18n';
 import { load as loadLevel } from './file-formats/load-level';
 import { load as loadConfig } from './file-formats/load-config';
 import { AsyncFunctionQueue } from './util/async-function-queue';
 
 class SequentialLevelLoader {
-  constructor() {
+  constructor(i18n) {
+    this._i18n = i18n;
     this._dummyDisposeLevel = () => true;
     this._disposeLevel = this._dummyDisposeLevel;
     this._asyncFunctionQueue = new AsyncFunctionQueue();
@@ -28,17 +32,22 @@ class SequentialLevelLoader {
 
   static async _loadNonUI({ name, url }) {
     const levelObj = await YAMLLoader.fromUrl(url);
-    return loadLevel({ object: levelObj, name, url });
+    return { name, url, ...loadLevel({ object: levelObj, name, url }) };
   }
 
-  static _loadUI({ model, inputs, training, layout, strings }) {
+  _loadUI({ name, model, inputs, training, layout, strings }) {
+    this._i18n.addLevelStrings(name, strings);
     const networkParentElem = document.querySelector('#network-container');
-    const networkController = new NetworkController(
-      model,
-      inputs,
-      training.targetActivationFuncs,
-      layout,
-      networkParentElem,
+    const networkController = new NetworkController({
+        levelName: name,
+        networkModel: model,
+        inputs,
+        targetActivationFuncs: training.targetActivationFuncs,
+        layout,
+        parentElem: networkParentElem,
+        strings,
+        i18n: this._i18n,
+      }
     );
 
     const inputNodeIds = model.network.inputNodeIds;
@@ -50,7 +59,12 @@ class SequentialLevelLoader {
     };
     const trainingTargets = training.inputs.map(computeTargets);
 
-    const levelController = new LevelController(model, training.inputs, trainingTargets);
+    const levelController = new LevelController({
+      networkModel: model,
+      trainingInputs: training.inputs,
+      trainingTargets,
+      i18n: this._i18n,
+    });
 
     return { networkController, levelController };
   }
@@ -60,7 +74,7 @@ class SequentialLevelLoader {
     this._disposeLevel();
     this._disposeLevel = () => true;
 
-    const { networkController, levelController } = SequentialLevelLoader._loadUI(
+    const { networkController, levelController } = this._loadUI(
       await SequentialLevelLoader._loadNonUI({ name, url })
     );
 
@@ -83,6 +97,46 @@ function processPreloadResults(levelPreloadResults) {
     .forEach(warn);
 }
 
+function setupLanguageSelector(i18n, supportedLanguages) {
+  const i18next = i18n.getI18NextInstance();
+  const currentLng = i18next.language;
+
+  const languageSelector = document.querySelector('#language-selector');
+  supportedLanguages.forEach(lng => {
+    const name = langmap[lng].nativeName;
+    const option = document.createElement('option');
+    option.value = lng;
+    option.innerText = name;
+    languageSelector.appendChild(option);
+  });
+  languageSelector.value = currentLng;
+
+  const localizeMain = () => i18n.localize('.footer, .train .trainingdata, .train .helper');
+
+  const handleLanguageChange = async (lng) => {
+    await i18next.changeLanguage(lng);
+    localizeMain();
+  };
+
+  languageSelector.addEventListener('change',
+    async (event) => await handleLanguageChange(event.target.value)
+  );
+
+  i18next.on('languageChanged', (lng) => {
+    if (lng !== currentLng) {
+      const url = new URL(window.location.href);
+      const urlSearchParams = new URLSearchParams(url.search);
+      if (urlSearchParams.has('lang')) {
+        urlSearchParams.set('lang', lng);
+        url.search = urlSearchParams.toString();
+        window.history.pushState({ path: url.href }, '', url.href);
+      }
+    }
+  });
+
+  localizeMain();
+}
+
 async function main() {
   const parent = document.createElement('div');
   parent.id = 'network-container';
@@ -92,14 +146,15 @@ async function main() {
   const oldSvg = document.querySelector('svg');
   oldSvg.parentElement.insertBefore(parent, oldSvg); // TODO: move to pug/CSS
 
-  const configUrl = new URL('/assets/config/default.yaml', window.location.href);
+  const configUrl = new URL('./assets/config/default.yaml', window.location.href);
   const configObj = await YAMLLoader.fromUrl(configUrl);
-  const { levels, defaultLanguage } = loadConfig(configObj, configUrl);
+  const { levels, languages } = loadConfig(configObj, configUrl);
 
-  console.log(configUrl, configObj, levels);
+  const i18n = await createI18N(languages, true);
+  setupLanguageSelector(i18n, languages);
+
   SequentialLevelLoader.preload(...levels).then(processPreloadResults);
-
-  const levelLoader = new SequentialLevelLoader();
+  const levelLoader = new SequentialLevelLoader(i18n);
   const sliderController = new SliderController(levels.map(({ name, url }) => name));
   sliderController.on('current-slide-changed', (_, i) => levelLoader.load(levels[i]));
   await levelLoader.load(levels[sliderController.getModel().getCurrentSlideIndex()]);

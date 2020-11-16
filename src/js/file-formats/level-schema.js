@@ -88,7 +88,7 @@ const levelSchema = {
           "type": "object",
           "properties": {
             "text": { "$ref": "#/definitions/stringOrI18N" },
-            "permanent": { "type": "boolean" },
+            "alwaysOn": { "type": "boolean" },
             "highlight": { "type": "boolean" },
           },
         }
@@ -182,7 +182,8 @@ const levelSchema = {
             {
               "type": "object",
               "properties": {
-                "node": { "$ref": "#/definitions/label" },
+                "name": { "$ref": "#/definitions/label" },
+                "description": { "$ref": "#/definitions/label" },
                 "input": { "$ref": "#/definitions/label" },
               },
               "additionalProperties": false,
@@ -190,7 +191,8 @@ const levelSchema = {
             {
               "type": "object",
               "properties": {
-                "node": { "$ref": "#/definitions/label" },
+                "name": { "$ref": "#/definitions/label" },
+                "description": { "$ref": "#/definitions/label" },
                 "bias": { "$ref": "#/definitions/label" },
                 "activationFunc": { "$ref": "#/definitions/label" },
               },

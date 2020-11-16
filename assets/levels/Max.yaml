@@ -34,20 +34,22 @@ description:
   de: 'In diesem Level ...'
 labels:
   'a':
-    node:
-      text: 'a'
+    name:
+      text:
+        de: 'a de'
+        en: 'a en'
     bias:
-      permanent: true
+      alwaysOn: true
       highlight: true
       text: "This is the bias of 'a'."
   'b':
-    node:
+    name:
       text: 'b'
   'max(a,b)':
-    node:
+    name:
       text: 'max(a,b)'
   'a -> h':
     weight:
       text:
         en: "This is the weight of the edge between 'a' and 'h'."
-        de: "Das ist die Gewichtung der Kante zwischen 'a' und 'b'."
+        de: "Das ist die Gewichtung der Kante zwischen 'a' und 'h'."

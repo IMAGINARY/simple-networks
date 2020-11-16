@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events';
 
-import DOMEventManager from '../../util/dom-event-manager';
+import EventManager from '../../util/event-manager';
 
 export default class View extends EventEmitter {
   constructor(model) {
@@ -18,7 +18,7 @@ export default class View extends EventEmitter {
   }
 
   _addEventListeners() {
-    const domEventManager = new DOMEventManager();
+    const domEventManager = new EventManager();
     const ael = domEventManager.ael;
 
     ael(this._previousSlideButton, 'click', () => this.emit('go-to-previous-slide'));

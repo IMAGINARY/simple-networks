@@ -1,13 +1,13 @@
 import { EventEmitter } from 'events';
 
-import DOMEventManager from '../../util/dom-event-manager';
+import EventManager from '../../util/event-manager';
 
 export default class Model extends EventEmitter {
   constructor(slideNames, currentSlideIndexOrName) {
     super();
     this._slideNames = [...slideNames];
     this._currentSlideIndex = 0;
-    this._domEventManager = new DOMEventManager();
+    this._domEventManager = new EventManager();
     this.setSlide(currentSlideIndexOrName ?? this._getSlideNameFromURL());
     this._domEventManager.ael(window, 'hashchange', this._updateFromHash.bind(this));
   }
