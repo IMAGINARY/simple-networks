@@ -6,9 +6,9 @@ export default class Model extends EventEmitter {
   constructor(slideNames, currentSlideIndexOrName) {
     super();
     this._slideNames = [...slideNames];
-    this._currentSlideIndex = 0;
+    this._currentSlideIndex = -1;
     this._domEventManager = new EventManager();
-    this.setSlide(currentSlideIndexOrName ?? this._getSlideNameFromURL());
+    this.setSlide((currentSlideIndexOrName ?? this._getSlideNameFromURL()) ?? 0);
     this._domEventManager.ael(window, 'hashchange', this._updateFromHash.bind(this));
   }
 
@@ -82,7 +82,7 @@ export default class Model extends EventEmitter {
 
   _getSlideNameFromURL() {
     const hash = window.location.hash;
-    return decodeURIComponent(hash.substring(1));
+    return hash.length === 0 ? null : decodeURIComponent(hash.substring(1));
   }
 
   _updateFromHash() {
