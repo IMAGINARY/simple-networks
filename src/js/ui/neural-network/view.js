@@ -39,7 +39,9 @@ export default class View extends EventEmitter {
     this.localize();
     this._i18n.getI18NextInstance().on('languageChanged', this.localize.bind(this));
 
-    //this._tippies.forEach(t => t.hide());
+    if(!new URLSearchParams(location.search).has('tooltip')) {
+      this._tippies.forEach(t => t.hide());
+    }
   }
 
   static _buildEdgePaths({ fromPos, fromActivation, toPos, toActivation }) {
