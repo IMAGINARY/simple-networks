@@ -146,7 +146,7 @@ async function main() {
   const oldSvg = document.querySelector('svg');
   oldSvg.parentElement.insertBefore(parent, oldSvg); // TODO: move to pug/CSS
 
-  const configUrl = new URL('/assets/config/default.yaml', window.location.href);
+  const configUrl = new URL('./assets/config/default.yaml', window.location.href);
   const configObj = await YAMLLoader.fromUrl(configUrl);
   const { levels, languages } = loadConfig(configObj, configUrl);
 
