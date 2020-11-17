@@ -44,28 +44,15 @@ const paths = {
     dest: `${OUTPUT_DIR}/assets/js`,
   },
   dependencies: {
-    // list of dependency packages can be computed by running the following command in /src
-    // grep -R "import .* from .[^.]" js | grep -v deprecated | sed 's/^.* from .//g' | sed 's/.;$//g' | sort -u | sed "s/^/'/g" | sed "s/$/',/g"
-    packages: [
-      '@svgdotjs/svg.js',
-      'ajv',
-      'bcp-47',
-      'bezier-js',
-      'document-ready',
-      'events',
-      'expression-eval',
-      'i18next',
-      'i18next-browser-languagedetector',
-      'i18next-http-backend',
-      'interval-arithmetic',
-      'js-yaml',
-      'langmap',
-      'loc-i18next',
-      'lodash',
-      'tippy.js',
-    ].concat([
-      // Other packages that are not included via 'import'
-    ]),
+    additionalPackages: [
+      // packages that are not in package.json dependencies,
+      // but that should be included (e.g. packages from devDependencies)
+    ],
+    excludePackages: [
+      // packages that are in package.json dependencies,
+      // but that should be excluded (e.g. packages that just provide fonts or css)
+      'typeface-roboto',
+    ],
     watchSrc: [
       './package-lock.json',
     ],
@@ -123,11 +110,19 @@ function styleDependencies() {
   return _styles(paths.styleDependencies);
 }
 
+function getDependencyList() {
+  const packageJSON = JSON.parse(fs.readFileSync('./package.json'));
+  const packages = Object.keys(packageJSON.dependencies)
+    .concat(paths.dependencies.additionalPackages)
+    .filter(package => !paths.dependencies.excludePackages.includes(package));
+  return packages;
+}
+
 function dependencies() {
   return browserify({
     debug: true,
   })
-    .require(paths.dependencies.packages)
+    .require(getDependencyList())
     .transform('babelify', {
       global: true,
       presets: ['@babel/preset-env'],
@@ -150,7 +145,7 @@ function scripts() {
     entries: './js/main.js',
     debug: true,
   })
-    .external(paths.dependencies.packages)
+    .external(getDependencyList())
     .transform('babelify', {
       plugins: ['@babel/plugin-proposal-nullish-coalescing-operator'],
       presets: [['@babel/preset-env', { useBuiltIns: 'usage', corejs: 3 }]],
