@@ -28,7 +28,9 @@ training:
   outputs:
     'max(a,b)': 'max(a,b)'
 
-title: 'Compute the maximum of the inputs'
+title:
+  de: Berechne das Maximum der Eingaben
+  en: Compute the maximum of the inputs
 description:
   en: 'In this level ...'
   de: 'In diesem Level ...'

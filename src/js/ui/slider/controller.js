@@ -3,11 +3,11 @@ import View from './view';
 import { EventEmitter } from 'events';
 
 export default class Controller extends EventEmitter {
-  constructor(slideNames) {
+  constructor({ slideNames, i18n }) {
     super();
 
     this._model = new Model(slideNames);
-    this._view = new View(this._model);
+    this._view = new View({ model: this._model, i18n });
 
     this._model.on('current-slide-changed', this._handleSlideChanged.bind(this));
 
@@ -22,6 +22,10 @@ export default class Controller extends EventEmitter {
   _handleSlideChanged(slideName, slideIndex, prevSlideName, prevSlideIndex) {
     this._view.update();
     this.emit('current-slide-changed', slideName, slideIndex, prevSlideName, prevSlideIndex, this);
+  }
+
+  localize() {
+    this._view.localize();
   }
 
   dispose() {

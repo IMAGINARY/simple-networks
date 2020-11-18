@@ -2,11 +2,16 @@ import { EventEmitter } from 'events';
 import EventManager from '../../util/event-manager';
 
 export default class MissionControlsView extends EventEmitter {
-  constructor() {
+  constructor(i18n) {
     super();
+
+    this._i18n = i18n;
+    this._localizables = [];
 
     this._dem = new EventManager();
     this._setupDOM();
+
+    this.localize();
   }
 
   _setupDOM() {
@@ -30,10 +35,18 @@ export default class MissionControlsView extends EventEmitter {
   _setupTrainingTab() {
     const ael = this._dem.ael;
 
+    const showGradientLabel = document.querySelector('#show-gradient-label');
+    showGradientLabel.setAttribute('data-i18n', 'main:mission-control.show-gradient');
+
+    const missionControlTrainLabel = document.querySelector('#mission-control-train-label');
+    missionControlTrainLabel.setAttribute('data-i18n', 'main:mission-control.train');
+
     const resetButton = document.querySelector('.controls .reset');
+    resetButton.setAttribute('data-i18n', '[title]main:mission-control.reset-button');
     ael(resetButton, 'click', () => this.emit('reset-training'));
 
     const pauseResumeButton = document.querySelector('.controls .pause-resume');
+    resetButton.setAttribute('data-i18n', '[title]main:mission-control.pause-resume-button');
     const isPlaying = () => pauseResumeButton.classList.contains('pause');
     const resume = () => {
       pauseResumeButton.classList.add('pause');
@@ -49,7 +62,16 @@ export default class MissionControlsView extends EventEmitter {
     ael(pauseResumeButton, 'click', () => isPlaying() ? pause() : resume());
 
     const stepButton = document.querySelector('.controls .single-step');
+    stepButton.setAttribute('data-i18n', '[title]main:mission-control.single-step-button');
     ael(stepButton, 'click', () => this.emit('step-training'));
+
+    this._localizables.push(
+      showGradientLabel,
+      missionControlTrainLabel,
+      resetButton,
+      pauseResumeButton,
+      stepButton,
+    );
   }
 
   showHelpTab() {
@@ -64,6 +86,10 @@ export default class MissionControlsView extends EventEmitter {
     this._helpContent.classList.remove('visible');
     this._missionButton.classList.add('selected');
     this._missionContent.classList.add('visible');
+  }
+
+  localize() {
+    this._i18n.localize(...this._localizables);
   }
 
   dispose() {

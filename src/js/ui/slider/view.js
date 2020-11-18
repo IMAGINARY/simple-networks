@@ -3,14 +3,18 @@ import { EventEmitter } from 'events';
 import EventManager from '../../util/event-manager';
 
 export default class View extends EventEmitter {
-  constructor(model) {
+  constructor({ model, i18n }) {
     super();
     this._model = model;
+    this._i18n = i18n;
     this._previousSlideButton = document.querySelector("#backbutton");
     this._nextSlideButton = document.querySelector("#nextbutton");
+    this._previousSlideButton.setAttribute('data-i18n', 'main:slider.previous');
+    this._nextSlideButton.setAttribute('data-i18n', 'main:slider.next');
     this._items = this._addItems();
     this._domEventManager = this._addEventListeners();
     this.update();
+    this.localize();
   }
 
   update() {
@@ -66,6 +70,11 @@ export default class View extends EventEmitter {
     const isLastSlide = this._model.getCurrentSlideIndex() === this._model.numSlides() - 1;
     this._previousSlideButton.style.visibility = isFirstSlide ? "hidden" : "visible";
     this._nextSlideButton.style.visibility = isLastSlide ? "hidden" : "visible";
+  }
+
+  localize() {
+    this._i18n.localize(this._previousSlideButton);
+    this._i18n.localize(this._nextSlideButton);
   }
 
   dispose() {

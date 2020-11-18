@@ -11,6 +11,10 @@ import { load as loadLevel } from './file-formats/load-level';
 import { load as loadConfig } from './file-formats/load-config';
 import { AsyncFunctionQueue } from './util/async-function-queue';
 
+let sliderController = null;
+let networkController = null;
+let levelController = null;
+
 class SequentialLevelLoader {
   constructor(i18n) {
     this._i18n = i18n;
@@ -84,7 +88,7 @@ class SequentialLevelLoader {
       levelController.dispose();
     };
 
-    return true;
+    return { networkController, levelController };
   }
 }
 
@@ -111,30 +115,26 @@ function setupLanguageSelector(i18n, supportedLanguages) {
   });
   languageSelector.value = currentLng;
 
-  const localizeMain = () => i18n.localize('.footer, .train .trainingdata, .train .helper');
-
-  const handleLanguageChange = async (lng) => {
-    await i18next.changeLanguage(lng);
-    localizeMain();
+  const localizeUI = () => {
+    sliderController.localize();
+    networkController.localize();
+    levelController.localize();
   };
 
   languageSelector.addEventListener('change',
-    async (event) => await handleLanguageChange(event.target.value)
+    async (event) => await i18next.changeLanguage(event.target.value)
   );
 
   i18next.on('languageChanged', (lng) => {
-    if (lng !== currentLng) {
-      const url = new URL(window.location.href);
-      const urlSearchParams = new URLSearchParams(url.search);
-      if (urlSearchParams.has('lang')) {
-        urlSearchParams.set('lang', lng);
-        url.search = urlSearchParams.toString();
-        window.history.pushState({ path: url.href }, '', url.href);
-      }
+    const url = new URL(window.location.href);
+    const urlSearchParams = new URLSearchParams(url.search);
+    if (urlSearchParams.has('lang')) {
+      urlSearchParams.set('lang', lng);
+      url.search = urlSearchParams.toString();
+      window.history.pushState({ path: url.href }, '', url.href);
     }
+    localizeUI();
   });
-
-  localizeMain();
 }
 
 async function main() {
@@ -155,9 +155,13 @@ async function main() {
 
   SequentialLevelLoader.preload(...levels).then(processPreloadResults);
   const levelLoader = new SequentialLevelLoader(i18n);
-  const sliderController = new SliderController(levels.map(({ name, url }) => name));
-  sliderController.on('current-slide-changed', (_, i) => levelLoader.load(levels[i]));
-  await levelLoader.load(levels[sliderController.getModel().getCurrentSlideIndex()]);
+  const loadByIndex = async (i) => (
+    { networkController, levelController } = await levelLoader.load(levels[i])
+  );
+  const slideNames = levels.map(({ name, url }) => name);
+  sliderController = new SliderController({ slideNames, i18n });
+  sliderController.on('current-slide-changed', async (_, i) => await loadByIndex(i));
+  await loadByIndex(sliderController.getModel().getCurrentSlideIndex());
 }
 
 ready(main);

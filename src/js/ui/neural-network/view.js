@@ -37,11 +37,6 @@ export default class View extends EventEmitter {
 
     this._viewUpdaters = this._createSubViews();
     this.localize();
-    this._eventManager.addEventListener(
-      this._i18n.getI18NextInstance(),
-      'languageChanged',
-      this.localize.bind(this),
-    );
 
     if (!new URLSearchParams(location.search).has('tooltip')) {
       this._tippies.forEach(t => t.hide());

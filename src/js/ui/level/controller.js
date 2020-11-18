@@ -26,7 +26,7 @@ export default class Controller extends EventEmitter {
     );
     this._trainingDataView = new TrainingDataView({ model: this._trainingModel, i18n });
 
-    this._missionControlsView = new MissionControlsView();
+    this._missionControlsView = new MissionControlsView(i18n);
     this._missionControlsView.showHelpTab();
     this._missionControlsView.on('reset-training', this._handleResetTraining.bind(this));
     this._missionControlsView.on('pause-training', this._handlePauseTraining.bind(this));
@@ -63,6 +63,11 @@ export default class Controller extends EventEmitter {
   _handleResetTraining() {
     forEach(this._initialWeights, (weight, id) => this._networkModel.setWeight(id, weight));
     forEach(this._initialBiases, (bias, id) => this._networkModel.setBias(id, bias));
+  }
+
+  localize() {
+    this._trainingDataView.localize();
+    this._missionControlsView.localize();
   }
 
   dispose() {

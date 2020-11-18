@@ -7,19 +7,20 @@
       #description
     .helper.absolute
       div(style="flex:1;")
-        p(data-i18n="main:mission-control.show-gradient")
-          label.switch
-            input(type="checkbox")#showgradient
+        p
+          label(for="show-gradient-switch")#show-gradient-label
+          label(for="show-gradient")#show-gradient-switch.switch
+            input(type="checkbox")#show-gradient
             span.slider.round
       div(style="flex:1; width: 100%;")
-        p(data-i18n="main:mission-control.train")
+        p#mission-control-train-label
           .controls
-            div(data-i18n="[title]main:mission-control.reset-button").reset
-            div(data-i18n="[title]main:mission-control.pause-resume-button").pause-resume.pause
-            div(data-i18n="[title]main:mission-control.single-step-button").single-step
+            div.reset
+            div.pause-resume.pause
+            div.single-step
 .box.trainingdata.visible
   div
-    p(style="font-weight:600;", data-i18n="main:training-data.title")
+    p(style="font-weight:600;")#training-data-title
   div
     table#trainingtable
   //.v-seperator

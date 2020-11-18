@@ -45,6 +45,10 @@ export default class Controller {
     this.view.update(this.predictionModel.computePredictions());
   }
 
+  localize() {
+    this.view.localize();
+  }
+
   dispose() {
     this.view.dispose();
   }

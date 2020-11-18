@@ -1,27 +1,20 @@
 import { EventEmitter } from 'events';
 import { zip } from 'lodash';
 
-import EventManager from '../../util/event-manager';
-
 export default class TrainingDataView extends EventEmitter {
   constructor({ model, i18n }) {
     super();
     this._model = model;
     this._i18n = i18n;
     this._formatNumber = this._i18n.getNumberFormatter();
+    this._trainingDataTitle = document.querySelector('#training-data-title');
+    this._trainingDataTitle.setAttribute('data-i18n', 'main:training-data.title');
     this._table = document.querySelector('#trainingtable');
     this._table.setAttribute('border', 1);
 
     this._setupDOM();
 
     this.localize();
-
-    this.eventManager = new EventManager();
-    this.eventManager.addEventListener(
-      this._i18n.getI18NextInstance(),
-      'languageChanged',
-      this.localize.bind(this)
-    );
   }
 
   _setupDOM() {
@@ -156,10 +149,11 @@ export default class TrainingDataView extends EventEmitter {
   }
 
   dispose() {
-    this.eventManager.dispose();
   }
 
   localize() {
+    this._i18n.localize(this._trainingDataTitle);
+
     this._formatNumber = this._i18n.getNumberFormatter();
 
     const [inputss, targetss] = [
