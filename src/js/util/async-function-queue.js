@@ -4,9 +4,10 @@ export default class AsyncFunctionQueue {
   }
 
   async enqueue(func) {
-    // this serves as a barrier such the provided function is only executed once the previous
+    // this serves as a barrier such that the provided function is only executed once the previous
     // have finished execution (successfully or with exception)
-    this._queuePromise = this._queuePromise.finally(func);
+    const queueFunc = () => func();
+    this._queuePromise = this._queuePromise.then(queueFunc, queueFunc);
     return await this._queuePromise;
   }
 }
