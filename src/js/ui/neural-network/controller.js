@@ -2,15 +2,12 @@ import View from './view';
 import PredictionModel from './prediction-model';
 
 export default class Controller {
-  constructor({ levelName, networkModel, inputs, targetActivationFuncs, layout, parentElem, strings, i18n }) {
+  constructor({ levelName, networkModel, inputs, targetActivationFuncs, layout, strings, i18n }) {
     this.networkModel = networkModel;
     this.predictionModel = new PredictionModel(networkModel, inputs, targetActivationFuncs);
     this.view = new View({
       levelName, layout, strings, i18n,
-      ...{
-        parentElement: parentElem,
-        predictionModel: this.predictionModel,
-      }
+      predictionModel: this.predictionModel,
     });
 
     this.view.on('input-changed', this.handleInputChange.bind(this));

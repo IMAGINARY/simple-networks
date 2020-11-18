@@ -1,9 +1,15 @@
 import { EventEmitter } from 'events';
 import EventManager from '../../util/event-manager';
+import $ from 'jquery';
+import { defaultsDeep } from 'lodash';
+
+import { missionControl as missionControlDefaults } from '../defaults';
 
 export default class MissionControlsView extends EventEmitter {
-  constructor(i18n) {
+  constructor({ i18n, options = missionControlDefaults }) {
     super();
+
+    this._options = defaultsDeep({ ...options }, missionControlDefaults);
 
     this._i18n = i18n;
     this._localizables = [];
@@ -21,13 +27,13 @@ export default class MissionControlsView extends EventEmitter {
   _setupMissionAndTrainingTabs() {
     const ael = this._dem.ael;
 
-    this._missionContent = document.querySelector('.content .mission');
-    this._missionButton = document.querySelector('#missionbutton');
-    ael(this._missionButton, 'click', this.showMissionTab.bind(this));
+    this._$missionContent = $(this._options.missionTabContent);
+    this._$missionButton = $(this._options.missionTabButton);
+    ael(this._$missionButton, 'click', this.showMissionTab.bind(this));
 
-    this._helpContent = document.querySelector('.content .helper');
-    this._helpButton = document.querySelector('#helpmebutton');
-    ael(this._helpButton, 'click', this.showHelpTab.bind(this));
+    this._$helpContent = $(this._options.helpTabContent);
+    this._$helpButton = $(this._options.helpTabButton);
+    ael(this._$helpButton, 'click', this.showHelpTab.bind(this));
 
     this._setupTrainingTab();
   }
@@ -35,57 +41,60 @@ export default class MissionControlsView extends EventEmitter {
   _setupTrainingTab() {
     const ael = this._dem.ael;
 
-    const showGradientLabel = document.querySelector('#show-gradient-label');
-    showGradientLabel.setAttribute('data-i18n', 'main:mission-control.show-gradient');
+    const $showGradientLabel = $(this._options.showGradientLabel)
+      .attr('data-i18n', 'main:mission-control.show-gradient');
 
-    const missionControlTrainLabel = document.querySelector('#mission-control-train-label');
-    missionControlTrainLabel.setAttribute('data-i18n', 'main:mission-control.train');
+    const $missionControlTrainLabel = $(this._options.trainLabel)
+      .attr('data-i18n', 'main:mission-control.train');
 
-    const resetButton = document.querySelector('.controls .reset');
-    resetButton.setAttribute('data-i18n', '[title]main:mission-control.reset-button');
-    ael(resetButton, 'click', () => this.emit('reset-training'));
+    const $resetButton = $(this._options.resetButton)
+      .attr('data-i18n', '[title]main:mission-control.reset-button');
+    ael($resetButton, 'click', () => this.emit('reset-training'));
 
-    const pauseResumeButton = document.querySelector('.controls .pause-resume');
-    resetButton.setAttribute('data-i18n', '[title]main:mission-control.pause-resume-button');
-    const isPlaying = () => pauseResumeButton.classList.contains('pause');
+    const $pauseResumeButton = $(this._options.pauseResumeButton)
+      .attr('data-i18n', '[title]main:mission-control.pause-resume-button');
+    const pauseClasses = this._options.pauseResumeButtonPauseClasses;
+    const resumeClasses = this._options.pauseResumeButtonResumeClasses;
+    const isPlaying = () => $pauseResumeButton.hasClass(pauseClasses);
     const resume = () => {
-      pauseResumeButton.classList.add('pause');
-      pauseResumeButton.classList.remove('resume');
+      $pauseResumeButton.addClass(pauseClasses);
+      $pauseResumeButton.removeClass(resumeClasses);
       this.emit('resume-training');
     };
     const pause = () => {
-      pauseResumeButton.classList.add('resume');
-      pauseResumeButton.classList.remove('pause');
+      $pauseResumeButton.addClass(resumeClasses);
+      $pauseResumeButton.removeClass(pauseClasses);
       this.emit('pause-training');
     };
     pause();
-    ael(pauseResumeButton, 'click', () => isPlaying() ? pause() : resume());
+    ael($pauseResumeButton, 'click', () => isPlaying() ? pause() : resume());
 
-    const stepButton = document.querySelector('.controls .single-step');
-    stepButton.setAttribute('data-i18n', '[title]main:mission-control.single-step-button');
-    ael(stepButton, 'click', () => this.emit('step-training'));
+    const $singleStepButton = $(this._options.singleStepButton)
+      .attr('data-i18n', '[title]main:mission-control.single-step-button');
+    ael($singleStepButton, 'click', () => this.emit('step-training'));
 
-    this._localizables.push(
-      showGradientLabel,
-      missionControlTrainLabel,
-      resetButton,
-      pauseResumeButton,
-      stepButton,
-    );
+    const localizables = [
+      $showGradientLabel,
+      $missionControlTrainLabel,
+      $resetButton,
+      $pauseResumeButton,
+      $singleStepButton,
+    ].map(l => l.toArray()).flat();
+    this._localizables.push(...localizables);
   }
 
   showHelpTab() {
-    this._missionButton.classList.remove('selected');
-    this._missionContent.classList.remove('visible');
-    this._helpButton.classList.add('selected');
-    this._helpContent.classList.add('visible');
+    this._$missionButton.removeClass(this._options.tabButtonSelectedClasses);
+    this._$missionContent.removeClass(this._options.tabContentVisibleClasses);
+    this._$helpButton.addClass(this._options.tabButtonSelectedClasses);
+    this._$helpContent.addClass(this._options.tabContentVisibleClasses);
   }
 
   showMissionTab() {
-    this._helpButton.classList.remove('selected');
-    this._helpContent.classList.remove('visible');
-    this._missionButton.classList.add('selected');
-    this._missionContent.classList.add('visible');
+    this._$helpButton.removeClass(this._options.tabButtonSelectedClasses);
+    this._$helpContent.removeClass(this._options.tabContentVisibleClasses);
+    this._$missionButton.addClass(this._options.tabButtonSelectedClasses);
+    this._$missionContent.addClass(this._options.tabContentVisibleClasses);
   }
 
   localize() {

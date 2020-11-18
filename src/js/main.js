@@ -41,14 +41,12 @@ class SequentialLevelLoader {
 
   _loadUI({ name, model, inputs, training, layout, strings }) {
     this._i18n.addLevelStrings(name, strings);
-    const networkParentElem = document.querySelector('#network-container');
     const networkController = new NetworkController({
         levelName: name,
         networkModel: model,
         inputs,
         targetActivationFuncs: training.targetActivationFuncs,
         layout,
-        parentElem: networkParentElem,
         strings,
         i18n: this._i18n,
       }
@@ -138,14 +136,6 @@ function setupLanguageSelector(i18n, supportedLanguages) {
 }
 
 async function main() {
-  const parent = document.createElement('div');
-  parent.id = 'network-container';
-  parent.style.position = 'absolute';
-  parent.style.top = '150px';
-  parent.style.left = '100px';
-  const oldSvg = document.querySelector('svg');
-  oldSvg.parentElement.insertBefore(parent, oldSvg); // TODO: move to pug/CSS
-
   const configUrl = new URL('./assets/config/default.yaml', window.location.href);
   const configObj = await YAMLLoader.fromUrl(configUrl);
   const { levels, languages } = loadConfig(configObj, configUrl);

@@ -3,22 +3,26 @@ import { SVG } from '@svgdotjs/svg.js';
 import Bezier from 'bezier-js';
 import IOps, { Interval } from 'interval-arithmetic';
 import tippy from 'tippy.js';
+import $ from 'jquery';
 
 import EventManager from '../../util/event-manager';
 import SVGPathBuilder from '../../util/svg-path-builder';
 import NodeCoordinates from './node-coordinates';
 import * as I18N from '../../util/i18n';
+import { level as levelDefaults } from '../defaults';
+import { defaultsDeep } from 'lodash';
 
 export default class View extends EventEmitter {
-  constructor({ levelName, predictionModel, layout, parentElement, strings, i18n }) {
+  constructor({ levelName, predictionModel, layout, strings, i18n, options = levelDefaults }) {
     super();
     this._levelName = levelName;
     this._predictionModel = predictionModel;
     this._network = predictionModel.getNetwork();
-    this._parent = parentElement;
     this._strings = strings;
     this._i18n = i18n;
     this._formatNumber = i18n.getNumberFormatter();
+
+    this._options = defaultsDeep({ ...options }, levelDefaults);
 
     this._eventManager = new EventManager();
 
@@ -340,40 +344,32 @@ export default class View extends EventEmitter {
   }
 
   _createSubViews() {
-    while (this._parent.lastChild) {
-      this._parent.lastChild.remove();
-    }
+    const $container = $(this._options.networkContainer).empty();
 
-    const levelTitleEl = document.querySelector('#leveltitle');
     const titleKey = this._levelI18NKey('title');
     const titleFallbackKey = I18N.key('main', 'levelDefaults', 'title');
-    levelTitleEl.setAttribute('data-i18n', `${titleFallbackKey};${titleKey}`);
-    this._localizables.push(levelTitleEl);
+    const $levelTitleEl = $(this._options.title)
+      .attr('data-i18n', `${titleFallbackKey};${titleKey}`);
+    this._localizables.push(...$levelTitleEl.toArray());
 
-    const levelDescription = document.querySelector('.mission #description');
     const descKey = this._levelI18NKey('description');
     const descFallbackKey = I18N.key('main', 'levelDefaults', 'description');
-    levelDescription.setAttribute('data-i18n', `${descFallbackKey};${descKey}`);
-    this._localizables.push(levelDescription);
-
-    const container = document.createElement('div');
-    container.style.position = 'relative';
+    const $levelDescriptionEl = $(this._options.description)
+      .attr('data-i18n', `${descFallbackKey};${descKey}`);
+    this._localizables.push($levelDescriptionEl);
 
     const offset = {
       x: 0.5 * View.NODE_SIZE.x,
       y: 0.5 * (View.NODE_SIZE.y + View.NODE_MAX_INNER_HEIGHT),
     };
 
-    this._overlay = document.createElement('div');
-    this._overlay.style.position = 'absolute';
-    this._overlay.style.top = `${offset.x}px`;
-    this._overlay.style.left = `${offset.y}px`;
-
-    this._parent.appendChild(this._overlay);
+    this._$overlay = $('<div>')
+      .css({ position: 'absolute', top: `${offset.x}px`, left: `${offset.y}px` })
+      .appendTo($container);
 
     this._svg = SVG()
       .size(1000, 1000)
-      .addTo(this._parent);
+      .addTo($container.get(0));
     this._svg.css({
       'overflow': 'visible',
       'stroke-width': 2,
@@ -848,7 +844,7 @@ export default class View extends EventEmitter {
   localize() {
     this._formatNumber = this._i18n.getNumberFormatter();
     this.update();
-    this._i18n.localize(this._localizables);
+    this._i18n.localize(...this._localizables);
     this._tippies.forEach(t => (t?.popperInstance?.update ?? (() => true))());
   }
 }

@@ -1,32 +1,37 @@
 import { EventEmitter } from 'events';
+import { defaultsDeep } from 'lodash';
+import $ from 'jquery';
 
+import { slider as sliderDefaults } from '../defaults';
 import EventManager from '../../util/event-manager';
 
 export default class View extends EventEmitter {
-  constructor({ model, i18n }) {
+  constructor({ model, i18n, options = sliderDefaults }) {
     super();
+    this._options = defaultsDeep({ ...options }, sliderDefaults);
     this._model = model;
     this._i18n = i18n;
-    this._previousSlideButton = document.querySelector("#backbutton");
-    this._nextSlideButton = document.querySelector("#nextbutton");
-    this._previousSlideButton.setAttribute('data-i18n', 'main:slider.previous');
-    this._nextSlideButton.setAttribute('data-i18n', 'main:slider.next');
-    this._items = this._addItems();
+    this._$navParent = $(this._options.navParent);
+    this._$previousSlideButton = $(this._options.prevButton);
+    this._$nextSlideButton = $(this._options.nextButton);
+    this._$previousSlideButton.attr('data-i18n', 'main:slider.previous');
+    this._$nextSlideButton.attr('data-i18n', 'main:slider.next');
+    this._$items = this._addItems();
     this._domEventManager = this._addEventListeners();
     this.update();
     this.localize();
   }
 
   update() {
-    this._updateFooter();
+    this._updateNav();
   }
 
   _addEventListeners() {
     const domEventManager = new EventManager();
     const ael = domEventManager.ael;
 
-    ael(this._previousSlideButton, 'click', () => this.emit('go-to-previous-slide'));
-    ael(this._nextSlideButton, 'click', () => this.emit('go-to-next-slide'));
+    ael(this._$previousSlideButton, 'click', () => this.emit('go-to-previous-slide'));
+    ael(this._$nextSlideButton, 'click', () => this.emit('go-to-next-slide'));
 
     ael(window, 'keydown', event => {
       switch (event.key) {
@@ -43,38 +48,33 @@ export default class View extends EventEmitter {
   }
 
   _addItems() {
-    const parent = document.querySelector('#navcircles');
-    parent.querySelectorAll('a').forEach(n => n.remove());
-    const items = this._model.getSlideNames().map(name => this._createItem(name));
-    items.forEach(item => parent.appendChild(item));
+    const items = $(this._model.getSlideNames().map(name => this._createPlainItem(name)));
+    this._$navParent.empty().append(items);
     return items;
   }
 
-  _createItem(name) {
-    const item = document.createElement('a');
-    item.href = `#${encodeURIComponent(name)}`;
-    item.classList.add('circ');
-    return item;
+  _createPlainItem(name) {
+    return $('<a/>', {
+      href: `#${encodeURIComponent(name)}`,
+      class: this._options.navClasses,
+    }).get(0);
   }
 
-  _updateFooter() {
-    this._items.forEach((item, i) => {
-      if (i === this._model.getCurrentSlideIndex()) {
-        item.classList.add('selected');
-      } else {
-        item.classList.remove('selected');
-      }
-    });
+  _updateNav() {
+    this._$items.removeClass(this._options.navClassesSelected);
+    const currentSlideIndex = this._model.getCurrentSlideIndex();
+    this._$items.filter((i) => i !== currentSlideIndex).addClass(this._options.navClasses);
+    this._$items.eq(currentSlideIndex).addClass(this._options.navClassesSelected);
 
     const isFirstSlide = this._model.getCurrentSlideIndex() === 0;
     const isLastSlide = this._model.getCurrentSlideIndex() === this._model.numSlides() - 1;
-    this._previousSlideButton.style.visibility = isFirstSlide ? "hidden" : "visible";
-    this._nextSlideButton.style.visibility = isLastSlide ? "hidden" : "visible";
+    this._$previousSlideButton.css('visibility', isFirstSlide ? "hidden" : "visible");
+    this._$nextSlideButton.css('visibility', isLastSlide ? "hidden" : "visible");
   }
 
   localize() {
-    this._i18n.localize(this._previousSlideButton);
-    this._i18n.localize(this._nextSlideButton);
+    this._i18n.localize(...this._$previousSlideButton.toArray());
+    this._i18n.localize(...this._$nextSlideButton.toArray());
   }
 
   dispose() {

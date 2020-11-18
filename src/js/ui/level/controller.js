@@ -26,7 +26,7 @@ export default class Controller extends EventEmitter {
     );
     this._trainingDataView = new TrainingDataView({ model: this._trainingModel, i18n });
 
-    this._missionControlsView = new MissionControlsView(i18n);
+    this._missionControlsView = new MissionControlsView({ i18n });
     this._missionControlsView.showHelpTab();
     this._missionControlsView.on('reset-training', this._handleResetTraining.bind(this));
     this._missionControlsView.on('pause-training', this._handlePauseTraining.bind(this));

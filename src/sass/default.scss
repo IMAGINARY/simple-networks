@@ -49,6 +49,12 @@ td, th {
   height: 0;
 }
 
+#network-container {
+  position: absolute;
+  top: 150px;
+  left: 100px;
+}
+
 .network {
   width: 70vw;
   position: relative;
