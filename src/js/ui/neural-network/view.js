@@ -26,6 +26,8 @@ export default class View extends EventEmitter {
 
     this._eventManager = new EventManager();
 
+    this._computeGeometricParameters();
+
     this._coords = new NodeCoordinates(layout);
 
     const predictionExt = predictionModel.computePredictions();
@@ -45,6 +47,22 @@ export default class View extends EventEmitter {
     if (!new URLSearchParams(location.search).has('tooltip')) {
       this._tippies.forEach(t => t.hide());
     }
+  }
+
+  _computeGeometricParameters() {
+    // TODO: Avoid constants in favor of per-network parameters
+    this._gridScale = {
+      x: 400,
+      y: 400
+    };
+    this._nodeSize = {
+      x: Math.min(this._gridScale.x, this._gridScale.y) / 4,
+      y: Math.min(this._gridScale.x, this._gridScale.y) / 4,
+    };
+    this._nodeMaxInnerHeight = (this._gridScale.y - this._nodeSize.y) * 0.9;
+    this._nodeRadius = this._nodeSize.y * 0.5;
+    this._labelFontSize = 16; // TODO: Move to CSS if possible // px
+    this._handleRadius = 10;
   }
 
   static _buildEdgePaths({ fromPos, fromActivation, toPos, toActivation }) {
@@ -266,14 +284,14 @@ export default class View extends EventEmitter {
       maxRelFlow.update(nodeHull, layer);
     }
 
-    return View.NODE_MAX_INNER_HEIGHT / maxRelFlow.value;
+    return this._nodeMaxInnerHeight / maxRelFlow.value;
   }
 
   _computeImmutableProps() {
     const computeNodeProp = node => ({
       [node.id]: {
         orderedInEdges: getOrderedInEdges(node, this._coords),
-        gridPos: grid(this._coords.abs(node.id)),
+        gridPos: this._grid(this._coords.abs(node.id)),
       }
     });
     return Object.assign({}, ...this._network.nodes.map(computeNodeProp));
@@ -303,7 +321,7 @@ export default class View extends EventEmitter {
       // Compute to-part of in-edges
       let lastTo = {
         pos: {
-          x: np.gridPos.x - 0.5 * View.NODE_SIZE.x,
+          x: np.gridPos.x - 0.5 * this._nodeSize.x,
           y: np.gridPos.y - np.zeroGridOffsetY,
         },
         activation: np.bias * this._flowScale,
@@ -329,8 +347,8 @@ export default class View extends EventEmitter {
       node.out.forEach((edge, i) => {
         const ep = p[edge.id];
         ep.fromPos = {
-          x: gridX(this._coords.absX(edge.from.id)) + 0.5 * View.NODE_SIZE.x,
-          y: gridY(this._coords.absY(edge.from.id)) - np.zeroGridOffsetY,
+          x: this._gridX(this._coords.absX(edge.from.id)) + 0.5 * this._nodeSize.x,
+          y: this._gridY(this._coords.absY(edge.from.id)) - np.zeroGridOffsetY,
         };
         ep.fromActivation = p[edge.from.id].activation * this._flowScale;
       });
@@ -359,8 +377,8 @@ export default class View extends EventEmitter {
     this._localizables.push($levelDescriptionEl);
 
     const offset = {
-      x: 0.5 * View.NODE_SIZE.x,
-      y: 0.5 * (View.NODE_SIZE.y + View.NODE_MAX_INNER_HEIGHT),
+      x: 0.5 * this._nodeSize.x,
+      y: 0.5 * (this._nodeSize.y + this._nodeMaxInnerHeight),
     };
 
     this._$overlay = $('<div>')
@@ -383,7 +401,7 @@ export default class View extends EventEmitter {
     this._nodeLayer = this._svgOffsetContainer.group();
     this._edgeLayer = this._svgOffsetContainer.group();
     this._labelLayer = this._svgOffsetContainer.group()
-      .css({ 'font-size': `${View.LABEL_FONT_SIZE}px` });
+      .css({ 'font-size': `${this._labelFontSize}px` });
     this._handleLayer = this._svgOffsetContainer.group()
       .attr({
         stroke: 'black',
@@ -404,17 +422,17 @@ export default class View extends EventEmitter {
 
     // set up DOM elements and certain static/default properties
     const svgNodeGroup = this._nodeLayer.group();
-    const svgNodeRect = svgNodeGroup.rect(View.NODE_SIZE.x, View.NODE_SIZE.y)
-      .move(np.gridPos.x - 0.5 * View.NODE_SIZE.x, np.gridPos.y - 0.5 * View.NODE_SIZE.y)
+    const svgNodeRect = svgNodeGroup.rect(this._nodeSize.x, this._nodeSize.y)
+      .move(np.gridPos.x - 0.5 * this._nodeSize.x, np.gridPos.y - 0.5 * this._nodeSize.y)
       .attr({
-        rx: View.NODE_RADIUS,
-        ry: View.NODE_RADIUS,
+        rx: this._nodeRadius,
+        ry: this._nodeRadius,
         fill: fillColor(node),
         stroke: 'black',
       });
 
-    const svgBiasHandle = this._handleLayer.circle(View.HANDLE_RADIUS)
-      .cx(np.gridPos.x - 0.5 * View.NODE_SIZE.x)
+    const svgBiasHandle = this._handleLayer.circle(this._handleRadius)
+      .cx(np.gridPos.x - 0.5 * this._nodeSize.x)
       .css({ 'visibility': node.isInput() ? 'hidden' : 'visible' });
 
     const biasDraggable = new VerticalDraggable(
@@ -424,12 +442,12 @@ export default class View extends EventEmitter {
       this._eventManager,
     );
 
-    const svgSumHandle = this._handleLayer.circle(View.HANDLE_RADIUS)
+    const svgSumHandle = this._handleLayer.circle(this._handleRadius)
       .cx(np.gridPos.x)
       .css({ 'visibility': 'hidden' });
 
-    const svgActivationHandle = this._handleLayer.circle(View.HANDLE_RADIUS)
-      .cx(np.gridPos.x + 0.5 * View.NODE_SIZE.x)
+    const svgActivationHandle = this._handleLayer.circle(this._handleRadius)
+      .cx(np.gridPos.x + 0.5 * this._nodeSize.x)
       .css({ 'visibility': node.isInput() ? 'visible' : 'hidden' });
 
     if (node.isInput()) {
@@ -518,11 +536,11 @@ export default class View extends EventEmitter {
     const middleLinePathBuilder = () => new SVGPathBuilder()
       .M(np.gridPos)
       .m({
-        x: -0.5 * View.NODE_SIZE.x,
+        x: -0.5 * this._nodeSize.x,
         y: 0
       })
       .l({
-        x: View.NODE_SIZE.x,
+        x: this._nodeSize.x,
         y: 0
       })
       .build();
@@ -536,11 +554,11 @@ export default class View extends EventEmitter {
     const zeroLinePathBuilder = () => new SVGPathBuilder()
       .M(np.gridPos)
       .m({
-        x: -0.5 * View.NODE_SIZE.x,
+        x: -0.5 * this._nodeSize.x,
         y: -np.zeroGridOffsetY
       })
       .l({
-        x: View.NODE_SIZE.x,
+        x: this._nodeSize.x,
         y: 0
       })
       .build();
@@ -555,21 +573,21 @@ export default class View extends EventEmitter {
       });
     const svgBiasLabel = this._labelLayer.plain()
       .attr(np.gridPos)
-      .dmove(-View.NODE_SIZE.x / 2, np.lowerHeight)
-      .dy(View.LABEL_FONT_SIZE)
+      .dmove(-this._nodeSize.x / 2, np.lowerHeight)
+      .dy(this._labelFontSize)
       .dmove(-3, -3) // TODO: don't hardcode
       .attr({
         'text-anchor': 'end',
       })
       .css({ visibility: node.isInput() ? 'hidden' : 'visible' });
     const svgActivationLabel = this._labelLayer.plain()
-      .x(np.gridPos.x + View.NODE_SIZE.x / 2)
+      .x(np.gridPos.x + this._nodeSize.x / 2)
       .dx(3) // TODO: don't hardcode
       .attr({
         'text-anchor': 'start',
       });
     const svgTargetLabel = this._labelLayer.plain()
-      .x(np.gridPos.x + View.NODE_SIZE.x)
+      .x(np.gridPos.x + this._nodeSize.x)
       .dx(3) // TODO: don't hardcode
       .attr({
         'text-anchor': 'start',
@@ -579,7 +597,7 @@ export default class View extends EventEmitter {
     const biasLinePathBuilder = () => new SVGPathBuilder()
       .M(np.gridPos)
       .m({
-        x: -View.NODE_SIZE.x / 2,
+        x: -this._nodeSize.x / 2,
         y: -np.zeroGridOffsetY
       })
       .l({
@@ -598,9 +616,9 @@ export default class View extends EventEmitter {
         x: 0,
         y: -np.zeroGridOffsetY
       })
-      .h(-View.NODE_SIZE.x / 2)
+      .h(-this._nodeSize.x / 2)
       .v(-np.sum * this._flowScale)
-      .h(View.NODE_SIZE.x / 2)
+      .h(this._nodeSize.x / 2)
       .z()
       .build();
     const svgSumArea = node.isInput() ? this._edgeLayer.group() : this._edgeLayer
@@ -613,9 +631,9 @@ export default class View extends EventEmitter {
         x: 0,
         y: -np.zeroGridOffsetY
       })
-      .h(View.NODE_SIZE.x / 2)
+      .h(this._nodeSize.x / 2)
       .v(-np.activation * this._flowScale)
-      .h(-View.NODE_SIZE.x / 2)
+      .h(-this._nodeSize.x / 2)
       .z()
       .build();
     const svgActivationArea = node.isInput() ? this._edgeLayer.group() : this._edgeLayer
@@ -625,12 +643,12 @@ export default class View extends EventEmitter {
     const inOutConnectorPolyLinePathBuilder = () => new SVGPathBuilder()
       .M(np.gridPos)
       .m({
-        x: -View.NODE_SIZE.x / 2,
+        x: -this._nodeSize.x / 2,
         y: -np.zeroGridOffsetY - Math.min(0, np.sum) * this._flowScale
       })
-      .h(View.NODE_SIZE.x / 2)
+      .h(this._nodeSize.x / 2)
       .V(np.gridPos.y - np.zeroGridOffsetY)
-      .h(View.NODE_SIZE.x / 2)
+      .h(this._nodeSize.x / 2)
       .build();
     const svgInOutConnectorPolyLine = node.isInput() ? this._edgeLayer.group() : this._edgeLayer
       .path(inOutConnectorPolyLinePathBuilder())
@@ -640,10 +658,10 @@ export default class View extends EventEmitter {
     const targetLineBuilder = () => new SVGPathBuilder()
       .M(np.gridPos)
       .m({
-        x: View.NODE_SIZE.x / 2,
+        x: this._nodeSize.x / 2,
         y: -np.zeroGridOffsetY - np.target * this._flowScale
       })
-      .h(View.NODE_SIZE.x / 2)
+      .h(this._nodeSize.x / 2)
       .build();
     const svgTargetLine = !node.isOutput() ? this._edgeLayer.group() : this._edgeLayer
       .path(targetLineBuilder())
@@ -654,14 +672,14 @@ export default class View extends EventEmitter {
     const update = () => {
       svgNodeRect
         .attr({
-          width: View.NODE_SIZE.x,
-          height: View.NODE_SIZE.y + np.innerHeight
+          width: this._nodeSize.x,
+          height: this._nodeSize.y + np.innerHeight
         })
         .transform({ translateY: -0.5 * np.innerHeight });
 
       svgIdLabel
         .attr(np.gridPos)
-        .dy(-np.innerHeight / 2 - View.NODE_SIZE.y / 8)
+        .dy(-np.innerHeight / 2 - this._nodeSize.y / 8)
         .attr({
           'text-anchor': 'middle',
         });
@@ -738,7 +756,7 @@ export default class View extends EventEmitter {
       .translate(0, -3)
       .attr({ 'text-anchor': 'middle' });
 
-    const svgWeightHandle = this._handleLayer.circle(View.HANDLE_RADIUS);
+    const svgWeightHandle = this._handleLayer.circle(this._handleRadius);
 
     const weightDraggable = new VerticalDraggable(
       svgWeightHandle,
@@ -783,6 +801,21 @@ export default class View extends EventEmitter {
     this._tippies.push(...tippies);
 
     return update;
+  }
+
+  _gridX(x) {
+    return this._gridScale.x * x;
+  }
+
+  _gridY(y) {
+    return this._gridScale.y * y;
+  }
+
+  _grid({ x, y }) {
+    return {
+      x: this._gridX(x),
+      y: this._gridY(y),
+    };
   }
 
   _inputFromY(y, np) {
@@ -849,19 +882,6 @@ export default class View extends EventEmitter {
   }
 }
 
-View.GRID_SCALE = {
-  x: 300,
-  y: 300
-};
-View.NODE_SIZE = {
-  x: Math.min(View.GRID_SCALE.x, View.GRID_SCALE.y) / 4,
-  y: Math.min(View.GRID_SCALE.x, View.GRID_SCALE.y) / 4,
-};
-View.NODE_MAX_INNER_HEIGHT = (View.GRID_SCALE.y - View.NODE_SIZE.y) * 0.9;
-View.NODE_RADIUS = View.NODE_SIZE.y * 0.5;
-View.LABEL_FONT_SIZE = 16; // TODO: Move to CSS if possible // px
-View.HANDLE_RADIUS = 10;
-
 function getOrderedInEdges(node, coords) {
   // sort incoming edges by connected node (node.from) in descending y order
   const compare = (edgeA, edgeB) => -(coords.absY(edgeA.from.id) - coords.absY(edgeB.from.id));
@@ -895,13 +915,6 @@ const fillColor = node => {
 };
 
 const activationColor = activation => activation >= 0 ? 'blue' : 'red';
-
-const gridX = x => View.GRID_SCALE.x * x;
-const gridY = y => View.GRID_SCALE.y * y;
-const grid = ({ x, y }) => ({
-  x: gridX(x),
-  y: gridY(y)
-});
 
 class VerticalDraggable {
   constructor(svgElem, anchorElem, dragHandler, domEventManager) {
