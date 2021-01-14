@@ -1,16 +1,18 @@
 import { EventEmitter } from 'events';
 import { SVG } from '@svgdotjs/svg.js';
+import '@svgdotjs/svg.filter.js';
 import Bezier from 'bezier-js';
 import IOps, { Interval } from 'interval-arithmetic';
 import tippy from 'tippy.js';
 import $ from 'jquery';
+import { defaultsDeep } from 'lodash';
 
 import EventManager from '../../util/event-manager';
 import SVGPathBuilder from '../../util/svg-path-builder';
 import NodeCoordinates from './node-coordinates';
 import * as I18N from '../../util/i18n';
 import { level as levelDefaults } from '../defaults';
-import { defaultsDeep } from 'lodash';
+import { outlineFilter as svgOutlineFilter } from '../../util/svg-filters';
 
 export default class View extends EventEmitter {
   constructor({ levelName, predictionModel, layout, strings, i18n, options = levelDefaults }) {
@@ -407,6 +409,8 @@ export default class View extends EventEmitter {
       'stroke-color': 'black',
     });
 
+    this._outlineFilter = svgOutlineFilter(this._svg, 1, 'white', 0.5);
+
     this._svgOffsetContainer = this._svg.group()
       .translate(offset.x, offset.y);
 
@@ -590,15 +594,18 @@ export default class View extends EventEmitter {
         'dominant-baseline': 'central',
         x: np.gridPos.x - this._nodeSize.x / 2,
       })
+      .filterWith(this._outlineFilter)
       .css({ visibility: node.isInput() ? 'hidden' : 'visible' });
     const svgActivationLabel = this._labelLayer.plain()
       .x(np.gridPos.x + this._nodeSize.x / 2)
+      .filterWith(this._outlineFilter)
       .attr({
         'text-anchor': 'start',
         'dominant-baseline': 'central',
       });
     const svgTargetLabel = this._labelLayer.plain()
       .x(np.gridPos.x + this._nodeSize.x)
+      .filterWith(this._outlineFilter)
       .attr({
         'text-anchor': 'start',
         'dominant-baseline': 'central',
@@ -762,6 +769,7 @@ export default class View extends EventEmitter {
     const svgFromActivation = svgEdgeGroup.path(ep.fromActivationEdgePath);
     const svgToActivation = svgEdgeGroup.path(ep.toActivationEdgePath);
     const svgWeightLabel = this._labelLayer.plain('')
+      .filterWith(this._outlineFilter)
       .attr({
         'text-anchor': 'middle',
         'dominant-baseline': 'central',
