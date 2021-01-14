@@ -102,23 +102,36 @@ export default class View extends EventEmitter {
 
     const { intersectionPos, handlePos, labelPos } = (() => {
       const bbox = bezier.bbox();
+      const bboxActivated = bezierActivated.bbox();
       const intersection = bezier.intersects({
         p1: {
           x: bbox.x.min + bbox.x.size * (1 - 0.33),
-          y: bbox.y.min - 1
+          y: bbox.y.min - bbox.x.size - 1
         },
         p2: {
           x: bbox.x.min + bbox.x.size * (1 - 0.33),
-          y: bbox.y.max + 1
+          y: bbox.y.max + bbox.x.size + 1
+        },
+      })[0];
+
+      const intersectionActivated = bezierActivated.intersects({
+        p1: {
+          x: bboxActivated.x.min + bboxActivated.x.size * (1 - 0.33),
+          y: bboxActivated.y.min - bboxActivated.y.size - 1
+        },
+        p2: {
+          x: bboxActivated.x.min + bboxActivated.x.size * (1 - 0.33),
+          y: bboxActivated.y.min + bboxActivated.y.size + 1
         },
       })[0];
 
       const intersectionPos = bezier.get(intersection);
-      const handlePos = {
-        x: intersectionPos.x,
-        y: intersectionPos.y - toActivation
+      const intersectionActivatedPos = bezierActivated.get(intersectionActivated);
+      const handlePos = intersectionActivatedPos;
+      const labelPos = {
+        x: (intersectionPos.x + intersectionActivatedPos.x) / 2,
+        y: (intersectionPos.y + intersectionActivatedPos.y) / 2
       };
-      const labelPos = handlePos;
 
       return {
         intersectionPos,
@@ -572,25 +585,24 @@ export default class View extends EventEmitter {
         'data-i18n': this._levelI18NKey('labels', node.id, 'name'),
       });
     const svgBiasLabel = this._labelLayer.plain()
-      .attr(np.gridPos)
-      .dmove(-this._nodeSize.x / 2, np.lowerHeight)
-      .dy(this._labelFontSize)
-      .dmove(-3, -3) // TODO: don't hardcode
       .attr({
         'text-anchor': 'end',
+        'dominant-baseline': 'central',
+        x: np.gridPos.x - this._nodeSize.x / 2,
       })
       .css({ visibility: node.isInput() ? 'hidden' : 'visible' });
     const svgActivationLabel = this._labelLayer.plain()
       .x(np.gridPos.x + this._nodeSize.x / 2)
-      .dx(3) // TODO: don't hardcode
       .attr({
         'text-anchor': 'start',
+        'dominant-baseline': 'central',
       });
     const svgTargetLabel = this._labelLayer.plain()
       .x(np.gridPos.x + this._nodeSize.x)
-      .dx(3) // TODO: don't hardcode
       .attr({
         'text-anchor': 'start',
+        'dominant-baseline': 'central',
+        y: 0,
       })
       .css({ visibility: node.isOutput() ? 'visible' : 'hidden' });
 
@@ -684,15 +696,14 @@ export default class View extends EventEmitter {
           'text-anchor': 'middle',
         });
       svgBiasHandle.cy(np.gridPos.y - np.zeroGridOffsetY - np.bias * this._flowScale);
-      svgBiasLabel.plain(this._formatNumber(np.bias));
+      svgBiasLabel.plain(`${this._formatNumber(np.bias)}\u00A0`)
+        .attr({ y: np.gridPos.y - np.zeroGridOffsetY - np.bias * this._flowScale / 2 });
       svgSumHandle.cy(np.gridPos.y - np.zeroGridOffsetY - np.sum * this._flowScale);
       svgActivationHandle.cy(np.gridPos.y - np.zeroGridOffsetY - np.activation
         * this._flowScale);
       svgActivationLabel
-        .plain(this._formatNumber(np.activation))
-        .y(np.gridPos.y - np.zeroGridOffsetY)
-        .dy(-np.activation * this._flowScale)
-        .dy(-3); // TODO: don't hardcode
+        .plain(`\u00A0${this._formatNumber(np.activation)}`)
+        .attr({ y: np.gridPos.y - np.zeroGridOffsetY - np.activation * this._flowScale / 2 });
       if (debug) {
         svgNodeMiddleLine.plot(middleLinePathBuilder());
         svgNodeZeroLine.plot(zeroLinePathBuilder());
@@ -713,10 +724,8 @@ export default class View extends EventEmitter {
       }
       if (node.isOutput()) {
         svgTargetLine.plot(targetLineBuilder());
-        svgTargetLabel.plain(this._formatNumber(np.target))
-          .y(np.gridPos.y - np.zeroGridOffsetY)
-          .dy(-np.target * this._flowScale)
-          .dy(-3); // TODO: don't hardcode
+        svgTargetLabel.plain(`\u00A0${this._formatNumber(np.target)}`)
+          .attr({ y: np.gridPos.y - np.zeroGridOffsetY - np.target * this._flowScale });
       }
 
       tippies.forEach(t => t.popperInstance !== null ? t.popperInstance.update() : true);
@@ -753,10 +762,13 @@ export default class View extends EventEmitter {
     const svgFromActivation = svgEdgeGroup.path(ep.fromActivationEdgePath);
     const svgToActivation = svgEdgeGroup.path(ep.toActivationEdgePath);
     const svgWeightLabel = this._labelLayer.plain('')
-      .translate(0, -3)
-      .attr({ 'text-anchor': 'middle' });
+      .attr({
+        'text-anchor': 'middle',
+        'dominant-baseline': 'central',
+      });
 
-    const svgWeightHandle = this._handleLayer.circle(this._handleRadius);
+    const svgWeightHandle = this._handleLayer.circle(this._handleRadius)
+      .css({ 'opacity': '0.25' });
 
     const weightDraggable = new VerticalDraggable(
       svgWeightHandle,
@@ -790,7 +802,7 @@ export default class View extends EventEmitter {
         .attr({ fill: ep.fromActivationColor });
       svgToActivation.plot(ep.toActivationEdgePath)
         .attr({ fill: ep.toActivationColor });
-      svgWeightLabel.plain(this._formatNumber(ep.weight))
+      svgWeightLabel.plain(`×${this._formatNumber(ep.weight)}`)
         .attr(ep.labelPos);
       svgWeightHandle.center(ep.handlePos.x, ep.handlePos.y);
 
