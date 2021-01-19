@@ -8,5 +8,6 @@ levels:
   - CelsiusToFahrenheit
   - Max
   - Weather
+  - Xor
 
 languages: [ de, en ]

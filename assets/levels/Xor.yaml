@@ -1,0 +1,30 @@
+edges:
+  - 'a -> h'
+  - 'b -> h'
+  - 'a -> xor(a,b)'
+  - 'b -> xor(a,b)'
+  - 'h -> xor(a,b)'
+
+defaultProperties:
+  input: { range: [ 0, 1 ] }
+  bias: { value: 0, range: { min: -2, max: 2 } }
+  weight: { value: 1, range: { min: -2, max: 2 } }
+
+properties:
+  'a':
+    input: 0
+  'b':
+    input: 1
+
+layout: [
+  [ 'a', 'b' ],
+  [ 'h', ],
+  [ 'xor(a,b)' ],
+]
+
+training:
+  inputs:
+    'a': [ 0, 0, 1, 1 ]
+    'b': [ 0, 1, 0, 1 ]
+  outputs:
+    'xor(a,b)': 'a ^ b'
