@@ -577,38 +577,45 @@ function meshFromBezierCurves(numSegments, ...bezierCurves) {
 
   const geometry = new THREE.Geometry();
 
-  const step = numCurves;
   const faces = geometry.faces;
-  for (let i = 0; i < numSamples - 1; i = i + 1) {
-    let offset = i * step;
-    for (let j = 0; j < step - 1; j = j + 1) {
-      faces.push(new THREE.Face3(offset + j, offset + step + j, offset + j + 1));
-      faces.push(new THREE.Face3(offset + j + 1, offset + step + j, offset + step + j + 1));
+  for (let i = 0; i < numCurves; i = i + 1) {
+    const offset0 = numSamples * (2 * i + 0);
+    const offset1 = numSamples * (2 * i + 1);
+    for (let j = 0; j < numSegments; j = j + 1) {
+      faces.push(new THREE.Face3(offset0 + j, offset0 + j + 1, offset1 + j));
+      faces.push(new THREE.Face3(offset0 + j + 1, offset1 + j + 1, offset1 + j));
     }
-    faces.push(new THREE.Face3(offset + step - 1, offset + step + step - 1, offset));
-    faces.push(new THREE.Face3(offset, offset + step + step - 1, offset + step));
   }
 
-  const backOffset = numSegments * step;
-  for (let i = 1; i < step - 1; i = i + 1) {
-    faces.push(new THREE.Face3(0, i, i + 1));
+  const frontOffset = 2 * numCurves * numSamples;
+  const backOffset = 2 * numCurves * numSamples + numCurves;
+  for (let i = 1; i < numCurves - 1; i = i + 1) {
+    faces.push(new THREE.Face3(frontOffset, frontOffset + i, frontOffset + i + 1));
     faces.push(new THREE.Face3(backOffset, backOffset + i + 1, backOffset + i));
   }
 
   const vertices = geometry.vertices;
-  vertices.length = numSamples * numCurves;
+  vertices.length = 2 * numSamples * numCurves + 2 * numCurves;
   for (let i = 0; i < vertices.length; i = i + 1) {
     vertices[i] = new THREE.Vector3();
   }
   const updateVertices = (...newBezierCurves) => {
-    const pointsTransposed = newBezierCurves.map(curve => curve.getSpacedPoints(numSegments));
-    for (let i = 0; i < numSamples; i = i + 1) {
-      for (let j = 0; j < numCurves; j = j + 1) {
-        vertices[i * numCurves + j].copy(pointsTransposed[j][i]);
+    const points = newBezierCurves.map(curve => curve.getSpacedPoints(numSegments));
+    for (let i = 0; i < numCurves; i = i + 1) {
+      const c0 = points[i];
+      const c1 = points[(i + 1) % numCurves];
+      for (let j = 0; j < numSamples; j = j + 1) {
+        vertices[numSamples * (2 * i + 0) + j].copy(c0[j]);
+        vertices[numSamples * (2 * i + 1) + j].copy(c1[j]);
       }
+    }
+    for (let i = 0; i < numCurves; i = i + 1) {
+      vertices[frontOffset + i].copy(points[i][0]);
+      vertices[backOffset + i].copy(points[i][numSegments]);
     }
   };
   updateVertices(...bezierCurves);
+  console.log(vertices, faces);
   geometry.verticesNeedUpdate = true;
   geometry.elementsNeedUpdate = true;
 
