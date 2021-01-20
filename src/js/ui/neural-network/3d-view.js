@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { EventEmitter } from 'events';
-import { defaultsDeep } from 'lodash';
+import { cloneDeep, defaultsDeep } from 'lodash';
 
 import EventManager from '../../util/event-manager';
 import NodeCoordinates from './node-coordinates';
@@ -126,19 +126,30 @@ export default class View extends EventEmitter {
       ));
     });
 
+    const predictionExt = this._predictionModel.computePredictions();
+    console.log(predictionExt);
+    const {
+      sceneObject: nodeObjs,
+      update: nodeUpdater
+    } = this._createNodeGeometries(predictionExt);
+    const {
+      sceneObject: edgeObjs,
+      update: edgeUpdater
+    } = this._createEdgeGeometries(predictionExt);
+    networkGroup.add(nodeObjs);
+    networkGroup.add(edgeObjs);
+    const updateObjs = (predictionExt) => {
+      nodeUpdater(predictionExt);
+      edgeUpdater(predictionExt);
+    };
+
     const animate = (ts) => {
       requestAnimationFrame(animate);
 
       animators.forEach(animator => animator.update(ts));
 
       const predictionExt = this._predictionModel.computePredictions();
-      console.log(predictionExt);
-      const nodeObjs = this._createNodeGeometries(predictionExt);
-      const edgeObjs = this._createEdgeGeometries(predictionExt);
-
-      networkGroup.clear();
-      networkGroup.add(...nodeObjs);
-      networkGroup.add(...edgeObjs);
+      updateObjs(predictionExt);
 
       renderer.render(this._scene, camera);
     };
@@ -184,7 +195,8 @@ export default class View extends EventEmitter {
     );
     const edgeGeometry = new THREE.EdgesGeometry(meshGeometry);
 
-    const sceneObjects = [];
+    const group = new THREE.Group();
+    const updaters = [];
     for (let nodeId of nodeIds) {
       const meshMaterial = new THREE.MeshBasicMaterial({
         color: activationColor(predictionExt[nodeId].activation),
@@ -205,48 +217,70 @@ export default class View extends EventEmitter {
       scale.add(orient);
 
       console.log(nodeId);
-      const group = new THREE.Group();
+      const nodeGroup = new THREE.Group();
       const { x, y } = this._coords.abs(nodeId);
       console.log(nodeId, x, y);
-      group.position.set(x, y, 0);
-      group.add(scale);
-      sceneObjects.push(group);
+      nodeGroup.position.set(x, y, 0);
+      nodeGroup.add(scale);
+      group.add(nodeGroup);
+
+      const update = (predictionExt) => {
+        scale.scale.set(1, 1, predictionExt[nodeId].activation * this._flowScale);
+      };
+      updaters.push(update);
     }
-    return sceneObjects;
+
+    const update = (predictionExt) => updaters.forEach(update => update(predictionExt));
+    return {
+      sceneObject: group,
+      update,
+    };
   }
 
-  _createEdgeGeometries(predictionExt) {
+  _computePartialSums(predictionExt) {
+    predictionExt = cloneDeep(predictionExt);
     const nodeIds = this._network.nodeIds;
     const edgeIds = this._network.edgeIds;
     const partialSums = Object.fromEntries(nodeIds.map((id) => [id, predictionExt[id].bias]));
-    const sceneObjects = [];
     for (const edgeId of edgeIds) {
       const { to: toId } = FeedForwardNetwork.nodeIdsFromEdgeId(edgeId);
-      const obj = this._createEdgeGeometry(predictionExt, edgeId, partialSums[toId]);
-      sceneObjects.push(obj);
+      predictionExt[edgeId].partialSum = partialSums[toId];
       partialSums[toId] += predictionExt[edgeId].toActivation;
     }
-    return sceneObjects;
+    return predictionExt;
   }
 
-  _createEdgeGeometry(predictionExt, edgeId, toPartialSum) {
-    const meshMaterial = new THREE.MeshBasicMaterial({
-      color: activationColor(predictionExt[edgeId].toActivation),
-      opacity: 0.5,
-      transparent: true,
-    });
-    const edgeMaterial = new THREE.LineBasicMaterial({ color: 0x555555 });
+  _createEdgeGeometries(predictionExt) {
+    const predictionExtPartialSums = this._computePartialSums(predictionExt);
+    const edgeIds = this._network.edgeIds;
+    const group = new THREE.Group();
+    const updaters = [];
+    for (const edgeId of edgeIds) {
+      const { sceneObject, update } = this._createEdgeGeometry(predictionExtPartialSums, edgeId);
+      group.add(sceneObject);
+      updaters.push(update);
+    }
+    const update = (predictionExt) => {
+      const predictionExtPartialSums = this._computePartialSums(predictionExt);
+      updaters.forEach(updater => updater(predictionExtPartialSums));
+    };
+    return {
+      sceneObject: group,
+      update,
+    };
+  }
 
+  _createEdgeBezierCurves(predictionExt, edgeId) {
     const { from: fromId, to: toId } = FeedForwardNetwork.nodeIdsFromEdgeId(edgeId);
 
     const { x: fromX, y: fromY } = this._coords.abs(fromId);
     const { x: toX, y: toY } = this._coords.abs(toId);
 
-    const NUM_POINTS = 50;
     const NODE_RADIUS = 0.1;
     const { fromActivation, toActivation } = predictionExt[edgeId];
     const fromActivationScaled = fromActivation * this._flowScale;
     const toActivationScaled = toActivation * this._flowScale;
+    const toPartialSum = predictionExt[edgeId].partialSum;
     const toPartialSumScaled = toPartialSum * this._flowScale;
 
     const curveFront = new THREE.CubicBezierCurve3(
@@ -277,35 +311,65 @@ export default class View extends EventEmitter {
         toPartialSumScaled + toActivationScaled),
       new THREE.Vector3(toX, toY - NODE_RADIUS, toPartialSumScaled + toActivationScaled)
     );
-    const pointsFront = [
-      ...curveFront.getPoints(NUM_POINTS),
-      ...curveFrontActivated.getPoints(NUM_POINTS).reverse(),
-      curveFront.getPoint(0)
-    ];
-    const frontEdgeGeometry = new THREE.BufferGeometry().setFromPoints(pointsFront);
-    //  const mesh = new THREE.Mesh(meshGeometry, meshMaterial);
-    const frontEdges = new THREE.Line(frontEdgeGeometry, edgeMaterial);
-    const pointsBack = [
-      ...curveBack.getPoints(NUM_POINTS),
-      ...curveBackActivated.getPoints(NUM_POINTS).reverse(),
-      curveBack.getPoint(0)
-    ];
-    const backEdgeGeometry = new THREE.BufferGeometry().setFromPoints(pointsBack);
-    //  const mesh = new THREE.Mesh(meshGeometry, meshMaterial);
-    const backEdges = new THREE.Line(backEdgeGeometry, edgeMaterial);
 
-    const frontBackConnectorGeometry = new THREE.Geometry();
-    frontBackConnectorGeometry.vertices.push(
-      curveFront.getPoint(0), curveBack.getPoint(0),
-      curveFrontActivated.getPoint(0), curveBackActivated.getPoint(0),
-      curveFront.getPoint(1), curveBack.getPoint(1),
-      curveFrontActivated.getPoint(1), curveBackActivated.getPoint(1),
-    );
-    const frontBackConnectorEdges = new THREE.LineSegments(frontBackConnectorGeometry,
-      edgeMaterial);
+    return {
+      curveFront,
+      curveFrontActivated,
+      curveBack,
+      curveBackActivated,
+    };
+  }
 
-    const meshGeometry = meshFromBezierCurves(
-      NUM_POINTS,
+  _createEdgeGeometry(predictionExt, edgeId) {
+    const meshMaterial = new THREE.MeshBasicMaterial({
+      color: activationColor(predictionExt[edgeId].toActivation),
+      opacity: 0.5,
+      transparent: true,
+    });
+    const edgeMaterial = new THREE.LineBasicMaterial({ color: 0x555555 });
+
+    const {
+      curveFront,
+      curveFrontActivated,
+      curveBack,
+      curveBackActivated
+    } = this._createEdgeBezierCurves(predictionExt, edgeId);
+
+    const NUM_SEGMENTS = 50;
+
+    /*
+        const pointsFront = [
+          ...curveFront.getPoints(NUM_SEGMENTS),
+          ...curveFrontActivated.getPoints(NUM_SEGMENTS).reverse(),
+          curveFront.getPoint(0)
+        ];
+        const frontEdgeGeometry = new THREE.BufferGeometry().setFromPoints(pointsFront);
+        //  const mesh = new THREE.Mesh(meshGeometry, meshMaterial);
+        const frontEdges = new THREE.Line(frontEdgeGeometry, edgeMaterial);
+        const pointsBack = [
+          ...curveBack.getPoints(NUM_SEGMENTS),
+          ...curveBackActivated.getPoints(NUM_SEGMENTS).reverse(),
+          curveBack.getPoint(0)
+        ];
+        const backEdgeGeometry = new THREE.BufferGeometry().setFromPoints(pointsBack);
+        //  const mesh = new THREE.Mesh(meshGeometry, meshMaterial);
+        const backEdges = new THREE.Line(backEdgeGeometry, edgeMaterial);
+
+        const frontBackConnectorGeometry = new THREE.Geometry();
+        frontBackConnectorGeometry.vertices.push(
+          curveFront.getPoint(0), curveBack.getPoint(0),
+          curveFrontActivated.getPoint(0), curveBackActivated.getPoint(0),
+          curveFront.getPoint(1), curveBack.getPoint(1),
+          curveFrontActivated.getPoint(1), curveBackActivated.getPoint(1),
+        );
+        const frontBackConnectorEdges = new THREE.LineSegments(frontBackConnectorGeometry,
+          edgeMaterial);
+    */
+    const {
+      geometry: meshGeometry,
+      update: updateMeshGeometry
+    } = meshFromBezierCurves(
+      NUM_SEGMENTS,
       curveFront,
       curveFrontActivated,
       curveBackActivated,
@@ -313,13 +377,27 @@ export default class View extends EventEmitter {
     );
     const mesh = new THREE.Mesh(meshGeometry, meshMaterial);
 
+    const update = (predictionExt) => {
+      const {
+        curveFront,
+        curveFrontActivated,
+        curveBack,
+        curveBackActivated
+      } = this._createEdgeBezierCurves(predictionExt, edgeId);
+      updateMeshGeometry(curveFront, curveFrontActivated, curveBackActivated, curveBack);
+    };
+
     const group = new THREE.Group();
     group.add(mesh);
-    group.add(frontEdges);
-    group.add(backEdges);
-    group.add(frontBackConnectorEdges);
-
-    return group;
+    /*
+        group.add(frontEdges);
+        group.add(backEdges);
+        group.add(frontBackConnectorEdges);
+    */
+    return {
+      sceneObject: group,
+      update,
+    };
   }
 
   _computeGeometricParameters() {
@@ -494,41 +572,57 @@ const fillColor = node => {
 const activationColor = activation => activation >= 0 ? 0x0000FF : 0xFF0000;
 
 function meshFromBezierCurves(numSegments, ...bezierCurves) {
-  const pointsTransposed = bezierCurves.map(curve => curve.getSpacedPoints(numSegments));
   const numSamples = numSegments + 1;
-  const geometry = new THREE.Geometry();
-  for (let i = 0; i < numSamples; i = i + 1) {
-    for (let j = 0; j < bezierCurves.length; j = j + 1) {
-      geometry.vertices[i * bezierCurves.length + j] = pointsTransposed[j][i];
-    }
-  }
+  const numCurves = bezierCurves.length;
 
-  const step = bezierCurves.length;
-  console.log(pointsTransposed[0].length, step);
-
+  const step = numCurves;
+  const indices = [];
   for (let i = 0; i < numSamples - 1; i = i + 1) {
     let offset = i * step;
     for (let j = 0; j < step - 1; j = j + 1) {
-      const faceLo = new THREE.Face3(offset + j, offset + step + j, offset + j + 1);
-      const faceHi = new THREE.Face3(offset + j + 1, offset + step + j, offset + step + j + 1);
-      geometry.faces.push(faceLo, faceHi);
+      indices.push(offset + j, offset + step + j, offset + j + 1);
+      indices.push(offset + j + 1, offset + step + j, offset + step + j + 1);
     }
-    const faceLo = new THREE.Face3(offset + step - 1, offset + step + step - 1, offset);
-    const faceHi = new THREE.Face3(offset, offset + step + step - 1, offset + step);
-    geometry.faces.push(faceLo, faceHi);
+    indices.push(offset + step - 1, offset + step + step - 1, offset);
+    indices.push(offset, offset + step + step - 1, offset + step);
   }
 
   const backOffset = numSegments * step;
   for (let i = 1; i < step - 1; i = i + 1) {
-    const frontCoverFace = new THREE.Face3(0, i, i + 1);
-    const backCoverFace = new THREE.Face3(backOffset, backOffset + i + 1, backOffset + i);
-    geometry.faces.push(frontCoverFace, backCoverFace);
+    indices.push(0, i, i + 1);
+    indices.push(backOffset, backOffset + i + 1, backOffset + i);
   }
 
-  geometry.verticesNeedUpdate = true;
-  geometry.elementsNeedUpdate = true;
+  const numVertices = numSamples * numCurves;
+  const geometry = new THREE.BufferGeometry();
+  geometry.setIndex(indices);
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(3 * numVertices, 3));
 
-  return geometry;
+  const updateVertices = (...newBezierCurves) => {
+    const pointsTransposed = newBezierCurves.map(curve => curve.getSpacedPoints(numSegments));
+    const vertices = geometry.attributes.position.array;
+    for (let i = 0; i < numSamples; i = i + 1) {
+      for (let j = 0; j < numCurves; j = j + 1) {
+        const v = pointsTransposed[j][i];
+        vertices[3 * (i * numCurves + j) + 0] = v.x;
+        vertices[3 * (i * numCurves + j) + 1] = v.y;
+        vertices[3 * (i * numCurves + j) + 2] = v.z;
+      }
+    }
+  };
+  updateVertices(...bezierCurves);
+
+  const update = (...newBezierCurves) => {
+    updateVertices(...newBezierCurves);
+    geometry.attributes.position.needsUpdate = true;
+    geometry.computeBoundingBox();
+    geometry.computeBoundingSphere();
+  };
+
+  return {
+    geometry,
+    update: update,
+  };
 }
 
 export { View };
