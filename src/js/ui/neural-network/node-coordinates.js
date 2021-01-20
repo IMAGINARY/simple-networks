@@ -5,8 +5,8 @@ export default class NodeCoordinates {
   constructor(layout, options = {}) {
     this._options = Object.assign({}, { alignV: NodeCoordinates.alignVMiddle });
     this._layout = layout.map(layer => layer.map(nodeId => ({ id: nodeId })));
-    this._width = this._layout.length - 1;
-    this._height = this._layout.map(layer => layer.length - 1)
+    this._width = this._layout.length;
+    this._height = this._layout.map(layer => layer.length)
       .reduce((cur, acc) => Math.max(cur, acc), -1);
     this._absCoords = {};
     for (let l = 0; l < this._layout.length; ++l) {
@@ -15,7 +15,7 @@ export default class NodeCoordinates {
         const cell = layer[n];
         const absCoords = {
           x: l,
-          y: this._options.alignV(n, layer.length - 1, this._height),
+          y: this._options.alignV(n, layer.length, this._height),
         };
         cell.pos = absCoords;
         this._absCoords[cell.id] = absCoords;
@@ -62,7 +62,7 @@ export default class NodeCoordinates {
 
   rel(nodeId) {
     const { x, y } = this.abs(nodeId);
-    return { x: x / (this.width() - 1), y: y / (this.height() - 1) };
+    return { x: x / (this.width - 1), y: y / (this.height - 1) };
   }
 
   relX(nodeId) {

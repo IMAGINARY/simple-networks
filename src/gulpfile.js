@@ -47,6 +47,7 @@ const paths = {
     additionalPackages: [
       // packages that are not in package.json dependencies,
       // but that should be included (e.g. packages from devDependencies)
+      'three/examples/jsm/controls/OrbitControls',
     ],
     excludePackages: [
       // packages that are in package.json dependencies,

@@ -96,8 +96,13 @@ export default class Model extends EventEmitter {
     );
     for (let n of this.network.topSortNoInputs) {
       const np = p[n.id];
+      for (let inEdge of n.in) {
+        const fromActivation = outP[inEdge.from.id].activation;
+        const toActivation = fromActivation * p[inEdge.id].weight;
+        outP[inEdge.id] = { fromActivation, toActivation };
+      }
       const sum = n.in.reduce(
-        (a, inEdge) => a + outP[inEdge.from.id].activation * p[inEdge.id].weight,
+        (partialSum, inEdge) => partialSum + outP[inEdge.id].toActivation,
         np.bias
       );
       const activation = np.activationFunc.f(sum);

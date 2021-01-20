@@ -48,6 +48,7 @@
     "loc-i18next": "^0.1.4",
     "lodash": "^4.17.20",
     "popper.js": "^1.16.1-lts",
+    "three": "^0.124.0",
     "tippy.js": "^6.2.7",
     "typeface-roboto": "0.0.75"
   },

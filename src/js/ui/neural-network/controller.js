@@ -1,4 +1,4 @@
-import View from './view';
+import View from './3d-view';
 import PredictionModel from './prediction-model';
 
 export default class Controller {
