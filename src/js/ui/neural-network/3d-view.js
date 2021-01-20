@@ -575,46 +575,47 @@ function meshFromBezierCurves(numSegments, ...bezierCurves) {
   const numSamples = numSegments + 1;
   const numCurves = bezierCurves.length;
 
+  const geometry = new THREE.Geometry();
+
   const step = numCurves;
-  const indices = [];
+  const faces = geometry.faces;
   for (let i = 0; i < numSamples - 1; i = i + 1) {
     let offset = i * step;
     for (let j = 0; j < step - 1; j = j + 1) {
-      indices.push(offset + j, offset + step + j, offset + j + 1);
-      indices.push(offset + j + 1, offset + step + j, offset + step + j + 1);
+      faces.push(new THREE.Face3(offset + j, offset + step + j, offset + j + 1));
+      faces.push(new THREE.Face3(offset + j + 1, offset + step + j, offset + step + j + 1));
     }
-    indices.push(offset + step - 1, offset + step + step - 1, offset);
-    indices.push(offset, offset + step + step - 1, offset + step);
+    faces.push(new THREE.Face3(offset + step - 1, offset + step + step - 1, offset));
+    faces.push(new THREE.Face3(offset, offset + step + step - 1, offset + step));
   }
 
   const backOffset = numSegments * step;
   for (let i = 1; i < step - 1; i = i + 1) {
-    indices.push(0, i, i + 1);
-    indices.push(backOffset, backOffset + i + 1, backOffset + i);
+    faces.push(new THREE.Face3(0, i, i + 1));
+    faces.push(new THREE.Face3(backOffset, backOffset + i + 1, backOffset + i));
   }
 
-  const numVertices = numSamples * numCurves;
-  const geometry = new THREE.BufferGeometry();
-  geometry.setIndex(indices);
-  geometry.setAttribute('position', new THREE.Float32BufferAttribute(3 * numVertices, 3));
-
+  const vertices = geometry.vertices;
+  vertices.length = numSamples * numCurves;
+  for (let i = 0; i < vertices.length; i = i + 1) {
+    vertices[i] = new THREE.Vector3();
+  }
   const updateVertices = (...newBezierCurves) => {
     const pointsTransposed = newBezierCurves.map(curve => curve.getSpacedPoints(numSegments));
-    const vertices = geometry.attributes.position.array;
     for (let i = 0; i < numSamples; i = i + 1) {
       for (let j = 0; j < numCurves; j = j + 1) {
-        const v = pointsTransposed[j][i];
-        vertices[3 * (i * numCurves + j) + 0] = v.x;
-        vertices[3 * (i * numCurves + j) + 1] = v.y;
-        vertices[3 * (i * numCurves + j) + 2] = v.z;
+        vertices[i * numCurves + j].copy(pointsTransposed[j][i]);
       }
     }
   };
   updateVertices(...bezierCurves);
+  geometry.verticesNeedUpdate = true;
+  geometry.elementsNeedUpdate = true;
 
   const update = (...newBezierCurves) => {
     updateVertices(...newBezierCurves);
-    geometry.attributes.position.needsUpdate = true;
+    geometry.verticesNeedUpdate = true;
+    geometry.computeVertexNormals();
     geometry.computeBoundingBox();
     geometry.computeBoundingSphere();
   };
