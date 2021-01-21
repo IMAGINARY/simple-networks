@@ -54,7 +54,9 @@ export default class View extends EventEmitter {
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     const aspectRatio = this._coords.width / this._coords.height;
-    const [maxWidth, maxHeight] = [800, 600];
+    const [maxWidth, maxHeight] = [800, 800];
+    const width = maxWidth, height = maxHeight;
+    /*
     let width, height;
     if (aspectRatio * maxHeight > maxWidth) {
       width = maxWidth;
@@ -63,6 +65,7 @@ export default class View extends EventEmitter {
       width = maxHeight * aspectRatio;
       height = maxHeight;
     }
+    */
     console.log(this._levelName, this._coords.width, this._coords.height, width, height);
 
     renderer.setSize(width, height);
@@ -70,19 +73,28 @@ export default class View extends EventEmitter {
     const $container = $(this._options.networkContainer).empty();
     $container.append(renderer.domElement);
     renderer.domElement.style.outline = '1px red solid';
+    /*
+        const camera = new THREE.OrthographicCamera(
+          -this._coords.width / 2,
+          +this._coords.width / 2,
+          -this._coords.height / 2,
+          +this._coords.height / 2,
+          -1000,
+          1000
+        );
 
-    const camera = new THREE.OrthographicCamera(
-      -this._coords.width / 2,
-      +this._coords.width / 2,
-      -this._coords.height / 2,
-      +this._coords.height / 2,
-      -1000,
-      1000
-    );
+     */
+    const fov = 45;
+    const distance = 1 / Math.sin((fov / 2) * (Math.PI / 180));
+    console.log({ distance });
+    const near = distance - 1;
+    const far = distance + 1;
+    const camera = new THREE.PerspectiveCamera(fov, width / height, near, far);
+
     {
-      const isometricAngle = Math.atan(1 / Math.sqrt(2));
-      const cameraRotation = new THREE.Matrix4().makeRotationX(isometricAngle);
-      const cameraTranslation = new THREE.Matrix4().makeTranslation(0, 0, 1);
+      const isometricAngle = 0;//Math.atan(1 / Math.sqrt(2));
+      const cameraRotation = new THREE.Matrix4().makeRotationX(-isometricAngle);
+      const cameraTranslation = new THREE.Matrix4().makeTranslation(0, 0, distance);
       const cameraMatrix = new THREE.Matrix4().multiplyMatrices(cameraRotation, cameraTranslation);
       cameraMatrix.decompose(camera.position, camera.quaternion, camera.scale);
     }
@@ -92,13 +104,31 @@ export default class View extends EventEmitter {
     controls.update();
 
     this._scene = new THREE.Scene();
-    this._scene.position.set(-(this._coords.width - 1) / 2, -(this._coords.height - 1) / 2, 0);
-    const axesHelper = new THREE.AxesHelper(0.5);
-    axesHelper.position.set((this._coords.width - 1) / 2, (this._coords.height - 1) / 2, 0);
+    const sphere = new THREE.Mesh(
+      new THREE.SphereBufferGeometry(1, 32, 32),
+      new THREE.MeshBasicMaterial({ color: 0xAAAAAA, wireframe: true }),
+    );
+    sphere.visible = false;
+    this._scene.add(sphere);
+    const axesHelper = new THREE.AxesHelper(1);
     this._scene.add(axesHelper);
 
+    const networkRadius = new THREE.Vector3(
+      (this._coords.width-1) / 2 + this._nodeRadius,
+      (this._coords.height-1) / 2 + this._nodeRadius,
+      1 // max flow
+    ).length();
+    const networkScaler = new THREE.Group();
+    networkScaler.scale.setScalar(1 / networkRadius);
+    this._scene.add(networkScaler);
+
+    const networkPositioner = new THREE.Group();
+    networkPositioner.translateX(-(this._coords.width - 1) / 2);
+    networkPositioner.translateY(-(this._coords.height - 1) / 2);
+    networkScaler.add(networkPositioner);
+
     const networkGroup = new THREE.Group();
-    this._scene.add(networkGroup);
+    networkPositioner.add(networkGroup);
 
     const animators = [];
     this._network.inputNodeIds.forEach((nodeId) => {
@@ -188,8 +218,8 @@ export default class View extends EventEmitter {
     const nodeIds = this._coords.sortXY().filter((id) => this._network.hasNode(id));
     const edgeMaterial = new THREE.LineBasicMaterial({ color: 0x555555 });
     const meshGeometry = new THREE.CylinderBufferGeometry(
-      0.1,
-      0.1,
+      this._nodeRadius,
+      this._nodeRadius,
       1,
       40
     );
@@ -276,7 +306,7 @@ export default class View extends EventEmitter {
     const { x: fromX, y: fromY } = this._coords.abs(fromId);
     const { x: toX, y: toY } = this._coords.abs(toId);
 
-    const NODE_RADIUS = 0.1;
+    const r = this._nodeRadius;
     const { fromActivation, toActivation } = predictionExt[edgeId];
     const fromActivationScaled = fromActivation * this._flowScale;
     const toActivationScaled = toActivation * this._flowScale;
@@ -284,32 +314,32 @@ export default class View extends EventEmitter {
     const toPartialSumScaled = toPartialSum * this._flowScale;
 
     const curveFront = new THREE.CubicBezierCurve3(
-      new THREE.Vector3(fromX, fromY + NODE_RADIUS, 0),
-      new THREE.Vector3((fromX + toX) * 0.5, fromY + NODE_RADIUS, 0),
-      new THREE.Vector3((fromX + toX) * 0.5, toY + NODE_RADIUS, toPartialSumScaled),
-      new THREE.Vector3(toX, toY + NODE_RADIUS, toPartialSumScaled)
+      new THREE.Vector3(fromX, fromY + r, 0),
+      new THREE.Vector3((fromX + toX) * 0.5, fromY + r, 0),
+      new THREE.Vector3((fromX + toX) * 0.5, toY + r, toPartialSumScaled),
+      new THREE.Vector3(toX, toY + r, toPartialSumScaled)
     );
     const curveFrontActivated = new THREE.CubicBezierCurve3(
-      new THREE.Vector3(fromX, fromY + NODE_RADIUS, fromActivationScaled),
-      new THREE.Vector3((fromX + toX) * 0.5, fromY + NODE_RADIUS, fromActivationScaled),
+      new THREE.Vector3(fromX, fromY + r, fromActivationScaled),
+      new THREE.Vector3((fromX + toX) * 0.5, fromY + r, fromActivationScaled),
       new THREE.Vector3((fromX + toX) * 0.5,
-        toY + NODE_RADIUS,
+        toY + r,
         toPartialSumScaled + toActivationScaled),
-      new THREE.Vector3(toX, toY + NODE_RADIUS, toPartialSumScaled + toActivationScaled)
+      new THREE.Vector3(toX, toY + r, toPartialSumScaled + toActivationScaled)
     );
     const curveBack = new THREE.CubicBezierCurve3(
-      new THREE.Vector3(fromX, fromY - NODE_RADIUS, 0),
-      new THREE.Vector3((fromX + toX) * 0.5, fromY - NODE_RADIUS, 0),
-      new THREE.Vector3((fromX + toX) * 0.5, toY - NODE_RADIUS, toPartialSumScaled),
-      new THREE.Vector3(toX, toY - NODE_RADIUS, toPartialSumScaled)
+      new THREE.Vector3(fromX, fromY - r, 0),
+      new THREE.Vector3((fromX + toX) * 0.5, fromY - r, 0),
+      new THREE.Vector3((fromX + toX) * 0.5, toY - r, toPartialSumScaled),
+      new THREE.Vector3(toX, toY - r, toPartialSumScaled)
     );
     const curveBackActivated = new THREE.CubicBezierCurve3(
-      new THREE.Vector3(fromX, fromY - NODE_RADIUS, fromActivationScaled),
-      new THREE.Vector3((fromX + toX) * 0.5, fromY - NODE_RADIUS, fromActivationScaled),
+      new THREE.Vector3(fromX, fromY - r, fromActivationScaled),
+      new THREE.Vector3((fromX + toX) * 0.5, fromY - r, fromActivationScaled),
       new THREE.Vector3((fromX + toX) * 0.5,
-        toY - NODE_RADIUS,
+        toY - r,
         toPartialSumScaled + toActivationScaled),
-      new THREE.Vector3(toX, toY - NODE_RADIUS, toPartialSumScaled + toActivationScaled)
+      new THREE.Vector3(toX, toY - r, toPartialSumScaled + toActivationScaled)
     );
 
     return {
@@ -401,19 +431,7 @@ export default class View extends EventEmitter {
   }
 
   _computeGeometricParameters() {
-    // TODO: Avoid constants in favor of per-network parameters
-    this._gridScale = {
-      x: 400,
-      y: 400
-    };
-    this._nodeSize = {
-      x: Math.min(this._gridScale.x, this._gridScale.y) / 4,
-      y: Math.min(this._gridScale.x, this._gridScale.y) / 4,
-    };
-    this._nodeMaxInnerHeight = (this._gridScale.y - this._nodeSize.y) * 0.9;
-    this._nodeRadius = this._nodeSize.y * 0.5;
-    this._labelFontSize = 16; // TODO: Move to CSS if possible // px
-    this._handleRadius = 10;
+    this._nodeRadius = 0.1;
   }
 
   _computeFlowScale(p) {
@@ -615,7 +633,6 @@ function meshFromBezierCurves(numSegments, ...bezierCurves) {
     }
   };
   updateVertices(...bezierCurves);
-  console.log(vertices, faces);
   geometry.verticesNeedUpdate = true;
   geometry.elementsNeedUpdate = true;
 
