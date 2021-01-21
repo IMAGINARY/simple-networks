@@ -92,8 +92,8 @@ export default class View extends EventEmitter {
     const camera = new THREE.PerspectiveCamera(fov, width / height, near, far);
 
     {
-      const isometricAngle = 0;//Math.atan(1 / Math.sqrt(2));
-      const cameraRotation = new THREE.Matrix4().makeRotationX(-isometricAngle);
+      const isometricAngle = Math.atan(1 / Math.sqrt(2));
+      const cameraRotation = new THREE.Matrix4().makeRotationX(isometricAngle);
       const cameraTranslation = new THREE.Matrix4().makeTranslation(0, 0, distance);
       const cameraMatrix = new THREE.Matrix4().multiplyMatrices(cameraRotation, cameraTranslation);
       cameraMatrix.decompose(camera.position, camera.quaternion, camera.scale);
