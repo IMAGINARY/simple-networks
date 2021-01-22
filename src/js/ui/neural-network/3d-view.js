@@ -114,8 +114,8 @@ export default class View extends EventEmitter {
     this._scene.add(axesHelper);
 
     const networkRadius = new THREE.Vector3(
-      (this._coords.width-1) / 2 + this._nodeRadius,
-      (this._coords.height-1) / 2 + this._nodeRadius,
+      (this._coords.width - 1) / 2 + this._nodeRadius,
+      (this._coords.height - 1) / 2 + this._nodeRadius,
       1 // max flow
     ).length();
     const networkScaler = new THREE.Group();
@@ -124,7 +124,7 @@ export default class View extends EventEmitter {
 
     const networkPositioner = new THREE.Group();
     networkPositioner.translateX(-(this._coords.width - 1) / 2);
-    networkPositioner.translateY(-(this._coords.height - 1) / 2);
+    networkPositioner.translateY((this._coords.height - 1) / 2);
     networkScaler.add(networkPositioner);
 
     const networkGroup = new THREE.Group();
@@ -249,8 +249,8 @@ export default class View extends EventEmitter {
       console.log(nodeId);
       const nodeGroup = new THREE.Group();
       const { x, y } = this._coords.abs(nodeId);
-      console.log(nodeId, x, y);
-      nodeGroup.position.set(x, y, 0);
+      console.log(nodeId, x, -y);
+      nodeGroup.position.set(x, -y, 0);
       nodeGroup.add(scale);
       group.add(nodeGroup);
 
@@ -303,8 +303,10 @@ export default class View extends EventEmitter {
   _createEdgeBezierCurves(predictionExt, edgeId) {
     const { from: fromId, to: toId } = FeedForwardNetwork.nodeIdsFromEdgeId(edgeId);
 
-    const { x: fromX, y: fromY } = this._coords.abs(fromId);
-    const { x: toX, y: toY } = this._coords.abs(toId);
+    const negY = ({ x, y }) => ({ x, y: -y });
+
+    const { x: fromX, y: fromY } = negY(this._coords.abs(fromId));
+    const { x: toX, y: toY } = negY(this._coords.abs(toId));
 
     const r = this._nodeRadius;
     const { fromActivation, toActivation } = predictionExt[edgeId];
