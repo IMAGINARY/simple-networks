@@ -309,7 +309,7 @@ export default class View extends EventEmitter {
     const { x: fromX, y: fromY } = negY(this._coords.abs(fromId));
     const { x: toX, y: toY } = negY(this._coords.abs(toId));
 
-    const r = this._nodeRadius;
+    const r = 0.8 * this._nodeRadius;
     const { fromActivation, toActivation } = predictionExt[edgeId];
     const fromActivationScaled = fromActivation * this._flowScale;
     const toActivationScaled = toActivation * this._flowScale;
