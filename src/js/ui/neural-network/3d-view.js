@@ -589,7 +589,7 @@ const fillColor = node => {
   }
 };
 
-const activationColor = activation => activation >= 0 ? 0x0000FF : 0xFF0000;
+const activationColor = activation => activation >= 0 ? 0x346ee0 : 0xbf2b2b;
 
 function meshFromBezierCurves(numSegments, ...bezierCurves) {
   const numSamples = numSegments + 1;
