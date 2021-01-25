@@ -10,6 +10,8 @@ import IOps, { Interval } from 'interval-arithmetic';
 import $ from 'jquery';
 import FeedForwardNetwork from '../../neural-network/network';
 
+const DEBUG = false;
+
 export default class View extends EventEmitter {
   constructor({ levelName, predictionModel, layout, strings, i18n, options = levelDefaults }) {
     super();
@@ -72,7 +74,9 @@ export default class View extends EventEmitter {
     renderer.setClearColor(0xffffff, 1.0);
     const $container = $(this._options.networkContainer).empty();
     $container.append(renderer.domElement);
-    renderer.domElement.style.outline = '1px red solid';
+    if (DEBUG) {
+      renderer.domElement.style.outline = '1px red solid';
+    }
     /*
         const camera = new THREE.OrthographicCamera(
           -this._coords.width / 2,
@@ -104,14 +108,18 @@ export default class View extends EventEmitter {
     controls.update();
 
     this._scene = new THREE.Scene();
+    this._debug = new THREE.Group();
+    this._debug.visible = DEBUG;
+    this._scene.add(this._debug);
+
     const sphere = new THREE.Mesh(
       new THREE.SphereBufferGeometry(1, 32, 32),
       new THREE.MeshBasicMaterial({ color: 0xAAAAAA, wireframe: true }),
     );
-    sphere.visible = false;
-    this._scene.add(sphere);
+    this._debug.add(sphere);
+
     const axesHelper = new THREE.AxesHelper(1);
-    this._scene.add(axesHelper);
+    this._debug.add(axesHelper);
 
     const pointLight0 = new THREE.PointLight(0xffffff, 0.5, 100);
     const pointLightDistance0 = 1;
@@ -145,7 +153,7 @@ export default class View extends EventEmitter {
     dirLight1.position.set(0, 0, 1);
     this._scene.add(dirLight1);
 
-    this._scene.add(
+    this._debug.add(
       new THREE.PointLightHelper(pointLight0, 0.05, 0x777777),
       new THREE.PointLightHelper(pointLight1, 0.05, 0x777777),
       //      new THREE.PointLightHelper(pointLight2, 0.05, 0x777777),
