@@ -305,7 +305,11 @@ export default class View extends EventEmitter {
       group.add(nodeGroup);
 
       const update = (predictionExt) => {
-        scale.scale.set(1, 1, predictionExt[nodeId].activation * this._flowScale);
+        const epsilon = 0.001;
+        const clampedActivation = Math.abs(predictionExt[nodeId].activation) > epsilon ?
+          predictionExt[nodeId].activation :
+          (predictionExt[nodeId].activation >= 0.0 ? 1 : -1) * epsilon;
+        scale.scale.set(1, 1, clampedActivation * this._flowScale);
       };
       updaters.push(update);
     }
