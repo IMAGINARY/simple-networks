@@ -235,6 +235,7 @@ export default class View extends EventEmitter {
       });
       const mesh = new THREE.Mesh(meshGeometry, meshMaterial);
       const edges = new THREE.LineSegments(edgeGeometry, edgeMaterial);
+      edges.visible = false;
 
       const orient = new THREE.Group();
       orient.translateZ(0.5);
