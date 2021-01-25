@@ -54,7 +54,7 @@ export default class View extends EventEmitter {
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     const aspectRatio = this._coords.width / this._coords.height;
-    const [maxWidth, maxHeight] = [800, 800];
+    const [maxWidth, maxHeight] = [1080, 1080];
     const width = maxWidth, height = maxHeight;
     /*
     let width, height;
