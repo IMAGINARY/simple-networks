@@ -11,6 +11,8 @@ import $ from 'jquery';
 import FeedForwardNetwork from '../../neural-network/network';
 
 const DEBUG = false;
+const NODE_RADIUS = 0.2;
+const EDGE_WIDTH = 2 * 0.8 * NODE_RADIUS;
 
 export default class View extends EventEmitter {
   constructor({ levelName, predictionModel, layout, strings, i18n, options = levelDefaults }) {
@@ -25,8 +27,6 @@ export default class View extends EventEmitter {
     this._options = defaultsDeep({ ...options }, levelDefaults);
 
     this._eventManager = new EventManager();
-
-    this._computeGeometricParameters();
 
     this._coords = new NodeCoordinates(layout);
 
@@ -162,8 +162,8 @@ export default class View extends EventEmitter {
     );
 
     const networkRadius = new THREE.Vector3(
-      (this._coords.width - 1) / 2 + this._nodeRadius,
-      (this._coords.height - 1) / 2 + this._nodeRadius,
+      (this._coords.width - 1) / 2 + NODE_RADIUS,
+      (this._coords.height - 1) / 2 + NODE_RADIUS,
       1 // max flow
     ).length();
     const networkScaler = new THREE.Group();
@@ -266,8 +266,8 @@ export default class View extends EventEmitter {
     const nodeIds = this._coords.sortXY().filter((id) => this._network.hasNode(id));
     const edgeMaterial = new THREE.LineBasicMaterial({ color: 0x555555 });
     const meshGeometry = new THREE.CylinderBufferGeometry(
-      this._nodeRadius,
-      this._nodeRadius,
+      NODE_RADIUS,
+      NODE_RADIUS,
       1,
       40
     );
@@ -358,7 +358,7 @@ export default class View extends EventEmitter {
     const { x: fromX, y: fromY } = negY(this._coords.abs(fromId));
     const { x: toX, y: toY } = negY(this._coords.abs(toId));
 
-    const r = 0.8 * this._nodeRadius;
+    const r = EDGE_WIDTH / 2;
     const { fromActivation, toActivation } = predictionExt[edgeId];
     const fromActivationScaled = fromActivation * this._flowScale;
     const toActivationScaled = toActivation * this._flowScale;
@@ -481,10 +481,6 @@ export default class View extends EventEmitter {
       sceneObject: group,
       update,
     };
-  }
-
-  _computeGeometricParameters() {
-    this._nodeRadius = 0.1;
   }
 
   _computeFlowScale(p) {
