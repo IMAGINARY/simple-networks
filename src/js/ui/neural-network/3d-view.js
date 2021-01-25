@@ -113,6 +113,46 @@ export default class View extends EventEmitter {
     const axesHelper = new THREE.AxesHelper(1);
     this._scene.add(axesHelper);
 
+    const pointLight0 = new THREE.PointLight(0xffffff, 0.5, 100);
+    const pointLightDistance0 = 1;
+    pointLight0.translateOnAxis(
+      new THREE.Vector3(-1, -1, 1).normalize(),
+      pointLightDistance0
+    );
+    this._scene.add(pointLight0);
+
+    const pointLight1 = new THREE.PointLight(0xffffff, 0.5, 100);
+    const pointLightDistance1 = 1;
+    pointLight1.translateOnAxis(
+      new THREE.Vector3(-1, -1, -1).normalize(),
+      pointLightDistance1
+    );
+    this._scene.add(pointLight1);
+    /*
+        const pointLight2 = new THREE.PointLight(0xffffff, 0.5, 100);
+        const pointLightDistance2 = 1;
+        pointLight2.translateOnAxis(
+          new THREE.Vector3(1, 1, 1).normalize(),
+          pointLightDistance2
+        );
+        this._scene.add(pointLight2);
+    */
+    const dirLight0 = new THREE.DirectionalLight(0xffffff, 0.75);
+    dirLight0.position.set(0, -1, 0);
+    this._scene.add(dirLight0);
+
+    const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.75);
+    dirLight1.position.set(0, 0, 1);
+    this._scene.add(dirLight1);
+
+    this._scene.add(
+      new THREE.PointLightHelper(pointLight0, 0.05, 0x777777),
+      new THREE.PointLightHelper(pointLight1, 0.05, 0x777777),
+      //      new THREE.PointLightHelper(pointLight2, 0.05, 0x777777),
+      new THREE.DirectionalLightHelper(dirLight0, 0.05, 0x777777),
+      new THREE.DirectionalLightHelper(dirLight1, 0.05, 0x777777),
+    );
+
     const networkRadius = new THREE.Vector3(
       (this._coords.width - 1) / 2 + this._nodeRadius,
       (this._coords.height - 1) / 2 + this._nodeRadius,
@@ -228,10 +268,11 @@ export default class View extends EventEmitter {
     const group = new THREE.Group();
     const updaters = [];
     for (let nodeId of nodeIds) {
-      const meshMaterial = new THREE.MeshBasicMaterial({
+      const meshMaterial = new THREE.MeshStandardMaterial({
         color: activationColor(predictionExt[nodeId].activation),
-        opacity: 0.5,
-        transparent: true,
+        metalness: 0.0,
+        roughness: 0.5,
+        side: THREE.DoubleSide,
       });
       const mesh = new THREE.Mesh(meshGeometry, meshMaterial);
       const edges = new THREE.LineSegments(edgeGeometry, edgeMaterial);
@@ -354,10 +395,11 @@ export default class View extends EventEmitter {
   }
 
   _createEdgeGeometry(predictionExt, edgeId) {
-    const meshMaterial = new THREE.MeshBasicMaterial({
+    const meshMaterial = new THREE.MeshStandardMaterial({
       color: activationColor(predictionExt[edgeId].toActivation),
-      opacity: 0.5,
-      transparent: true,
+      metalness: 0.0,
+      roughness: 0.5,
+      side: THREE.DoubleSide,
     });
     const edgeMaterial = new THREE.LineBasicMaterial({ color: 0x555555 });
 
