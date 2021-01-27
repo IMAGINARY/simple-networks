@@ -309,6 +309,7 @@ export default class View extends EventEmitter {
           predictionExt[nodeId].activation :
           (predictionExt[nodeId].activation >= 0.0 ? 1 : -1) * epsilon;
         scale.scale.set(1, 1, clampedActivation * this._flowScale);
+        meshMaterial.color.set(activationColor(predictionExt[nodeId].activation));
       };
       updaters.push(update);
     }
@@ -471,6 +472,7 @@ export default class View extends EventEmitter {
         curveBackActivated
       } = this._createEdgeBezierCurves(predictionExt, edgeId);
       updateMeshGeometry(curveFront, curveFrontActivated, curveBackActivated, curveBack);
+      meshMaterial.color.set(activationColor(predictionExt[edgeId].toActivation));
     };
 
     const group = new THREE.Group();
