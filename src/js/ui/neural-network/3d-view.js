@@ -88,7 +88,7 @@ export default class View extends EventEmitter {
         );
 
      */
-    const fov = 45;
+    const fov = 20;
     const distance = 1 / Math.sin((fov / 2) * (Math.PI / 180));
     const near = 0.1;
     const far = 1000.0;
