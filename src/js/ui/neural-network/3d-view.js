@@ -55,6 +55,9 @@ export default class View extends EventEmitter {
     console.log('============================');
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.VSMShadowMap;
+
     const aspectRatio = this._coords.width / this._coords.height;
     const [maxWidth, maxHeight] = [1080, 1080];
     const width = maxWidth, height = maxHeight;
@@ -120,45 +123,38 @@ export default class View extends EventEmitter {
     const axesHelper = new THREE.AxesHelper(1);
     this._debug.add(axesHelper);
 
-    const pointLight0 = new THREE.PointLight(0xffffff, 0.5, 100);
-    const pointLightDistance0 = 1;
-    pointLight0.translateOnAxis(
-      new THREE.Vector3(-1, -1, 1).normalize(),
-      pointLightDistance0
-    );
-    this._scene.add(pointLight0);
+    const lights = new THREE.Group();
+    this._scene.add(lights);
 
-    const pointLight1 = new THREE.PointLight(0xffffff, 0.5, 100);
-    const pointLightDistance1 = 1;
-    pointLight1.translateOnAxis(
-      new THREE.Vector3(-1, -1, -1).normalize(),
-      pointLightDistance1
-    );
-    this._scene.add(pointLight1);
-    /*
-        const pointLight2 = new THREE.PointLight(0xffffff, 0.5, 100);
-        const pointLightDistance2 = 1;
-        pointLight2.translateOnAxis(
-          new THREE.Vector3(1, 1, 1).normalize(),
-          pointLightDistance2
-        );
-        this._scene.add(pointLight2);
-    */
-    const dirLight0 = new THREE.DirectionalLight(0xffffff, 0.75);
-    dirLight0.position.set(0, -1, 0);
-    this._scene.add(dirLight0);
+    const hemisphericLight = new THREE.HemisphereLight(0xffffff, 0x777777, 0.5);
+    hemisphericLight.position.set(0, 0, 1);
+    lights.add(hemisphericLight);
 
-    const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.75);
-    dirLight1.position.set(0, 0, 1);
-    this._scene.add(dirLight1);
+    const shadowCastingLights = new THREE.Group();
+    lights.add(shadowCastingLights);
 
-    this._debug.add(
-      new THREE.PointLightHelper(pointLight0, 0.05, 0x777777),
-      new THREE.PointLightHelper(pointLight1, 0.05, 0x777777),
-      //      new THREE.PointLightHelper(pointLight2, 0.05, 0x777777),
-      new THREE.DirectionalLightHelper(dirLight0, 0.05, 0x777777),
-      new THREE.DirectionalLightHelper(dirLight1, 0.05, 0x777777),
-    );
+    const spotLight0 = new THREE.SpotLight(0xffffff, 0.75);
+    const spotLightDistance0 = 1.5;
+    const lightPosition0 = new THREE.Vector3(0, -1, 1)
+      .normalize()
+      .multiplyScalar(spotLightDistance0);
+    spotLight0.position.copy(lightPosition0);
+    shadowCastingLights.add(spotLight0);
+
+    for (let light of shadowCastingLights.children) {
+      light.castShadow = true;
+      light.shadow.mapSize.width = 1024;
+      light.shadow.mapSize.height = 1024;
+      light.shadow.camera.fov = (Math.asin(1 / spotLightDistance0) * 2) * 180 / Math.PI;
+      light.shadow.camera.near = spotLightDistance0 - 1;
+      light.shadow.camera.far = light.shadow.camera.near + 2;
+      light.shadow.bias = -0.002;
+    }
+
+    this._debug.add(new THREE.HemisphereLightHelper(hemisphericLight, 0.05, 0x777777));
+    for (let light of shadowCastingLights.children) {
+      this._debug.add(new THREE.CameraHelper(light.shadow.camera));
+    }
 
     const networkRadius = new THREE.Vector3(
       (this._coords.width - 1) / 2 + NODE_RADIUS,
@@ -282,6 +278,8 @@ export default class View extends EventEmitter {
         side: THREE.DoubleSide,
       });
       const mesh = new THREE.Mesh(meshGeometry, meshMaterial);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
       const edges = new THREE.LineSegments(edgeGeometry, edgeMaterial);
       edges.visible = false;
 
@@ -463,6 +461,8 @@ export default class View extends EventEmitter {
       curveBack
     );
     const mesh = new THREE.Mesh(meshGeometry, meshMaterial);
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
 
     const update = (predictionExt) => {
       const {
