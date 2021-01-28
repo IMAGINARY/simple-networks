@@ -353,14 +353,17 @@ export default class View extends EventEmitter {
   }
 
   _createEdgeBezierCurves(predictionExt, edgeId) {
+    const r = EDGE_WIDTH / 2;
+    const d = Math.sqrt(NODE_RADIUS * NODE_RADIUS - r * r);
+
     const { from: fromId, to: toId } = FeedForwardNetwork.nodeIdsFromEdgeId(edgeId);
 
     const negY = ({ x, y }) => ({ x, y: -y });
+    const add = ({ x: x0, y: y0 }, { x: x1, y: y1 }) => ({ x: x0 + x1, y: y0 + y1 });
 
-    const { x: fromX, y: fromY } = negY(this._coords.abs(fromId));
-    const { x: toX, y: toY } = negY(this._coords.abs(toId));
+    const { x: fromX, y: fromY } = add((negY(this._coords.abs(fromId))), { x: d, y: 0 });
+    const { x: toX, y: toY } = add((negY(this._coords.abs(toId))), { x: -d, y: 0 });
 
-    const r = EDGE_WIDTH / 2;
     const { fromActivation, toActivation } = predictionExt[edgeId];
     const fromActivationScaled = fromActivation * this._flowScale;
     const toActivationScaled = toActivation * this._flowScale;
