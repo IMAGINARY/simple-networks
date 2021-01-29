@@ -409,12 +409,21 @@ export default class View extends EventEmitter {
   }
 
   _createEdgeGeometry(predictionExt, edgeId) {
-    const meshMaterial = new THREE.MeshStandardMaterial({
-      color: activationColor(predictionExt[edgeId].toActivation),
+    const materialOptions = {
       metalness: 0.0,
       roughness: 0.5,
       side: THREE.DoubleSide,
-    });
+    };
+    const materials = [
+      new THREE.MeshStandardMaterial({
+        ...materialOptions,
+        color: activationColor(predictionExt[edgeId].fromActivation),
+      }),
+      new THREE.MeshStandardMaterial({
+        ...materialOptions,
+        color: activationColor(predictionExt[edgeId].toActivation),
+      }),
+    ];
     const edgeMaterial = new THREE.LineBasicMaterial({ color: 0x555555 });
 
     const {
@@ -464,7 +473,7 @@ export default class View extends EventEmitter {
       curveBackActivated,
       curveBack
     );
-    const mesh = new THREE.Mesh(meshGeometry, meshMaterial);
+    const mesh = new THREE.Mesh(meshGeometry, materials);
     mesh.castShadow = true;
     mesh.receiveShadow = true;
 
@@ -476,7 +485,8 @@ export default class View extends EventEmitter {
         curveBackActivated
       } = this._createEdgeBezierCurves(predictionExt, edgeId);
       updateMeshGeometry(curveFront, curveFrontActivated, curveBackActivated, curveBack);
-      meshMaterial.color.set(activationColor(predictionExt[edgeId].toActivation));
+      materials[0].color.set(activationColor(predictionExt[edgeId].fromActivation));
+      materials[1].color.set(activationColor(predictionExt[edgeId].toActivation));
     };
 
     const group = new THREE.Group();
@@ -655,29 +665,32 @@ function meshFromBezierCurves(numSegments, ...bezierCurves) {
 
   // Faces
   const faces = [];
-  for (let i = 0; i < numCurves; i = i + 1) {
-    const offset0 = numSamples * (2 * i + 0);
-    const offset1 = numSamples * (2 * i + 1);
-    for (let j = 0; j < numSegments; j = j + 1) {
+  const frontOffset = 2 * numCurves * numSamples;
+  for (let i = 1; i < numCurves - 1; i = i + 1) {
+    faces.push(frontOffset, frontOffset + i + 1, frontOffset + i);
+  }
+
+  for (let j = 0; j < numSegments; j = j + 1) {
+    for (let i = 0; i < numCurves; i = i + 1) {
+      const offset0 = numSamples * (2 * i + 0);
+      const offset1 = numSamples * (2 * i + 1);
       faces.push(offset0 + j, offset1 + j, offset0 + j + 1);
       faces.push(offset0 + j + 1, offset1 + j, offset1 + j + 1);
     }
   }
 
-  const frontOffset = 2 * numCurves * numSamples;
   const backOffset = 2 * numCurves * numSamples + numCurves;
   for (let i = 1; i < numCurves - 1; i = i + 1) {
-    faces.push(frontOffset, frontOffset + i + 1, frontOffset + i);
     faces.push(backOffset, backOffset + i, backOffset + i + 1);
   }
 
   geometry.setIndex(faces);
 
-  // Positions
+  // Positions & material groups
   const numVertices = 2 * numSamples * numCurves + 2 * numCurves;
   const positionAttribute = new BufferAttribute(new Float32Array(3 * numVertices), 3)
   geometry.setAttribute('position', positionAttribute);
-  const updateVertices = (...newBezierCurves) => {
+  const updateVerticesAndGroups = (...newBezierCurves) => {
     const vertices = positionAttribute.array;
     const points = newBezierCurves.map(curve => curve.getSpacedPoints(numSegments));
     for (let i = 0; i < numCurves; i = i + 1) {
@@ -692,13 +705,16 @@ function meshFromBezierCurves(numSegments, ...bezierCurves) {
       points[i][0].toArray(vertices, 3 * (frontOffset + i));
       points[i][numSegments].toArray(vertices, 3 * (backOffset + i));
     }
+    geometry.clearGroups();
+    geometry.addGroup(0, faces.length / 2, 0);
+    geometry.addGroup(faces.length / 2, faces.length / 2, 1);
   };
-  updateVertices(...bezierCurves);
+  updateVerticesAndGroups(...bezierCurves);
   positionAttribute.needsUpdate = true;
   geometry.getIndex().needsUpdate = true;
 
   const update = (...newBezierCurves) => {
-    updateVertices(...newBezierCurves);
+    updateVerticesAndGroups(...newBezierCurves);
     positionAttribute.needsUpdate = true;
     geometry.computeVertexNormals();
     geometry.computeBoundingBox();
