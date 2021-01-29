@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { BufferAttribute } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { EventEmitter } from 'events';
 import { cloneDeep, defaultsDeep } from 'lodash';
@@ -650,52 +651,55 @@ function meshFromBezierCurves(numSegments, ...bezierCurves) {
   const numSamples = numSegments + 1;
   const numCurves = bezierCurves.length;
 
-  const geometry = new THREE.Geometry();
+  const geometry = new THREE.BufferGeometry();
 
-  const faces = geometry.faces;
+  // Faces
+  const faces = [];
   for (let i = 0; i < numCurves; i = i + 1) {
     const offset0 = numSamples * (2 * i + 0);
     const offset1 = numSamples * (2 * i + 1);
     for (let j = 0; j < numSegments; j = j + 1) {
-      faces.push(new THREE.Face3(offset0 + j, offset1 + j, offset0 + j + 1));
-      faces.push(new THREE.Face3(offset0 + j + 1, offset1 + j, offset1 + j + 1));
+      faces.push(offset0 + j, offset1 + j, offset0 + j + 1);
+      faces.push(offset0 + j + 1, offset1 + j, offset1 + j + 1);
     }
   }
 
   const frontOffset = 2 * numCurves * numSamples;
   const backOffset = 2 * numCurves * numSamples + numCurves;
   for (let i = 1; i < numCurves - 1; i = i + 1) {
-    faces.push(new THREE.Face3(frontOffset, frontOffset + i + 1, frontOffset + i));
-    faces.push(new THREE.Face3(backOffset, backOffset + i, backOffset + i + 1));
+    faces.push(frontOffset, frontOffset + i + 1, frontOffset + i);
+    faces.push(backOffset, backOffset + i, backOffset + i + 1);
   }
 
-  const vertices = geometry.vertices;
-  vertices.length = 2 * numSamples * numCurves + 2 * numCurves;
-  for (let i = 0; i < vertices.length; i = i + 1) {
-    vertices[i] = new THREE.Vector3();
-  }
+  geometry.setIndex(faces);
+
+  // Positions
+  const numVertices = 2 * numSamples * numCurves + 2 * numCurves;
+  const positionAttribute = new BufferAttribute(new Float32Array(3 * numVertices), 3)
+  geometry.setAttribute('position', positionAttribute);
   const updateVertices = (...newBezierCurves) => {
+    const vertices = positionAttribute.array;
     const points = newBezierCurves.map(curve => curve.getSpacedPoints(numSegments));
     for (let i = 0; i < numCurves; i = i + 1) {
       const c0 = points[i];
       const c1 = points[(i + 1) % numCurves];
       for (let j = 0; j < numSamples; j = j + 1) {
-        vertices[numSamples * (2 * i + 0) + j].copy(c0[j]);
-        vertices[numSamples * (2 * i + 1) + j].copy(c1[j]);
+        c0[j].toArray(vertices, 3 * (numSamples * (2 * i + 0) + j));
+        c1[j].toArray(vertices, 3 * (numSamples * (2 * i + 1) + j));
       }
     }
     for (let i = 0; i < numCurves; i = i + 1) {
-      vertices[frontOffset + i].copy(points[i][0]);
-      vertices[backOffset + i].copy(points[i][numSegments]);
+      points[i][0].toArray(vertices, 3 * (frontOffset + i));
+      points[i][numSegments].toArray(vertices, 3 * (backOffset + i));
     }
   };
   updateVertices(...bezierCurves);
-  geometry.verticesNeedUpdate = true;
-  geometry.elementsNeedUpdate = true;
+  positionAttribute.needsUpdate = true;
+  geometry.getIndex().needsUpdate = true;
 
   const update = (...newBezierCurves) => {
     updateVertices(...newBezierCurves);
-    geometry.verticesNeedUpdate = true;
+    positionAttribute.needsUpdate = true;
     geometry.computeVertexNormals();
     geometry.computeBoundingBox();
     geometry.computeBoundingSphere();
