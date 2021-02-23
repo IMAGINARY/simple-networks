@@ -657,6 +657,14 @@ const fillColor = node => {
 
 const activationColor = activation => activation >= 0 ? 0x346ee0 : 0xbf2b2b;
 
+
+/***
+ * TODO:
+ * - compute t where edges with neg weights self intersect
+ * - add own function for computing points on the bezier curves: (numSegments, tSplit, ...bezierCurves) => {pointArray, indexTSplit}
+ * - group 0: faces < indexTSplit; group 1: faces >= indexTSplit
+ * - special case (maybe): no self intersection -> indexTSplit = -1 (or numSegments + 1 depending on the weights/activations)
+ */
 function meshFromBezierCurves(numSegments, ...bezierCurves) {
   const numSamples = numSegments + 1;
   const numCurves = bezierCurves.length;
