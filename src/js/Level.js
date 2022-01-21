@@ -116,8 +116,7 @@ export class Level {
       .text(closs.toFixed(2));
 
     d3.select("#nextbutton")
-      .classed("selected", closs < 0.02)
-      .classed("successful", closs < 0.02);
+      .classed("disable", closs > 0.02);
 
     d3.select(".tabbed")
       .classed("successful", closs < 0.02);

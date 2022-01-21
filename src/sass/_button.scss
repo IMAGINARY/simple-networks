@@ -13,11 +13,16 @@
   pointer-events: all;
 }
 
-.button:hover {
+.button:not(.disable):hover {
   background: #EEEEEE;
 }
 
 .button.selected {
   font-weight: bold;
   background: #E1E1E1;
+}
+
+.button.disable {
+  border-color: rgba(0, 0, 0, 0.1);
+  color: rgba(0, 0, 0, 0.1);
 }

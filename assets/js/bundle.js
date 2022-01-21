@@ -444,7 +444,7 @@ var Level = /*#__PURE__*/function () {
       this.updatetable();
       var closs = this.network.loss(this.trainXs, this.trainYs);
       d3.select("#totalerror").text(closs.toFixed(2));
-      d3.select("#nextbutton").classed("selected", closs < 0.02).classed("successful", closs < 0.02);
+      d3.select("#nextbutton").classed("disable", closs > 0.02);
       d3.select(".tabbed").classed("successful", closs < 0.02);
       d3.select("#totalerrorterm").text(this.rows.map(function (r) {
         return "(".concat(r[r.length - 1], " - ").concat(r[r.length - 2], ")\xB2");
@@ -586,7 +586,7 @@ var LevelController = /*#__PURE__*/function () {
         };
 
         document.querySelector("#nextbutton").onclick = function () {
-          return _this.goNext();
+          if (!document.querySelector("#nextbutton").classList.contains("disable")) _this.goNext();
         };
 
         _this.showLevelByURL();

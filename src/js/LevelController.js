@@ -48,7 +48,10 @@ export class LevelController {
   createEvents() {
     window.addEventListener('DOMContentLoaded', (event) => {
       document.querySelector("#backbutton").onclick = (() => this.goBack());
-      document.querySelector("#nextbutton").onclick = (() => this.goNext());
+      document.querySelector("#nextbutton").onclick = (() => {
+        if(!document.querySelector("#nextbutton").classList.contains("disable"))
+          this.goNext();
+      });
       this.showLevelByURL();
     });
 
