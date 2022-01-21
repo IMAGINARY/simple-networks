@@ -10,10 +10,10 @@
   background-image: url("assets/img/international.svg"); }
 
 .footer #backbutton::before {
-  content: "< "; }
+  content: "<"; }
 
 .footer #nextbutton::after {
-  content: " >"; }
+  content: ">"; }
 
 .footer .circ {
   border: 2px solid #000000;
