@@ -4,6 +4,10 @@
 @import "slider";
 @import "credits";
 
+* {
+  touch-action: none;
+}
+
 .hidden {
   visibility: hidden;
   opacity: 0;

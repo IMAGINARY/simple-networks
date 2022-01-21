@@ -1130,7 +1130,12 @@ var NetworkVisualization = /*#__PURE__*/function () {
     value: function addInteraction() {
       var nodes = this.nodes;
       var that = this;
-      var tooltip;
+      var tooltip = d3.local();
+
+      var addToolTip = function addToolTip() {
+        tooltip.set(this, d3.select("#tooltip").append("text").style("display", "none"));
+      };
+
       var nodedrag = d3.drag().on("start", function () {
         var current = d3.select(this);
         this.y0 = d3.event.y;
@@ -1139,7 +1144,11 @@ var NetworkVisualization = /*#__PURE__*/function () {
         if (node.adjustable) {
           this.v0 = node.bias;
           that.network.pauseAnimatedInput();
-          tooltip = d3.select("#tooltip").append("text");
+
+          if (d3.event.active === 0) {
+            var tooltipForThis = tooltip.get(this);
+            tooltipForThis.style("display", "block");
+          }
         }
 
         if (node.constructor.name == "InputNode") {
@@ -1152,7 +1161,8 @@ var NetworkVisualization = /*#__PURE__*/function () {
         if (node.adjustable) {
           node.bias = clamp(this.v0 - (d3.event.y - this.y0) / _constants.unit, -4, 4); //node.y = d3.event.y + this.deltaX;
 
-          tooltip.attr("x", node.x).attr("y", node.y - _constants.unit * node.bias).text("+ ".concat(node.format(node.bias)));
+          var tooltipForThis = tooltip.get(this);
+          tooltipForThis.attr("x", node.x).attr("y", node.y - _constants.unit * node.bias).text("+ ".concat(node.format(node.bias)));
         }
 
         if (node.constructor.name == "InputNode") {
@@ -1163,12 +1173,16 @@ var NetworkVisualization = /*#__PURE__*/function () {
           }
         }
       }).on("end", function () {
-        if (tooltip) tooltip.remove();
+        if (d3.event.active === 0) {
+          var tooltipForThis = tooltip.get(this);
+          tooltipForThis.style("display", "none");
+        }
       });
-      nodedrag(d3.select("#nodes").selectAll("circle"));
-      nodedrag(d3.select("#parameters").select(".input").selectAll("circle"));
-      nodedrag(d3.select("#parameters").select(".nodes").selectAll("circle"));
-      nodedrag(d3.select("#input").selectAll("rect"));
+      var nodeDragSelections = [d3.select("#nodes").selectAll("circle"), d3.select("#parameters").select(".input").selectAll("circle"), d3.select("#parameters").select(".nodes").selectAll("circle"), d3.select("#input").selectAll("rect")];
+      nodeDragSelections.forEach(function (s) {
+        s.each(addToolTip);
+        nodedrag(s);
+      });
       var edgedrag = d3.drag().on("start", function () {
         var edge = d3.select(this).data()[0];
 
@@ -1177,7 +1191,11 @@ var NetworkVisualization = /*#__PURE__*/function () {
           this.y0 = d3.event.y;
           this.weight0 = edge.weight;
           that.network.pauseAnimatedInput();
-          tooltip = d3.select("#tooltip").append("text");
+
+          if (d3.event.active === 0) {
+            var tooltipForThis = tooltip.get(this);
+            tooltipForThis.style("display", "block");
+          }
         }
       }).on("drag", function () {
         var edge = d3.select(this).data()[0];
@@ -1188,13 +1206,20 @@ var NetworkVisualization = /*#__PURE__*/function () {
 
           edge.weight = clamp(this.weight0 - (d3.event.y - this.y0) / sactivation / _constants.unit, -4, 4); //}
 
-          tooltip.attr("x", edge.parameterPosition()[0]).attr("y", edge.parameterPosition()[1]).text("\xD7 ".concat(edge.weight.toFixed(2)));
+          var tooltipForThis = tooltip.get(this);
+          tooltipForThis.attr("x", edge.parameterPosition()[0]).attr("y", edge.parameterPosition()[1]).text("\xD7 ".concat(edge.weight.toFixed(2)));
         }
       }).on("end", function () {
-        if (tooltip) tooltip.remove();
+        if (d3.event.active === 0) {
+          var tooltipForThis = tooltip.get(this);
+          tooltipForThis.style("display", "none");
+        }
       });
-      edgedrag(d3.select("#edges").selectAll("path, circle"));
-      edgedrag(d3.select("#parameters").select(".edges").selectAll("circle"));
+      var edgeDragSelections = [d3.select("#edges").selectAll("path, circle"), d3.select("#parameters").select(".edges").selectAll("circle")];
+      edgeDragSelections.forEach(function (s) {
+        s.each(addToolTip);
+        edgedrag(s);
+      });
     }
   }]);
 

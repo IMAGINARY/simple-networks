@@ -368,6 +368,9 @@ input[type=range]:focus::-webkit-slider-runnable-track {
   padding: 28px;
   z-index: 30; }
 
+* {
+  touch-action: none; }
+
 .hidden {
   visibility: hidden;
   opacity: 0; }

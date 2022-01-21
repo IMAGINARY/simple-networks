@@ -272,7 +272,14 @@ export class NetworkVisualization {
     const nodes = this.nodes;
 
     const that = this;
-    var tooltip;
+    const tooltip = d3.local();
+    const addToolTip = function() {
+      tooltip.set(
+        this,
+        d3.select("#tooltip").append("text").style("display", "none")
+      );
+    };
+    
     const nodedrag = d3.drag()
       .on("start", function() {
         var current = d3.select(this);
@@ -281,7 +288,10 @@ export class NetworkVisualization {
         if (node.adjustable) {
           this.v0 = node.bias;
           that.network.pauseAnimatedInput();
-          tooltip = d3.select("#tooltip").append("text");
+          if(d3.event.active === 0) {
+            const tooltipForThis = tooltip.get(this);
+            tooltipForThis.style("display", "block");
+          }
         }
 
         if (node.constructor.name == "InputNode") {
@@ -295,7 +305,8 @@ export class NetworkVisualization {
         if (node.adjustable) {
           node.bias = clamp(this.v0 - (d3.event.y - this.y0) / unit, -4, 4);
           //node.y = d3.event.y + this.deltaX;
-          tooltip
+          const tooltipForThis = tooltip.get(this);
+          tooltipForThis
             .attr("x", node.x)
             .attr("y", node.y - unit * node.bias)
             .text(`+ ${node.format(node.bias)}`);
@@ -307,16 +318,23 @@ export class NetworkVisualization {
           }
         }
       })
-      .on("end", () => {
-        if (tooltip)
-          tooltip.remove();
+      .on("end", function() {
+        if (d3.event.active === 0) {
+          const tooltipForThis = tooltip.get(this);
+          tooltipForThis.style("display", "none");
+        }
       });
 
-
-    nodedrag(d3.select("#nodes").selectAll("circle"));
-    nodedrag(d3.select("#parameters").select(".input").selectAll("circle"));
-    nodedrag(d3.select("#parameters").select(".nodes").selectAll("circle"));
-    nodedrag(d3.select("#input").selectAll("rect"));
+    const nodeDragSelections = [
+      d3.select("#nodes").selectAll("circle"),
+      d3.select("#parameters").select(".input").selectAll("circle"),
+      d3.select("#parameters").select(".nodes").selectAll("circle"),
+      d3.select("#input").selectAll("rect"),
+    ]
+    nodeDragSelections.forEach(s=>{
+      s.each(addToolTip);
+      nodedrag(s);
+    });
 
     const edgedrag = d3.drag()
       .on("start", function() {
@@ -326,7 +344,10 @@ export class NetworkVisualization {
           this.y0 = d3.event.y;
           this.weight0 = edge.weight;
           that.network.pauseAnimatedInput();
-          tooltip = d3.select("#tooltip").append("text");
+          if(d3.event.active === 0) {
+            const tooltipForThis = tooltip.get(this);
+            tooltipForThis.style("display", "block");
+          }
         }
       })
       .on("drag", function() {
@@ -337,21 +358,27 @@ export class NetworkVisualization {
           //if (Math.abs(edge.from.getActivation()) > 0.001) {
           edge.weight = clamp(this.weight0 - (d3.event.y - this.y0) / sactivation / unit, -4, 4);
           //}
-          tooltip
+          const tooltipForThis = tooltip.get(this);
+          tooltipForThis
             .attr("x", edge.parameterPosition()[0])
             .attr("y", edge.parameterPosition()[1])
             .text(`× ${edge.weight.toFixed(2)}`);
         }
       })
-      .on("end", () => {
-        if (tooltip)
-          tooltip.remove();
+      .on("end", function() {
+        if (d3.event.active === 0) {
+          const tooltipForThis = tooltip.get(this);
+          tooltipForThis.style("display", "none");
+        }
       });
 
-    edgedrag(d3.select("#edges").selectAll("path, circle"));
-    edgedrag(d3.select("#parameters").select(".edges").selectAll("circle"));
-
-
-
+    const edgeDragSelections = [
+      d3.select("#edges").selectAll("path, circle"),
+      d3.select("#parameters").select(".edges").selectAll("circle"),
+    ];
+    edgeDragSelections.forEach(s=>{
+      s.each(addToolTip);
+      edgedrag(s);
+    });
   }
 }
