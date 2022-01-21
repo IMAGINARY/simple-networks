@@ -47,8 +47,15 @@
 .footer .footerbox {
   flex: 1;
   display: flex;
-  justify-content: center;
-  flex-direction: row;
+  flex-direction: column;
   align-items: center;
-  margin: auto
+  margin: auto;
+  
+  &:first-of-type {
+    align-items: start;
+  }
+
+  &:last-of-type {
+    align-items: end;
+  }
 }

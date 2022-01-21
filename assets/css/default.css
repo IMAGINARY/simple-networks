@@ -36,10 +36,13 @@
 .footer .footerbox {
   flex: 1;
   display: flex;
-  justify-content: center;
-  flex-direction: row;
+  flex-direction: column;
   align-items: center;
   margin: auto; }
+  .footer .footerbox:first-of-type {
+    align-items: start; }
+  .footer .footerbox:last-of-type {
+    align-items: end; }
 
 .train {
   display: flex;
