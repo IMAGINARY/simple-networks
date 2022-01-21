@@ -102,6 +102,8 @@ export class LevelController {
     if (this.clevel) {
       this.clevel.hide();
     }
+    d3.select("#leveltitleprefix").text(`Level ${lid + 1}: `);
+
     //regenerate level
     this.clevel = (this.levels[lid])();
     this.clevel.show();

@@ -652,8 +652,9 @@ var LevelController = /*#__PURE__*/function () {
 
       if (this.clevel) {
         this.clevel.hide();
-      } //regenerate level
+      }
 
+      d3.select("#leveltitleprefix").text("Level ".concat(lid + 1, ": ")); //regenerate level
 
       this.clevel = this.levels[lid]();
       this.clevel.show();
