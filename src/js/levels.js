@@ -57,7 +57,7 @@ export class TutorialLevelA extends Level {
     const trainXs = [1, 2, 3];
     const trainYs = trainXs.map(f);
 
-    super("Ein einfaches Netz: Verdopple den Input!",
+    super("Verdopple den Input!",
       new Network(
         nodes,
         [nodes[0]], //input nodes
@@ -65,7 +65,7 @@ export class TutorialLevelA extends Level {
       ),
       ["input"], trainXs.map(x => [x]), //temperatures are internally divided by 10.
       ["desired output"], trainYs.map(x => [x]),
-      "Hier siehst du ein einfaches Neuronales Netz. Kannst du das Netz so einstellen, dass sich der Input verdoppelt, d.h. der Output soll den doppelten Input-Wert ergeben?"
+      "Stelle in diesem einfachen Netz das Gewicht so ein, dass sich der Input verdoppelt, d.h. der Output soll den doppelten Inputwert ergeben (siehe Zielwert). Wenn du es geschafft hast, schalte mit dem Pfeil unten rechts weiter zum nächsten Level! "
     );
 
     this.animatestep = function() {
@@ -73,11 +73,11 @@ export class TutorialLevelA extends Level {
     };
 
     this.onenter = function() {
-      addnodeinfo(nodes[0], "Hier kannst du den Inputwert verändern.");
-      addnodeinfo(nodes[1], "Das Output des Neuronalen Netzes.");
+      addnodeinfo(nodes[0], "Verändere hier den Inputwert!");
+      addnodeinfo(nodes[1], "Der Output");
 
       d3.select("#levelinfo").append("text")
-        .text("Stell hier den Multiplikationsfaktor (das “Gewicht”) ein.")
+        .text("Der Multiplikationsfaktor (das “Gewicht”)")
         .attr("pointer-events", "none")
         .attr("text-anchor", "middle")
         .attr("font-size", 20)
