@@ -384,7 +384,7 @@ export class SumLevel extends Level {
     ];
     const trainYs = trainXs.map(p => [p[0] + p[1]]);
 
-    super("Die beiden Input-Werte summieren!",
+    super("Addiere die beiden Inputwerte!",
       new Network(
         nodes,
         [nodes[0], nodes[1]], //input nodes
@@ -392,7 +392,7 @@ export class SumLevel extends Level {
       ),
       ["Summand 1", "Summand 2"], trainXs, //temperatures are internally divided by 10.
       ["Summe"], trainYs,
-      "Stell die Parameter des Netzes so ein, dass der Output (rechts) die Summe beider Inputs ergibt. Die Voraussagen des Netzes müssen möglichst den Werten der Trainingsdaten entsprechen, die du in der Tabelle unten siehst."
+      "Stelle die Gewichte des Netzes so ein, dass der Outputwert (rechts) die Summe beider Inputwerte ergibt. Die Voraussagen des Netzes sollen möglichst den Werten der Trainingsdaten entsprechen, die du in der Tabelle unten siehst."
     );
     this.animatestep = function() {
       nodes[2].target = (nodes[0].getActivation()) + (nodes[1].getActivation());
