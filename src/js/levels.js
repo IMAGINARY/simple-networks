@@ -336,7 +336,7 @@ export class FahrenheitLevel extends Level {
       ),
       ["Celsius"], trainXs.map(v => [v / 10]), //temperatures are internally divided by 10.
       ["Fahrenheit"], trainYs.map(v => [v / 10]),
-      "Ein positiver Temperatur-Wert in Grad Celsius (links, gelber Regler) soll in einen Wert in Grad Fahrenheit umgewandelt werden. Stell die Parameter (blaue und weiße Regler) des Netzes so ein, dass der Output dem Zielwert jeden Inputs entspricht. In der Tabelle unten kannst du die korrekten Werte ablesen."
+      "Ein positiver Temperaturwert in Grad Celsius (links) soll in einen Wert in Grad Fahrenheit umgewandelt werden (rechts). Stell die Parameter (blaue und weiße Regler) des Netzes so ein, dass der Output dem Zielwert jeden Inputs entspricht. In der Tabelle unten kannst du die korrekten Werte ablesen."
     );
     this.animatestep = function() {
       nodes[2].target = c2f(nodes[0].getActivation() * 10) / 10;
