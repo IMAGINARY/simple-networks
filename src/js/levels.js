@@ -269,10 +269,10 @@ export class WeatherLevel extends Level {
     //nodes[1].format = v => Math.round(v) == 1 ? '1 (inside)' : '0 (outside)';
     nodes[1].format = v => v.toFixed(0);
     nodes[4].format = temp => `${(temp*10).toFixed(0)}°C`;
-    super("Einfache Wettervorhersage im Innenraum und draußen!", nw,
+    super("Erstelle eine einfache Wettervorhersage!", nw,
       ["Bewölkung", "Innenraum"], trainingdata.map(td => [td.cloudiness, td.inside]),
       ["Temperatur"], trainingdata.map(td => [formula(td.cloudiness, td.inside)]),
-      "Draußen (d.h. Innenraum-Wert = 0) hängt die Temperatur davon ab, wie bewölkt es ist: Je bewölkter der Himmel ist, desto niedriger die Temperatur. In Innenräumen (d.h. Innenraum-Wert = 1) ist die Temperatur fast immer 20°C."
+      "Draußen (d.h. Innenraumwert = 0) hängt die Temperatur davon ab, wie bewölkt es ist: Je bewölkter der Himmel ist, desto niedriger die Temperatur. In Innenräumen (d.h. Innenraumwert = 1) ist die Temperatur fast immer 20°C."
     );
 
     this.animatestep = function() {
