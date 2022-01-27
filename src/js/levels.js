@@ -515,11 +515,11 @@ export class MaxLevel extends Level {
     const trainXs = [0, 0, 0, 0, 0, 0, 0].map(v => [Math.random(), Math.random()]);
     const trainYs = trainXs.map(p => [Math.max(p[0], p[1])]);
 
-    super("Das Maximum der Input-Werte!",
+    super("Berechne das Maximum der Inputwerte!",
       nw,
       ["Input 1", "Input 2"], trainXs, //temperatures are internally divided by 10.
       ["Maximum"], trainYs,
-      "Der Output rechts soll dem Maximalwert des Inputs entsprechen. Tipp: max(a, b) = max(0, a-b)+b. Denk daran, dass das mittlere Neuron negative Werte ignoriert."
+      "Der Output rechts soll dem Maximalwert der beiden Inputs entsprechen. Tipp: max(a, b) = max(0, a-b)+b. Denk daran, dass das mittlere Neuron negative Werte ignoriert."
     );
     this.animatestep = function() {
       nodes[3].target = Math.max(nodes[0].getActivation(), nodes[1].getActivation());
