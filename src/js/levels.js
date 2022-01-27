@@ -127,7 +127,7 @@ export class TutorialLevelB extends Level {
       ),
       ["Input"], trainXs.map(x => [x]), //temperatures are internally divided by 10.
       ["Output"], trainYs.map(x => [x]),
-      "Kannst du das Netz so einstellen, dass es positive Inputs oder 0 ausgibt, wenn sein Input negativ ist? Es soll die Daten der Trainingstabelle unten voraussagen."
+      "Stelle das Netz so ein, dass der Output nur die positive Inputs durchlässt, und für andere (negative) Inputs die 0 anzeigt. Das mittlere Neuron verwendet dafür eine Aktivierungsfunktion."
     );
 
 
