@@ -171,7 +171,7 @@ export class TutorialLevelC extends Level {
     const trainXs = [-2, -1, 0, 1, 2, 3];
     const trainYs = trainXs.map(f);
 
-    super("Ein Neuron mit Bias!",
+    super("Verändere den Bias!",
       new Network(
         nodes,
         [nodes[0]], //input nodes
@@ -179,7 +179,7 @@ export class TutorialLevelC extends Level {
       ),
       ["Input"], trainXs.map(x => [x]), //temperatures are internally divided by 10.
       ["Output"], trainYs.map(x => [x]),
-      "Kannst du die Parameter des Netzes so einstellen, dass der Output um 1.0 größer ist als der Input? Sollte der Input allerdings kleiner als 1 sein, soll der Output 0 ergeben."
+      "Dieses Netz hat einen neuen Parameter: den Bias. Stelle ihn so ein, dass der Output um 1.0 kleiner ist ist als der Input. Sollte der Input allerdings kleiner als 1 sein, soll der Output 0 ergeben."
     );
 
 
