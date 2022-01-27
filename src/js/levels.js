@@ -593,11 +593,11 @@ export class XorLevel extends Level {
       [0]
     ];
 
-    super("Berechne das XOR der Input-Werte!",
+    super("Berechne das exklusive Oder (XOR) der Inputwerte!",
       nw,
       ["Bit 1", "Bit 2"], trainXs, //temperatures are internally divided by 10.
       ["XOR"], trainYs,
-      "Nehmen wir an, dass das Netz nur 0 oder 1 als Input-Werte akzeptiert. Der Output-Wert des Netzes soll 1 sein, wenn nur ein einzelnes Input auf 1 gestellt ist. Andernfalls (wenn also beide Inputs 1 sind) muss der Output 0 sein."
+      "Nehmen wir an, dass das Netz nur 0 oder 1 als Inputwerte akzeptiert. Der Output des Netzes soll 1 sein, wenn beide Inputs verschieden sind. Andernfalls (wenn also beide Inputs gleich sind) soll der Output 0 sein."
     );
     this.animatestep = function() {
       //round input
