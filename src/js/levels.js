@@ -452,11 +452,11 @@ export class AndLevel extends Level {
     ];
     const trainYs = trainXs.map(p => [(p[0] * p[1])]);
 
-    super("Sind beide Inputs auf 1 gestellt?",
+    super("Finde heraus ob beide Inputs auf 1 gestellt sind!",
       nw,
       ["Bit 1", "Bit 2"], trainXs, //temperatures are internally divided by 10.
       ["AND"], trainYs,
-      "Die Input-Werte des Netzes sind entweder 0 oder 1. Der Output-Wert rechts darf nur 1 sein, wenn beide Input-Werte 1 sind. Anderfalls muss er 0 sein."
+      "Die Inputwerte des Netzes sind entweder 0 oder 1. Der Outputwert rechts soll nur dann 1 sein, wenn beide Inputwerte 1 sind. Anderfalls soll er 0 sein."
     );
     this.animatestep = function() {
       nodes[0].format = v => Math.round(v);
