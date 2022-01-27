@@ -658,11 +658,11 @@ export class AvgLevel extends Level {
     const trainXs = [0, 0, 0, 0, 0, 0, 0].map(v => [Math.random(), Math.random(), Math.random()]);
     const trainYs = trainXs.map(p => [(p[0] + p[1] + p[2]) / 3]);
 
-    super("Berechne den Durchschnitt der Input-Werte!",
+    super("Berechne den Durchschnitt der Inputwerte!",
       nw,
       ["Nummer 1", "Nummer 2", "Nummer 3"], trainXs, //temperatures are internally divided by 10.
       ["Durchschnitt"], trainYs,
-      "Es gibt drei Inputs. Kannst du die Gewichte so einstellen, dass der Output der Durchschnitt der Input-Werte ist? Insbesondere für die Werte in der Tabelle unten soll das Netz korrekte Outputs produzieren."
+      "Es gibt drei Inputs. Stelle die Gewichte so ein, dass der Output der Durchschnitt der drei Inputwerte ist. Insbesondere für die Inputwerte in der Tabelle unten soll das Netz korrekte Outputs produzieren."
     );
     this.animatestep = function() {
       nodes[3].target = (nodes[0].getActivation() + nodes[1].getActivation() + nodes[2].getActivation()) / 3;
