@@ -1531,23 +1531,23 @@ var TutorialLevelA = /*#__PURE__*/function (_Level) {
 
     var trainXs = [1, 2, 3];
     var trainYs = trainXs.map(f);
-    _this = _super.call(this, "Ein einfaches Netz: Verdopple den Input!", new _Network.Network(nodes, [nodes[0]], //input nodes
+    _this = _super.call(this, "Verdopple den Input!", new _Network.Network(nodes, [nodes[0]], //input nodes
     [nodes[1]] //output nodes
     ), ["input"], trainXs.map(function (x) {
       return [x];
     }), //temperatures are internally divided by 10.
     ["desired output"], trainYs.map(function (x) {
       return [x];
-    }), "Hier siehst du ein einfaches Neuronales Netz. Kannst du das Netz so einstellen, dass sich der Input verdoppelt, d.h. der Output soll den doppelten Input-Wert ergeben?");
+    }), "Stelle in diesem einfachen Netz das Gewicht so ein, dass sich der Input verdoppelt, d.h. der Output soll den doppelten Inputwert ergeben (siehe Zielwert). Wenn du es geschafft hast, schalte mit dem Pfeil unten rechts weiter zum nächsten Level! ");
 
     _this.animatestep = function () {
       nodes[1].target = f(nodes[0].getActivation());
     };
 
     _this.onenter = function () {
-      addnodeinfo(nodes[0], "Hier kannst du den Inputwert verändern.");
-      addnodeinfo(nodes[1], "Das Output des Neuronalen Netzes.");
-      d3.select("#levelinfo").append("text").text("Stell hier den Multiplikationsfaktor (das “Gewicht”) ein.").attr("pointer-events", "none").attr("text-anchor", "middle").attr("font-size", 20).attr("x", (nodes[0].x + nodes[1].x) / 2).attr("y", (nodes[0].y + nodes[1].y) / 2 - 100);
+      addnodeinfo(nodes[0], "Verändere hier den Inputwert!");
+      addnodeinfo(nodes[1], "Der Output");
+      d3.select("#levelinfo").append("text").text("Der Multiplikationsfaktor (das “Gewicht”)").attr("pointer-events", "none").attr("text-anchor", "middle").attr("font-size", 20).attr("x", (nodes[0].x + nodes[1].x) / 2).attr("y", (nodes[0].y + nodes[1].y) / 2 - 100);
       document.querySelector(".trainingdata").classList.remove("visible");
     };
 
@@ -1602,7 +1602,7 @@ var TutorialLevelB = /*#__PURE__*/function (_Level2) {
     }), //temperatures are internally divided by 10.
     ["Output"], trainYs.map(function (x) {
       return [x];
-    }), "Kannst du das Netz so einstellen, dass es positive Inputs oder 0 ausgibt, wenn sein Input negativ ist? Es soll die Daten der Trainingstabelle unten voraussagen.");
+    }), "Stelle das Netz so ein, dass der Output nur die positive Inputs durchlässt, und für andere (negative) Inputs die 0 anzeigt. Das mittlere Neuron verwendet dafür eine Aktivierungsfunktion.");
 
     _this2.animatestep = function () {
       nodes[2].target = f(nodes[0].getActivation());
@@ -1654,14 +1654,14 @@ var TutorialLevelC = /*#__PURE__*/function (_Level3) {
 
     var trainXs = [-2, -1, 0, 1, 2, 3];
     var trainYs = trainXs.map(f);
-    _this3 = _super3.call(this, "Ein Neuron mit Bias!", new _Network.Network(nodes, [nodes[0]], //input nodes
+    _this3 = _super3.call(this, "Verändere den Bias!", new _Network.Network(nodes, [nodes[0]], //input nodes
     [nodes[2]] //output nodes
     ), ["Input"], trainXs.map(function (x) {
       return [x];
     }), //temperatures are internally divided by 10.
     ["Output"], trainYs.map(function (x) {
       return [x];
-    }), "Kannst du die Parameter des Netzes so einstellen, dass der Output um 1.0 größer ist als der Input? Sollte der Input allerdings kleiner als 1 sein, soll der Output 0 ergeben.");
+    }), "Dieses Netz hat einen neuen Parameter: den Bias. Stelle ihn so ein, dass der Output um 1.0 kleiner ist ist als der Input. Sollte der Input allerdings kleiner als 1 sein, soll der Output 0 ergeben.");
 
     _this3.animatestep = function () {
       nodes[2].target = f(nodes[0].getActivation());
@@ -1754,11 +1754,11 @@ var WeatherLevel = /*#__PURE__*/function (_Level4) {
       return "".concat((temp * 10).toFixed(0), "\xB0C");
     };
 
-    _this4 = _super4.call(this, "Einfache Wettervorhersage im Innenraum und draußen!", nw, ["Bewölkung", "Innenraum"], trainingdata.map(function (td) {
+    _this4 = _super4.call(this, "Erstelle eine einfache Wettervorhersage!", nw, ["Bewölkung", "Innenraum"], trainingdata.map(function (td) {
       return [td.cloudiness, td.inside];
     }), ["Temperatur"], trainingdata.map(function (td) {
       return [formula(td.cloudiness, td.inside)];
-    }), "Draußen (d.h. Innenraum-Wert = 0) hängt die Temperatur davon ab, wie bewölkt es ist: Je bewölkter der Himmel ist, desto niedriger die Temperatur. In Innenräumen (d.h. Innenraum-Wert = 1) ist die Temperatur fast immer 20°C.");
+    }), "Draußen (d.h. Innenraumwert = 0) hängt die Temperatur davon ab, wie bewölkt es ist: Je bewölkter der Himmel ist, desto niedriger die Temperatur. In Innenräumen (d.h. Innenraumwert = 1) ist die Temperatur fast immer 20°C.");
 
     _this4.animatestep = function () {
       //TODO add some nicer visualization for inside, cloudiness, and temperature.
@@ -1839,7 +1839,7 @@ var FahrenheitLevel = /*#__PURE__*/function (_Level5) {
     }), //temperatures are internally divided by 10.
     ["Fahrenheit"], trainYs.map(function (v) {
       return [v / 10];
-    }), "Ein positiver Temperatur-Wert in Grad Celsius (links, gelber Regler) soll in einen Wert in Grad Fahrenheit umgewandelt werden. Stell die Parameter (blaue und weiße Regler) des Netzes so ein, dass der Output dem Zielwert jeden Inputs entspricht. In der Tabelle unten kannst du die korrekten Werte ablesen.");
+    }), "Ein positiver Temperaturwert in Grad Celsius (links) soll in einen Wert in Grad Fahrenheit umgewandelt werden (rechts). Stell die Parameter (blaue und weiße Regler) des Netzes so ein, dass der Output dem Zielwert jeden Inputs entspricht. In der Tabelle unten kannst du die korrekten Werte ablesen.");
 
     _this5.animatestep = function () {
       nodes[2].target = c2f(nodes[0].getActivation() * 10) / 10;
@@ -1890,10 +1890,10 @@ var SumLevel = /*#__PURE__*/function (_Level6) {
     var trainYs = trainXs.map(function (p) {
       return [p[0] + p[1]];
     });
-    _this6 = _super6.call(this, "Die beiden Input-Werte summieren!", new _Network.Network(nodes, [nodes[0], nodes[1]], //input nodes
+    _this6 = _super6.call(this, "Addiere die beiden Inputwerte!", new _Network.Network(nodes, [nodes[0], nodes[1]], //input nodes
     [nodes[2]] //output nodes
     ), ["Summand 1", "Summand 2"], trainXs, //temperatures are internally divided by 10.
-    ["Summe"], trainYs, "Stell die Parameter des Netzes so ein, dass der Output (rechts) die Summe beider Inputs ergibt. Die Voraussagen des Netzes müssen möglichst den Werten der Trainingsdaten entsprechen, die du in der Tabelle unten siehst.");
+    ["Summe"], trainYs, "Stelle die Gewichte des Netzes so ein, dass der Outputwert (rechts) die Summe beider Inputwerte ergibt. Die Voraussagen des Netzes sollen möglichst den Werten der Trainingsdaten entsprechen, die du in der Tabelle unten siehst.");
 
     _this6.animatestep = function () {
       nodes[2].target = nodes[0].getActivation() + nodes[1].getActivation();
@@ -1949,8 +1949,8 @@ var AndLevel = /*#__PURE__*/function (_Level7) {
     var trainYs = trainXs.map(function (p) {
       return [p[0] * p[1]];
     });
-    _this7 = _super7.call(this, "Sind beide Inputs auf 1 gestellt?", nw, ["Bit 1", "Bit 2"], trainXs, //temperatures are internally divided by 10.
-    ["AND"], trainYs, "Die Input-Werte des Netzes sind entweder 0 oder 1. Der Output-Wert rechts darf nur 1 sein, wenn beide Input-Werte 1 sind. Anderfalls muss er 0 sein.");
+    _this7 = _super7.call(this, "Finde heraus ob beide Inputs auf 1 gestellt sind!", nw, ["Bit 1", "Bit 2"], trainXs, //temperatures are internally divided by 10.
+    ["AND"], trainYs, "Die Inputwerte des Netzes sind entweder 0 oder 1. Der Outputwert rechts soll nur dann 1 sein, wenn beide Inputwerte 1 sind. Anderfalls soll er 0 sein.");
 
     _this7.animatestep = function () {
       nodes[0].format = function (v) {
@@ -2018,8 +2018,8 @@ var MaxLevel = /*#__PURE__*/function (_Level8) {
     var trainYs = trainXs.map(function (p) {
       return [Math.max(p[0], p[1])];
     });
-    _this8 = _super8.call(this, "Das Maximum der Input-Werte!", nw, ["Input 1", "Input 2"], trainXs, //temperatures are internally divided by 10.
-    ["Maximum"], trainYs, "Der Output rechts soll dem Maximalwert des Inputs entsprechen. Tipp: max(a, b) = max(0, a-b)+b. Denk daran, dass das mittlere Neuron negative Werte ignoriert.");
+    _this8 = _super8.call(this, "Berechne das Maximum der Inputwerte!", nw, ["Input 1", "Input 2"], trainXs, //temperatures are internally divided by 10.
+    ["Maximum"], trainYs, "Der Output rechts soll dem Maximalwert der beiden Inputs entsprechen. Tipp: max(a, b) = max(0, a-b)+b. Denk daran, dass das mittlere Neuron negative Werte ignoriert.");
 
     _this8.animatestep = function () {
       nodes[3].target = Math.max(nodes[0].getActivation(), nodes[1].getActivation());
@@ -2081,8 +2081,8 @@ var XorLevel = /*#__PURE__*/function (_Level9) {
     );
     var trainXs = [[0, 0], [1, 0], [0, 1], [1, 1]];
     var trainYs = [[0], [1], [1], [0]];
-    _this9 = _super9.call(this, "Berechne das XOR der Input-Werte!", nw, ["Bit 1", "Bit 2"], trainXs, //temperatures are internally divided by 10.
-    ["XOR"], trainYs, "Nehmen wir an, dass das Netz nur 0 oder 1 als Input-Werte akzeptiert. Der Output-Wert des Netzes soll 1 sein, wenn nur ein einzelnes Input auf 1 gestellt ist. Andernfalls (wenn also beide Inputs 1 sind) muss der Output 0 sein.");
+    _this9 = _super9.call(this, "Berechne das exklusive Oder (XOR) der Inputwerte!", nw, ["Bit 1", "Bit 2"], trainXs, //temperatures are internally divided by 10.
+    ["XOR"], trainYs, "Nehmen wir an, dass das Netz nur 0 oder 1 als Inputwerte akzeptiert. Der Output des Netzes soll 1 sein, wenn beide Inputs verschieden sind. Andernfalls (wenn also beide Inputs gleich sind) soll der Output 0 sein.");
 
     _this9.animatestep = function () {
       //round input
@@ -2155,8 +2155,8 @@ var AvgLevel = /*#__PURE__*/function (_Level10) {
     var trainYs = trainXs.map(function (p) {
       return [(p[0] + p[1] + p[2]) / 3];
     });
-    _this10 = _super10.call(this, "Berechne den Durchschnitt der Input-Werte!", nw, ["Nummer 1", "Nummer 2", "Nummer 3"], trainXs, //temperatures are internally divided by 10.
-    ["Durchschnitt"], trainYs, "Es gibt drei Inputs. Kannst du die Gewichte so einstellen, dass der Output der Durchschnitt der Input-Werte ist? Insbesondere für die Werte in der Tabelle unten soll das Netz korrekte Outputs produzieren.");
+    _this10 = _super10.call(this, "Berechne den Durchschnitt der Inputwerte!", nw, ["Nummer 1", "Nummer 2", "Nummer 3"], trainXs, //temperatures are internally divided by 10.
+    ["Durchschnitt"], trainYs, "Es gibt drei Inputs. Stelle die Gewichte so ein, dass der Output der Durchschnitt der drei Inputwerte ist. Insbesondere für die Inputwerte in der Tabelle unten soll das Netz korrekte Outputs produzieren.");
 
     _this10.animatestep = function () {
       nodes[3].target = (nodes[0].getActivation() + nodes[1].getActivation() + nodes[2].getActivation()) / 3;
