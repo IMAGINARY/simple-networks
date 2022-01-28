@@ -57,7 +57,7 @@ export class TutorialLevelA extends Level {
     const trainXs = [1, 2, 3];
     const trainYs = trainXs.map(f);
 
-    super("Ein einfaches Netz: Verdopple den Input!",
+    super("Verdopple den Input!",
       new Network(
         nodes,
         [nodes[0]], //input nodes
@@ -65,7 +65,7 @@ export class TutorialLevelA extends Level {
       ),
       ["input"], trainXs.map(x => [x]), //temperatures are internally divided by 10.
       ["desired output"], trainYs.map(x => [x]),
-      "Hier siehst du ein einfaches Neuronales Netz. Kannst du das Netz so einstellen, dass sich der Input verdoppelt, d.h. der Output soll den doppelten Input-Wert ergeben?"
+      "Stelle in diesem einfachen Netz das Gewicht so ein, dass sich der Input verdoppelt, d.h. der Output soll den doppelten Inputwert ergeben (siehe Zielwert). Wenn du es geschafft hast, schalte mit dem Pfeil unten rechts weiter zum nächsten Level! "
     );
 
     this.animatestep = function() {
@@ -73,11 +73,11 @@ export class TutorialLevelA extends Level {
     };
 
     this.onenter = function() {
-      addnodeinfo(nodes[0], "Hier kannst du den Inputwert verändern.");
-      addnodeinfo(nodes[1], "Das Output des Neuronalen Netzes.");
+      addnodeinfo(nodes[0], "Verändere hier den Inputwert!");
+      addnodeinfo(nodes[1], "Der Output");
 
       d3.select("#levelinfo").append("text")
-        .text("Stell hier den Multiplikationsfaktor (das “Gewicht”) ein.")
+        .text("Der Multiplikationsfaktor (das “Gewicht”)")
         .attr("pointer-events", "none")
         .attr("text-anchor", "middle")
         .attr("font-size", 20)
@@ -127,7 +127,7 @@ export class TutorialLevelB extends Level {
       ),
       ["Input"], trainXs.map(x => [x]), //temperatures are internally divided by 10.
       ["Output"], trainYs.map(x => [x]),
-      "Kannst du das Netz so einstellen, dass es positive Inputs oder 0 ausgibt, wenn sein Input negativ ist? Es soll die Daten der Trainingstabelle unten voraussagen."
+      "Stelle das Netz so ein, dass der Output nur die positive Inputs durchlässt, und für andere (negative) Inputs die 0 anzeigt. Das mittlere Neuron verwendet dafür eine Aktivierungsfunktion."
     );
 
 
@@ -171,7 +171,7 @@ export class TutorialLevelC extends Level {
     const trainXs = [-2, -1, 0, 1, 2, 3];
     const trainYs = trainXs.map(f);
 
-    super("Ein Neuron mit Bias!",
+    super("Verändere den Bias!",
       new Network(
         nodes,
         [nodes[0]], //input nodes
@@ -179,7 +179,7 @@ export class TutorialLevelC extends Level {
       ),
       ["Input"], trainXs.map(x => [x]), //temperatures are internally divided by 10.
       ["Output"], trainYs.map(x => [x]),
-      "Kannst du die Parameter des Netzes so einstellen, dass der Output um 1.0 größer ist als der Input? Sollte der Input allerdings kleiner als 1 sein, soll der Output 0 ergeben."
+      "Dieses Netz hat einen neuen Parameter: den Bias. Stelle ihn so ein, dass der Output um 1.0 kleiner ist ist als der Input. Sollte der Input allerdings kleiner als 1 sein, soll der Output 0 ergeben."
     );
 
 
@@ -269,10 +269,10 @@ export class WeatherLevel extends Level {
     //nodes[1].format = v => Math.round(v) == 1 ? '1 (inside)' : '0 (outside)';
     nodes[1].format = v => v.toFixed(0);
     nodes[4].format = temp => `${(temp*10).toFixed(0)}°C`;
-    super("Einfache Wettervorhersage im Innenraum und draußen!", nw,
+    super("Erstelle eine einfache Wettervorhersage!", nw,
       ["Bewölkung", "Innenraum"], trainingdata.map(td => [td.cloudiness, td.inside]),
       ["Temperatur"], trainingdata.map(td => [formula(td.cloudiness, td.inside)]),
-      "Draußen (d.h. Innenraum-Wert = 0) hängt die Temperatur davon ab, wie bewölkt es ist: Je bewölkter der Himmel ist, desto niedriger die Temperatur. In Innenräumen (d.h. Innenraum-Wert = 1) ist die Temperatur fast immer 20°C."
+      "Draußen (d.h. Innenraumwert = 0) hängt die Temperatur davon ab, wie bewölkt es ist: Je bewölkter der Himmel ist, desto niedriger die Temperatur. In Innenräumen (d.h. Innenraumwert = 1) ist die Temperatur fast immer 20°C."
     );
 
     this.animatestep = function() {
@@ -336,7 +336,7 @@ export class FahrenheitLevel extends Level {
       ),
       ["Celsius"], trainXs.map(v => [v / 10]), //temperatures are internally divided by 10.
       ["Fahrenheit"], trainYs.map(v => [v / 10]),
-      "Ein positiver Temperatur-Wert in Grad Celsius (links, gelber Regler) soll in einen Wert in Grad Fahrenheit umgewandelt werden. Stell die Parameter (blaue und weiße Regler) des Netzes so ein, dass der Output dem Zielwert jeden Inputs entspricht. In der Tabelle unten kannst du die korrekten Werte ablesen."
+      "Ein positiver Temperaturwert in Grad Celsius (links) soll in einen Wert in Grad Fahrenheit umgewandelt werden (rechts). Stell die Parameter (blaue und weiße Regler) des Netzes so ein, dass der Output dem Zielwert jeden Inputs entspricht. In der Tabelle unten kannst du die korrekten Werte ablesen."
     );
     this.animatestep = function() {
       nodes[2].target = c2f(nodes[0].getActivation() * 10) / 10;
@@ -384,7 +384,7 @@ export class SumLevel extends Level {
     ];
     const trainYs = trainXs.map(p => [p[0] + p[1]]);
 
-    super("Die beiden Input-Werte summieren!",
+    super("Addiere die beiden Inputwerte!",
       new Network(
         nodes,
         [nodes[0], nodes[1]], //input nodes
@@ -392,7 +392,7 @@ export class SumLevel extends Level {
       ),
       ["Summand 1", "Summand 2"], trainXs, //temperatures are internally divided by 10.
       ["Summe"], trainYs,
-      "Stell die Parameter des Netzes so ein, dass der Output (rechts) die Summe beider Inputs ergibt. Die Voraussagen des Netzes müssen möglichst den Werten der Trainingsdaten entsprechen, die du in der Tabelle unten siehst."
+      "Stelle die Gewichte des Netzes so ein, dass der Outputwert (rechts) die Summe beider Inputwerte ergibt. Die Voraussagen des Netzes sollen möglichst den Werten der Trainingsdaten entsprechen, die du in der Tabelle unten siehst."
     );
     this.animatestep = function() {
       nodes[2].target = (nodes[0].getActivation()) + (nodes[1].getActivation());
@@ -452,11 +452,11 @@ export class AndLevel extends Level {
     ];
     const trainYs = trainXs.map(p => [(p[0] * p[1])]);
 
-    super("Sind beide Inputs auf 1 gestellt?",
+    super("Finde heraus ob beide Inputs auf 1 gestellt sind!",
       nw,
       ["Bit 1", "Bit 2"], trainXs, //temperatures are internally divided by 10.
       ["AND"], trainYs,
-      "Die Input-Werte des Netzes sind entweder 0 oder 1. Der Output-Wert rechts darf nur 1 sein, wenn beide Input-Werte 1 sind. Anderfalls muss er 0 sein."
+      "Die Inputwerte des Netzes sind entweder 0 oder 1. Der Outputwert rechts soll nur dann 1 sein, wenn beide Inputwerte 1 sind. Anderfalls soll er 0 sein."
     );
     this.animatestep = function() {
       nodes[0].format = v => Math.round(v);
@@ -515,11 +515,11 @@ export class MaxLevel extends Level {
     const trainXs = [0, 0, 0, 0, 0, 0, 0].map(v => [Math.random(), Math.random()]);
     const trainYs = trainXs.map(p => [Math.max(p[0], p[1])]);
 
-    super("Das Maximum der Input-Werte!",
+    super("Berechne das Maximum der Inputwerte!",
       nw,
       ["Input 1", "Input 2"], trainXs, //temperatures are internally divided by 10.
       ["Maximum"], trainYs,
-      "Der Output rechts soll dem Maximalwert des Inputs entsprechen. Tipp: max(a, b) = max(0, a-b)+b. Denk daran, dass das mittlere Neuron negative Werte ignoriert."
+      "Der Output rechts soll dem Maximalwert der beiden Inputs entsprechen. Tipp: max(a, b) = max(0, a-b)+b. Denk daran, dass das mittlere Neuron negative Werte ignoriert."
     );
     this.animatestep = function() {
       nodes[3].target = Math.max(nodes[0].getActivation(), nodes[1].getActivation());
@@ -593,11 +593,11 @@ export class XorLevel extends Level {
       [0]
     ];
 
-    super("Berechne das XOR der Input-Werte!",
+    super("Berechne das exklusive Oder (XOR) der Inputwerte!",
       nw,
       ["Bit 1", "Bit 2"], trainXs, //temperatures are internally divided by 10.
       ["XOR"], trainYs,
-      "Nehmen wir an, dass das Netz nur 0 oder 1 als Input-Werte akzeptiert. Der Output-Wert des Netzes soll 1 sein, wenn nur ein einzelnes Input auf 1 gestellt ist. Andernfalls (wenn also beide Inputs 1 sind) muss der Output 0 sein."
+      "Nehmen wir an, dass das Netz nur 0 oder 1 als Inputwerte akzeptiert. Der Output des Netzes soll 1 sein, wenn beide Inputs verschieden sind. Andernfalls (wenn also beide Inputs gleich sind) soll der Output 0 sein."
     );
     this.animatestep = function() {
       //round input
@@ -658,11 +658,11 @@ export class AvgLevel extends Level {
     const trainXs = [0, 0, 0, 0, 0, 0, 0].map(v => [Math.random(), Math.random(), Math.random()]);
     const trainYs = trainXs.map(p => [(p[0] + p[1] + p[2]) / 3]);
 
-    super("Berechne den Durchschnitt der Input-Werte!",
+    super("Berechne den Durchschnitt der Inputwerte!",
       nw,
       ["Nummer 1", "Nummer 2", "Nummer 3"], trainXs, //temperatures are internally divided by 10.
       ["Durchschnitt"], trainYs,
-      "Es gibt drei Inputs. Kannst du die Gewichte so einstellen, dass der Output der Durchschnitt der Input-Werte ist? Insbesondere für die Werte in der Tabelle unten soll das Netz korrekte Outputs produzieren."
+      "Es gibt drei Inputs. Stelle die Gewichte so ein, dass der Output der Durchschnitt der drei Inputwerte ist. Insbesondere für die Inputwerte in der Tabelle unten soll das Netz korrekte Outputs produzieren."
     );
     this.animatestep = function() {
       nodes[3].target = (nodes[0].getActivation() + nodes[1].getActivation() + nodes[2].getActivation()) / 3;
